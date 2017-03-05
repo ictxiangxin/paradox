@@ -17,7 +17,7 @@ x_1 + 3 * x_2 = 4
 
 x_1, x_2 初始化为 0, 0
 
-```python3
+```python
 import paradox as pd
 
 # 定义符号，A为方程系数矩阵，x为自变量，b为常数项。
@@ -59,7 +59,7 @@ x =
 
 ### 线性回归
 
-```python3
+```python
 import numpy as np
 import matplotlib.pyplot as plt
 import paradox as pd
