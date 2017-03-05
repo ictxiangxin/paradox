@@ -1,5 +1,5 @@
 import numpy
-from paradox.symbol import Symbol
+from paradox.symbol import Symbol, reduce_sum
 
 
 class Engine:
@@ -8,9 +8,15 @@ class Engine:
         self.__variables = set()
         self.__gradients = {}
         self.__shape = {}
+        self.__broadcast = {}
         self.__bind = {}
         self.symbol(symbol)
         self.set_variables(variable)
+
+    def clear(self):
+        self.__gradients = {}
+        self.__shape = {}
+        self.__broadcast = {}
 
     def get_variables(self):
         return self.__variables
@@ -36,10 +42,12 @@ class Engine:
 
     def symbol(self, symbol: Symbol):
         self.__symbol = symbol
-        self.__gradients = {}
+        self.clear()
+        return self
 
     def bind(self, bind_data: dict):
         self.__bind = bind_data
+        self.clear()
         return self
 
     def __compute_value(self, symbol: Symbol):
@@ -72,6 +80,9 @@ class Engine:
                     current_gradient = multiply_tuple[0] @ multiply_tuple[1]
                 else:
                     current_gradient = self.gradient(forward) * gradient
+                current_broadcast = self.broadcast(variable, forward)
+                for i, axis in enumerate(current_broadcast):
+                    current_gradient = reduce_sum(current_gradient, axis=axis - i)
                 if variable not in self.__gradients:
                     self.__gradients[variable] = current_gradient
                 else:
@@ -84,7 +95,15 @@ class Engine:
             else:
                 self.__shape[symbol] = symbol.value.shape
         else:
-            self.__shape[symbol] = symbol.operator.shape(*[self.shape(s) for s in symbol.input])
+            shape_broadcasts = symbol.operator.shape(*[self.shape(s) for s in symbol.input])
+            shape = shape_broadcasts[0]
+            broadcasts = shape_broadcasts[1:]
+            self.__shape[symbol] = shape
+            for input_symbol, input_broadcast in zip(symbol.input, broadcasts):
+                if len(input_broadcast) > 0:
+                    self.__broadcast.setdefault(input_symbol, {})
+                    self.__broadcast[input_symbol].setdefault(symbol, {})
+                    self.__broadcast[input_symbol][symbol] = input_broadcast
 
     def value(self):
         return self.__compute_value(self.__symbol)
@@ -103,3 +122,14 @@ class Engine:
         if variable not in self.__shape:
             self.__compute_shape(variable)
         return self.__shape.get(variable, None)
+
+    def broadcast(self, from_variable: Symbol, to_variable: Symbol):
+        if from_variable not in self.__broadcast:
+            self.__compute_shape(from_variable)
+        if from_variable not in self.__broadcast:
+            return ()
+        else:
+            if to_variable not in self.__broadcast[from_variable]:
+                return ()
+            else:
+                return self.__broadcast[from_variable][to_variable]

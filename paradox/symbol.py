@@ -214,6 +214,6 @@ def transpose(a):
     return Symbol(operator=Transpose(), inputs=__as_symbols([a]))
 
 
-def reduce_sum(a, axis=None):
+def reduce_sum(a, axis=None, invariant=False):
     from paradox.operator import ReduceSum
-    return Symbol(operator=ReduceSum(axis), inputs=__as_symbols([a]))
+    return Symbol(operator=ReduceSum(axis, invariant), inputs=__as_symbols([a]))
