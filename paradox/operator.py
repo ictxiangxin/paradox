@@ -2,39 +2,26 @@ from abc import abstractmethod
 from paradox.symbol import *
 
 
-def binary_shape(shape_a, shape_b):
+def element_wise_shape(shape_a, shape_b):
+    gap = abs(len(shape_a) - len(shape_b))
     if len(shape_a) > len(shape_b):
         new_shape = list(shape_a)
-        base_shape = shape_b
-        broadcast_a_shape = [0] * len(shape_a)
-        broadcast_b_shape = list(shape_a)
-    elif len(shape_a) < len(shape_b):
-        new_shape = list(shape_b)
-        base_shape = shape_a
-        broadcast_a_shape = list(shape_b)
-        broadcast_b_shape = [0] * len(shape_b)
+        broadcast_a = []
+        broadcast_b = list(range(gap))
     else:
-        new_shape = list(shape_a)
-        base_shape = shape_a
-        broadcast_a_shape = [0] * len(shape_a)
-        broadcast_b_shape = [0] * len(shape_b)
-    for i in range(len(base_shape)):
+        new_shape = list(shape_b)
+        broadcast_a = list(range(gap))
+        broadcast_b = []
+    for i in range(min(len(shape_a), len(shape_b))):
         if shape_a[i] == 1 or shape_b[i] == 1:
             if shape_a[i] > shape_b[i]:
                 new_shape[i] = shape_a[i]
-                broadcast_b_shape[i] = shape_a[i]
+                broadcast_b.append(i + gap)
             elif shape_b[i] > shape_a[i]:
                 new_shape[i] = shape_b[i]
-                broadcast_a_shape[i] = shape_b[i]
+                broadcast_a.append(i + gap)
         elif shape_a[i] != shape_b[i]:
             raise ValueError('Can not broadcast these two shapes: {}, {}'.format(shape_a, shape_b))
-    broadcast_a = []
-    broadcast_b = []
-    for i, (v_a, v_b) in enumerate(zip(broadcast_a_shape, broadcast_b_shape)):
-        if v_a != 0:
-            broadcast_a.append(i)
-        if v_b != 0:
-            broadcast_b.append(i)
     return tuple(new_shape), tuple(broadcast_a), tuple(broadcast_b)
 
 
@@ -60,18 +47,18 @@ def matrix_multiply_shape(shape_a, shape_b):
             else:
                 raise ValueError()
         if shape_a[-1] == shape_b[-2]:
-            distance = abs(len(shape_a) - len(shape_b))
+            gap = abs(len(shape_a) - len(shape_b))
             if len(shape_a) > len(shape_b):
-                if shape_a[distance:-2] != shape_b[:-2]:
+                if shape_a[gap:-2] != shape_b[:-2]:
                     raise ValueError()
                 new_shape = list(shape_a)
                 broadcast_a = ()
-                broadcast_b = tuple(range(distance))
+                broadcast_b = tuple(range(gap))
             else:
-                if shape_b[distance:-2] != shape_a[:-2]:
+                if shape_b[gap:-2] != shape_a[:-2]:
                     raise ValueError()
                 new_shape = list(shape_b)
-                broadcast_a = tuple(range(distance))
+                broadcast_a = tuple(range(gap))
                 broadcast_b = ()
             new_shape[-1] = shape_b[-1]
             new_shape[-2] = shape_a[-2]
@@ -126,7 +113,7 @@ class Plus(Operator):
         return [Symbol(1), Symbol(1)]
 
     def shape(self, shape_a, shape_b):
-        return binary_shape(shape_a, shape_b)
+        return element_wise_shape(shape_a, shape_b)
 
 
 class Subtract(Operator):
@@ -142,7 +129,7 @@ class Subtract(Operator):
         return [Symbol(1), Symbol(-1)]
 
     def shape(self, shape_a, shape_b):
-        return binary_shape(shape_a, shape_b)
+        return element_wise_shape(shape_a, shape_b)
 
 
 class Multiply(Operator):
@@ -158,7 +145,7 @@ class Multiply(Operator):
         return [b, a]
 
     def shape(self, shape_a, shape_b):
-        return binary_shape(shape_a, shape_b)
+        return element_wise_shape(shape_a, shape_b)
 
 
 class Divide(Operator):
@@ -174,7 +161,7 @@ class Divide(Operator):
         return [Symbol(1) / b, Symbol(-1) * a / (b * b)]
 
     def shape(self, shape_a, shape_b):
-        return binary_shape(shape_a, shape_b)
+        return element_wise_shape(shape_a, shape_b)
 
 
 class MatrixMultiply(Operator):
@@ -237,7 +224,7 @@ class Power(Operator):
         return [b * (a ** (b - 1)), (a ** b) * log(a)]
 
     def shape(self, shape_a, shape_b):
-        return binary_shape(shape_a, shape_b)
+        return element_wise_shape(shape_a, shape_b)
 
 
 class Log(Operator):

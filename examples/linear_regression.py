@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import paradox as pd
 
-points_sum = 200
+points_sum = 500
 
 x_data = []
 y_data = []
