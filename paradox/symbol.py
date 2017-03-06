@@ -209,9 +209,9 @@ def log(a):
     return Symbol(operator=Log(), inputs=__as_symbols([a]))
 
 
-def transpose(a):
+def transpose(a, axes=None):
     from paradox.operator import Transpose
-    return Symbol(operator=Transpose(), inputs=__as_symbols([a]))
+    return Symbol(operator=Transpose(axes), inputs=__as_symbols([a]))
 
 
 def reduce_sum(a, axis=None, invariant=False):
