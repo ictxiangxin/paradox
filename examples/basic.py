@@ -1,8 +1,8 @@
 import paradox as pd
 
-A = pd.Symbol([[1, 2], [1, 3]], name='A')
-x = pd.Symbol([0, 0], name='x')
-b = pd.Symbol([3, 4], name='b')
+A = pd.Constant([[1, 2], [1, 3]], name='A')
+x = pd.Variable([0, 0], name='x')
+b = pd.Constant([3, 4], name='b')
 
 loss = pd.reduce_sum((A @ x - b) ** 2) / 2
 

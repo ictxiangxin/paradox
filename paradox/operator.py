@@ -126,7 +126,7 @@ class Plus(Operator):
         return value_a + value_b
 
     def gradient(self, symbol_a, symbol_b):
-        return [Symbol(1), Symbol(1)]
+        return [Constant(1), Constant(1)]
 
     def shape(self, shape_a, shape_b):
         return element_wise_shape(shape_a, shape_b)
@@ -142,7 +142,7 @@ class Subtract(Operator):
         return value_a - value_b
 
     def gradient(self, symbol_a, symbol_b):
-        return [Symbol(1), Symbol(-1)]
+        return [Constant(1), Constant(-1)]
 
     def shape(self, shape_a, shape_b):
         return element_wise_shape(shape_a, shape_b)
@@ -174,7 +174,7 @@ class Divide(Operator):
         return value_a / value_b
 
     def gradient(self, symbol_a, symbol_b):
-        return [Symbol(1) / symbol_b, Symbol(-1) * symbol_a / (symbol_b ** 2)]
+        return [Constant(1) / symbol_b, Constant(-1) * symbol_a / (symbol_b ** Constant(2))]
 
     def shape(self, shape_a, shape_b):
         return element_wise_shape(shape_a, shape_b)
@@ -206,7 +206,7 @@ class Transpose(Operator):
         return numpy.transpose(value_a, axes=self.arguments['axes'])
 
     def gradient(self, symbol_a):
-        return [Symbol(1)]
+        return [Constant(1)]
 
     def shape(self, shape_a):
         return transpose_shape(shape_a, self.arguments['axes'])
@@ -222,7 +222,7 @@ class ReduceSum(Operator):
         return numpy.sum(value_a, axis=self.arguments['axis'], keepdims=self.arguments['invariant'])
 
     def gradient(self, symbol_a):
-        return [Symbol(1)]
+        return [Constant(1)]
 
     def shape(self, shape_a):
         return reduce_shape(shape_a, **self.arguments)
@@ -238,7 +238,7 @@ class Power(Operator):
         return numpy.power(value_a, value_b)
 
     def gradient(self, symbol_a, symbol_b):
-        return [symbol_b * (symbol_a ** (symbol_b - 1)), (symbol_a ** symbol_b) * log(symbol_a)]
+        return [symbol_b * (symbol_a ** (symbol_b - Constant(1))), (symbol_a ** symbol_b) * log(symbol_a)]
 
     def shape(self, shape_a, shape_b):
         return element_wise_shape(shape_a, shape_b)
@@ -253,7 +253,7 @@ class Log(Operator):
         return numpy.log(value_a)
 
     def gradient(self, symbol_a):
-        return [1 / symbol_a]
+        return [Constant(1) / symbol_a]
 
     def shape(self, shape_a):
         return shape_a, (), ()

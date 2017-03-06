@@ -1,5 +1,4 @@
-import numpy
-from paradox.symbol import Symbol, reduce_sum
+from paradox.symbol import *
 
 
 class Engine:
@@ -46,6 +45,9 @@ class Engine:
         return self
 
     def bind(self, bind_data: dict):
+        for symbol in bind_data:
+            if symbol.category == SymbolCategory.constant:
+                raise ValueError('Can not bind data for Constant.')
         self.__bind = bind_data
         self.clear()
         return self

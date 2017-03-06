@@ -15,10 +15,10 @@ for i in range(points_sum):
 x_np = np.array(x_data)
 y_np = np.array(y_data)
 
-x = pd.Symbol(x_np, name='x')
-y = pd.Symbol(y_np, name='y')
-w = pd.Symbol(0, name='w')
-b = pd.Symbol(1, name='b')
+x = pd.Constant(x_np, name='x')
+y = pd.Constant(y_np, name='y')
+w = pd.Variable(0, name='w')
+b = pd.Variable(1, name='b')
 
 loss = pd.reduce_sum((w * x + b - y) ** 2)
 loss_engine = pd.Engine(loss, [w, b])

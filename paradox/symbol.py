@@ -1,14 +1,21 @@
+from enum import Enum
 import numpy
+
+SymbolCategory = Enum('SymbolCategory', ('variable', 'constant'))
 
 
 class Symbol:
-    def __init__(self, value=None, name: str=None, operator=None, inputs=None):
+    def __init__(self, value=None, name: str=None, operator=None, inputs=None, category: SymbolCategory=None):
         self.__name = None
         self.__input = []
         self.__operator = None
         self.__output = []
         self.__value = None
         self.__scala = False
+        self.__category = None
+        self.init(value, name, operator, inputs, category)
+
+    def init(self, value=None, name: str=None, operator=None, inputs=None, category: SymbolCategory=None):
         if isinstance(value, Symbol):
             self.name = value.name
             self.value = value.value
@@ -17,9 +24,11 @@ class Symbol:
             self.__set_operator(value.__operator)
             for _output in value.output:
                 self.__add_output(_output.clone())
+            self.__set_category(value.category)
         else:
             self.__set_value(value)
             self.__create_compute(operator, inputs)
+            self.__set_category(category)
             self.__set_name(name)
 
     def __repr__(self):
@@ -49,6 +58,21 @@ class Symbol:
             self.__name = name
 
     name = property(__get_name, __set_name)
+
+    def __get_category(self):
+        return self.__category
+
+    def __set_category(self, category: SymbolCategory):
+        if category is None:
+            if self.__category is None:
+                self.__category = SymbolCategory.variable
+        else:
+            if category == SymbolCategory.constant and self.__value is None:
+                raise ValueError('Constant Symbol must have value.')
+            else:
+                self.__category = category
+
+    category = property(__get_category, __set_category)
 
     def __get_value(self):
         return self.__value
@@ -121,6 +145,7 @@ class Symbol:
         clone_symbol.__set_operator(self.__operator)
         for _output in self.output:
             clone_symbol.__add_output(_output.clone())
+        clone_symbol.__set_category(self.__category)
         return clone_symbol
 
     def is_scala(self):
@@ -161,6 +186,18 @@ class Symbol:
 
     def __pow__(self, exponent):
         return power(self, exponent)
+
+
+class Constant(Symbol):
+    def __init__(self, value=None, name: str=None, operator=None, inputs=None):
+        Symbol.__init__(self)
+        self.init(value, name, operator, inputs, SymbolCategory.constant)
+
+
+class Variable(Symbol):
+    def __init__(self, value=None, name: str=None, operator=None, inputs=None):
+        Symbol.__init__(self)
+        self.init(value, name, operator, inputs, SymbolCategory.variable)
 
 
 def __as_symbol(obj):
