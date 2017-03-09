@@ -27,7 +27,7 @@ class Symbol:
             self.__set_category(value.category)
         else:
             self.__set_value(value)
-            self.__create_compute(operator, inputs)
+            self.arithmetic_compute(operator, inputs)
             self.__set_category(category)
             self.__set_name(name)
 
@@ -79,8 +79,11 @@ class Symbol:
 
     def __set_value(self, tensor):
         if tensor is not None:
-            self.__value = numpy.array(tensor, dtype=float)
-            self.__scala = len(self.value.shape) == 0
+            if self.__category == SymbolCategory.constant:
+                raise ValueError('Can not change value for Constant')
+            else:
+                self.__value = numpy.array(tensor, dtype=float)
+                self.__scala = len(self.value.shape) == 0
 
     value = property(__get_value, __set_value)
 
@@ -108,6 +111,13 @@ class Symbol:
         else:
             raise ValueError('Input must be Symbol class.')
 
+    def __remove_input(self, symbol):
+        new_input = []
+        for o in self.__input:
+            if hash(o) != hash(symbol):
+                new_input.append(o)
+        self.__input = new_input
+
     def __get_output(self):
         return self.__output
 
@@ -117,10 +127,17 @@ class Symbol:
         if isinstance(symbol, Symbol):
             self.__output.append(symbol)
         else:
-            raise ValueError('Input must be Symbol class.')
+            raise ValueError('Output must be Symbol class.')
 
-    def __create_compute(self, operator, inputs):
-        if operator is not None or inputs is not None:
+    def __remove_output(self, symbol):
+        new_output = []
+        for o in self.__output:
+            if hash(o) != hash(symbol):
+                new_output.append(o)
+        self.__output = new_output
+
+    def arithmetic_compute(self, operator, inputs):
+        if operator is not None and inputs:
             self.__set_operator(operator)
             inputs_count = operator.inputs_count
             if inputs_count is None:
@@ -147,6 +164,27 @@ class Symbol:
             clone_symbol.__add_output(_output.clone())
         clone_symbol.__set_category(self.__category)
         return clone_symbol
+
+    def clear_input(self):
+        for symbol in set(self.__input):
+            symbol.__remove_output(self)
+        self.__input = []
+
+    def clear_output(self):
+        for symbol in set(self.__output):
+            symbol.__remove_input(self)
+        self.__output = []
+
+    def clear_operator(self):
+        self.clear_input()
+        self.__operator = None
+
+    def destroy(self):
+        self.clear_input()
+        self.clear_output()
+        self.__output = []
+        self.__value = None
+        self.__operator = None
 
     def is_scala(self):
         return self.__scala
