@@ -53,7 +53,10 @@ class Symbol:
             if self.__value is None:
                 self.__name = self.__class__.__name__
             else:
-                self.__name = str(self.__value)
+                if self.is_scala():
+                    self.__name = str(self.__value)
+                else:
+                    self.__name = self.__class__.__name__
         else:
             self.__name = name
 
@@ -186,8 +189,18 @@ class Symbol:
         self.__value = None
         self.__operator = None
 
+    def rebuild_name(self):
+        self.__name = None
+        self.__set_name(None)
+
     def is_scala(self):
         return self.__scala
+
+    def is_constant(self):
+        return self.__category == SymbolCategory.constant
+
+    def is_variable(self):
+        return self.__category == SymbolCategory.variable
 
     def __hash__(self):
         return id(self)
@@ -238,15 +251,15 @@ class Variable(Symbol):
         self.init(value, name, operator, inputs, SymbolCategory.variable)
 
 
-def __as_symbol(obj):
-    if isinstance(obj, Symbol):
-        return obj
+def __as_symbol(thing):
+    if isinstance(thing, Symbol):
+        return thing
     else:
-        return Symbol(obj)
+        return Constant(thing)
 
 
-def __as_symbols(objs):
-    return list(map(__as_symbol, objs))
+def __as_symbols(things):
+    return list(map(__as_symbol, things))
 
 
 def plus(a, b):

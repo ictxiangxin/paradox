@@ -5,7 +5,10 @@ class Template:
     active_operator = None
 
     def __init__(self):
-        self.active_sign = self.active_operator.__name__
+        if self.active_operator is None:
+            self.active_sign = None
+        else:
+            self.active_sign = self.active_operator.__name__
 
     @staticmethod
     def reduce_left(symbol: Symbol):
@@ -30,15 +33,32 @@ class Template:
         pass
 
 
+class TemplateConstant(Template):
+    active_operator = None
+
+    def simplify(self, symbol: Symbol):
+        if symbol.operator is None:
+            return False
+        for s in symbol.input:
+            if not s.is_constant():
+                return False
+        compute_inputs = [_s.value for _s in symbol.input]
+        symbol.value = symbol.operator.compute(*compute_inputs)
+        symbol.clear_operator()
+        symbol.category = SymbolCategory.constant
+        symbol.rebuild_name()
+        return True
+
+
 class TemplatePlus(Template):
     active_operator = Plus
 
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
-        if left_symbol.value == 0:
+        if left_symbol.value == 0 and left_symbol.is_constant():
             self.reduce_right(symbol)
             return True
-        elif right_symbol.value == 0:
+        elif right_symbol.value == 0 and right_symbol.is_constant():
             self.reduce_left(symbol)
             return True
         else:
@@ -50,10 +70,10 @@ class TemplateMultiply(Template):
 
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
-        if left_symbol.value == 1:
+        if left_symbol.value == 1 and left_symbol.is_constant():
             self.reduce_right(symbol)
             return True
-        elif right_symbol.value == 1:
+        elif right_symbol.value == 1 and right_symbol.is_constant():
             self.reduce_left(symbol)
             return True
         else:
@@ -63,6 +83,7 @@ class TemplateMultiply(Template):
 class Simplification:
     def __init__(self):
         default_templates = [
+            TemplateConstant,
             TemplatePlus,
             TemplateMultiply,
         ]
@@ -83,6 +104,13 @@ class Simplification:
         self.__templates[active_operator].add(template)
 
     def simplify(self, symbol: Symbol):
+        while self.simplify_cycle(symbol):
+            pass
+
+    def simplify_cycle(self, symbol: Symbol):
+        effective = False
+        for template in self.__templates[None]:
+            effective |= template.simplify(symbol)
         while True:
             templates = self.operator_trigger(symbol.operator)
             simplified = True
@@ -91,8 +119,12 @@ class Simplification:
                     simplified &= template.simplify(symbol)
                 if not simplified:
                     break
+                else:
+                    effective |= True
             else:
                 break
         for next_symbol in symbol.input:
             if next_symbol.operator is not None:
-                self.simplify(next_symbol)
+                effective |= self.simplify_cycle(next_symbol)
+        return effective
+
