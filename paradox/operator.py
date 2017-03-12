@@ -125,8 +125,9 @@ class Plus(Operator):
     def compute(self, value_a, value_b):
         return value_a + value_b
 
-    def gradient(self, symbol_a, symbol_b):
-        return [Constant(1), Constant(1)]
+    def gradient(self, forward, symbol_a, symbol_b):
+        return [lambda: forward * Constant(1),
+                lambda: forward * Constant(1)]
 
     def shape(self, shape_a, shape_b):
         return element_wise_shape(shape_a, shape_b)
@@ -141,8 +142,9 @@ class Subtract(Operator):
     def compute(self, value_a, value_b):
         return value_a - value_b
 
-    def gradient(self, symbol_a, symbol_b):
-        return [Constant(1), Constant(-1)]
+    def gradient(self, forward, symbol_a, symbol_b):
+        return [lambda: forward * Constant(1),
+                lambda: forward * Constant(-1)]
 
     def shape(self, shape_a, shape_b):
         return element_wise_shape(shape_a, shape_b)
@@ -157,8 +159,9 @@ class Multiply(Operator):
     def compute(self, value_a, value_b):
         return value_a * value_b
 
-    def gradient(self, symbol_a, symbol_b):
-        return [symbol_b, symbol_a]
+    def gradient(self, forward, symbol_a, symbol_b):
+        return [lambda: forward * symbol_b,
+                lambda: forward * symbol_a]
 
     def shape(self, shape_a, shape_b):
         return element_wise_shape(shape_a, shape_b)
@@ -173,8 +176,9 @@ class Divide(Operator):
     def compute(self, value_a, value_b):
         return value_a / value_b
 
-    def gradient(self, symbol_a, symbol_b):
-        return [Constant(1) / symbol_b, Constant(-1) * symbol_a / (symbol_b ** Constant(2))]
+    def gradient(self, forward, symbol_a, symbol_b):
+        return [lambda: forward * Constant(1) / symbol_b,
+                lambda: forward * Constant(-1) * symbol_a / (symbol_b ** Constant(2))]
 
     def shape(self, shape_a, shape_b):
         return element_wise_shape(shape_a, shape_b)
@@ -187,10 +191,14 @@ class MatrixMultiply(Operator):
         self.matrix = True
 
     def compute(self, value_a, value_b):
-        return value_a @ value_b
+        if len(value_a.shape) == 0 or len(value_b.shape) == 0:
+            return value_a * value_b
+        else:
+            return value_a @ value_b
 
-    def gradient(self, symbol_a, symbol_b):
-        return [transpose(symbol_b), transpose(symbol_a)]
+    def gradient(self, forward, symbol_a, symbol_b):
+        return [lambda: forward @ transpose(symbol_b),
+                lambda: transpose(symbol_a) @ forward]
 
     def shape(self, shape_a, shape_b):
         return matrix_multiply_shape(shape_a, shape_b)
@@ -205,8 +213,8 @@ class Transpose(Operator):
     def compute(self, value_a):
         return numpy.transpose(value_a, axes=self.arguments['axes'])
 
-    def gradient(self, symbol_a):
-        return [Constant(1)]
+    def gradient(self, forward, symbol_a):
+        return [lambda: transpose(forward, axes=self.arguments['axes'])]
 
     def shape(self, shape_a):
         return transpose_shape(shape_a, self.arguments['axes'])
@@ -221,8 +229,8 @@ class ReduceSum(Operator):
     def compute(self, value_a):
         return numpy.sum(value_a, axis=self.arguments['axis'], keepdims=self.arguments['invariant'])
 
-    def gradient(self, symbol_a):
-        return [Constant(1)]
+    def gradient(self, forward, symbol_a):
+        return [lambda: forward]
 
     def shape(self, shape_a):
         return reduce_shape(shape_a, **self.arguments)
@@ -237,8 +245,9 @@ class Power(Operator):
     def compute(self, value_a, value_b):
         return numpy.power(value_a, value_b)
 
-    def gradient(self, symbol_a, symbol_b):
-        return [symbol_b * (symbol_a ** (symbol_b - Constant(1))), (symbol_a ** symbol_b) * log(symbol_a)]
+    def gradient(self, forward, symbol_a, symbol_b):
+        return [lambda: forward * symbol_b * (symbol_a ** (symbol_b - Constant(1))),
+                lambda: forward * (symbol_a ** symbol_b) * log(symbol_a)]
 
     def shape(self, shape_a, shape_b):
         return element_wise_shape(shape_a, shape_b)
@@ -252,8 +261,8 @@ class Log(Operator):
     def compute(self, value_a):
         return numpy.log(value_a)
 
-    def gradient(self, symbol_a):
-        return [Constant(1) / symbol_a]
+    def gradient(self, forward, symbol_a):
+        return [lambda: forward * Constant(1) / symbol_a]
 
     def shape(self, shape_a):
         return shape_a, (), ()

@@ -71,19 +71,9 @@ class Engine:
             return
         for forward in variable.output:
             if self.gradient(forward) is not None:
-                gradients = forward.operator.gradient(*forward.input)
-                index = forward.input.index(variable)
-                gradient = gradients[index]
-                if forward.operator.matrix and not gradient.is_scala() and not self.gradient(forward).is_scala():
-                    if index == 0:
-                        multiply_tuple = (self.gradient(forward), gradient)
-                    else:
-                        multiply_tuple = (gradient, self.gradient(forward))
-                    current_gradient = multiply_tuple[0] @ multiply_tuple[1]
-                else:
-                    current_gradient = self.gradient(forward) * gradient
-                current_broadcast = self.broadcast(variable, forward)
-                for i, axis in enumerate(current_broadcast):
+                gradients = forward.operator.gradient(self.gradient(forward), *forward.input)
+                current_gradient = gradients[forward.input.index(variable)]()
+                for i, axis in enumerate(self.broadcast(variable, forward)):
                     current_gradient = reduce_sum(current_gradient, axis=axis - i)
                 if variable not in self.__gradients:
                     self.__gradients[variable] = current_gradient
