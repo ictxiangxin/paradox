@@ -100,8 +100,8 @@ def transpose_shape(shape_a, axes):
 class Operator:
     operator_sign = None
     inputs_count = None
+    value_dependent = False
     arguments = {}
-    matrix = False
 
     @abstractmethod
     def compute(self, *args, **kwargs):
@@ -120,7 +120,6 @@ class Plus(Operator):
     def __init__(self):
         self.operator_sign = '+'
         self.inputs_count = 2
-        self.matrix = False
 
     def compute(self, value_a, value_b):
         return value_a + value_b
@@ -137,7 +136,6 @@ class Subtract(Operator):
     def __init__(self):
         self.operator_sign = '-'
         self.inputs_count = 2
-        self.matrix = False
 
     def compute(self, value_a, value_b):
         return value_a - value_b
@@ -154,7 +152,6 @@ class Multiply(Operator):
     def __init__(self):
         self.operator_sign = '*'
         self.inputs_count = 2
-        self.matrix = False
 
     def compute(self, value_a, value_b):
         return value_a * value_b
@@ -171,7 +168,6 @@ class Divide(Operator):
     def __init__(self):
         self.operator_sign = '/'
         self.inputs_count = 2
-        self.matrix = False
 
     def compute(self, value_a, value_b):
         return value_a / value_b
@@ -188,7 +184,6 @@ class MatrixMultiply(Operator):
     def __init__(self):
         self.operator_sign = '@'
         self.inputs_count = 2
-        self.matrix = True
 
     def compute(self, value_a, value_b):
         if len(value_a.shape) == 0 or len(value_b.shape) == 0:
@@ -208,7 +203,6 @@ class Transpose(Operator):
     def __init__(self, axes=None):
         self.inputs_count = 1
         self.arguments = {'axes': axes}
-        self.matrix = False
 
     def compute(self, value_a):
         return numpy.transpose(value_a, axes=self.arguments['axes'])
@@ -224,7 +218,6 @@ class ReduceSum(Operator):
     def __init__(self, axis: int=None, invariant: bool=False):
         self.inputs_count = 1
         self.arguments = {'axis': axis, 'invariant': invariant}
-        self.matrix = False
 
     def compute(self, value_a):
         return numpy.sum(value_a, axis=self.arguments['axis'], keepdims=self.arguments['invariant'])
@@ -240,7 +233,6 @@ class Power(Operator):
     def __init__(self):
         self.operator_sign = '**'
         self.inputs_count = 2
-        self.matrix = False
 
     def compute(self, value_a, value_b):
         return numpy.power(value_a, value_b)
@@ -256,7 +248,6 @@ class Power(Operator):
 class Log(Operator):
     def __init__(self):
         self.inputs_count = 1
-        self.matrix = False
 
     def compute(self, value_a):
         return numpy.log(value_a)
@@ -266,3 +257,37 @@ class Log(Operator):
 
     def shape(self, shape_a):
         return shape_a, (), ()
+
+
+class BinaryCondition(Operator):
+    def __init__(self, judgement):
+        self.inputs_count = 2
+        self.value_dependent = True
+        self.judgement = judgement
+        self.values = None
+
+    def compute(self, value_a, value_b):
+        self.values = [value_a, value_b]
+        if self.judgement(value_a, value_b):
+            return value_a
+        else:
+            return value_b
+
+    def gradient(self, forward, symbol_a, symbol_b):
+        if self.judgement(*self.values):
+            return [lambda: forward,
+                    lambda: Constant(0)]
+        else:
+            return [lambda: Constant(0),
+                    lambda: forward]
+
+    def shape(self, shape_a, shape_b):
+        if self.judgement(*self.values):
+            return shape_a
+        else:
+            return shape_b
+
+
+class Max(BinaryCondition):
+    def __init__(self):
+        BinaryCondition.__init__(self, judgement=lambda a, b: a > b)

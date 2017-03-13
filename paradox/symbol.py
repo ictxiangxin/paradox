@@ -305,3 +305,8 @@ def transpose(a, axes=None):
 def reduce_sum(a, axis=None, invariant=False):
     from paradox.operator import ReduceSum
     return Symbol(operator=ReduceSum(axis, invariant), inputs=__as_symbols([a]))
+
+
+def switch_max(a, b):
+    from paradox.operator import Max
+    return Symbol(operator=Max(), inputs=__as_symbols([a, b]))

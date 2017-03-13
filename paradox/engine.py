@@ -71,6 +71,8 @@ class Engine:
             return
         for forward in variable.output:
             if self.gradient(forward) is not None:
+                if forward.operator.value_dependent:
+                    self.__compute_value(forward)
                 gradients = forward.operator.gradient(self.gradient(forward), *forward.input)
                 current_gradient = gradients[forward.input.index(variable)]()
                 for i, axis in enumerate(self.broadcast(variable, forward)):
@@ -87,6 +89,8 @@ class Engine:
             else:
                 self.__shape[symbol] = symbol.value.shape
         else:
+            if symbol.operator.value_dependent:
+                self.__compute_value(symbol)
             shape_broadcasts = symbol.operator.shape(*[self.shape(s) for s in symbol.input])
             shape = shape_broadcasts[0]
             broadcasts = shape_broadcasts[1:]
