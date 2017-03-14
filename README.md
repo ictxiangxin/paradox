@@ -22,9 +22,9 @@ x_1, x_2 初始化为 0, 0
 import paradox as pd
 
 # 定义符号，A为方程系数矩阵，x为自变量，b为常数项。
-A = pd.Symbol([[1, 2], [1, 3]], name='A')
-x = pd.Symbol([0, 0], name='x')
-b = pd.Symbol([3, 4], name='b')
+A = pd.Constant([[1, 2], [1, 3]], name='A')
+x = pd.Variable([0, 0], name='x')
+b = pd.Constant([3, 4], name='b')
 
 # 使用最小二乘误差定义loss。
 loss = pd.reduce_sum((A @ x - b) ** 2)
@@ -40,7 +40,7 @@ for epoch in range(10000):
     optimizer.minimize(loss_engine)
     loss_value = loss_engine.value()
     print('loss = {:.8f}'.format(loss_value))
-    if loss_value < 0.0000001: # loss阈值。
+    if loss_value < 0.0000001:  # loss阈值。
         break
 
 # 输出最终结果。
@@ -71,7 +71,7 @@ x_data = []
 y_data = []
 
 # 生成y = 2 * x + 1直线附近的随机点。
-for i in range(points_sum):
+for _ in range(points_sum):
     x = np.random.normal(0, 2)
     y = x * 2 + 1 + np.random.normal(0, 2)
     x_data.append(x)
@@ -80,10 +80,10 @@ x_np = np.array(x_data)
 y_np = np.array(y_data)
 
 # 定义符号。
-x = pd.Symbol(x_np, name='x')
-y = pd.Symbol(y_np, name='y')
-w = pd.Symbol(0, name='w')
-b = pd.Symbol(1, name='b')
+x = pd.Constant(x_np, name='x')
+y = pd.Constant(y_np, name='y')
+w = pd.Variable(0, name='w')
+b = pd.Variable(1, name='b')
 
 # 使用最小二乘误差。
 loss = pd.reduce_sum((w * x + b - y) ** 2)
@@ -106,7 +106,7 @@ b_value = pd.Engine(b).value()
 
 # 绘制图像。
 plt.plot(x_data, y_data, 'ro', label='Data')
-plt.plot(x_data, w_value * x_data + b_value)
+plt.plot(x_data, w_value * x_data + b_value, label='Regression')
 plt.legend()
 plt.show()
 ```

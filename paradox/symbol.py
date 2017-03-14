@@ -307,6 +307,6 @@ def reduce_sum(a, axis=None, invariant=False):
     return Symbol(operator=ReduceSum(axis, invariant), inputs=__as_symbols([a]))
 
 
-def switch_max(a, b):
-    from paradox.operator import Max
-    return Symbol(operator=Max(), inputs=__as_symbols([a, b]))
+def where(condition, a, b):
+    from paradox.operator import Where
+    return Symbol(operator=Where(), inputs=__as_symbols([condition, a, b]))

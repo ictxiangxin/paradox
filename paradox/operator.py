@@ -2,27 +2,27 @@ from abc import abstractmethod
 from paradox.symbol import *
 
 
-def element_wise_shape(shape_a, shape_b):
-    gap = abs(len(shape_a) - len(shape_b))
-    if len(shape_a) > len(shape_b):
-        new_shape = list(shape_a)
-        broadcast_a = []
-        broadcast_b = list(range(gap))
-    else:
-        new_shape = list(shape_b)
-        broadcast_a = list(range(gap))
-        broadcast_b = []
-    for i in range(min(len(shape_a), len(shape_b))):
-        if shape_a[i] == 1 or shape_b[i] == 1:
-            if shape_a[i] > shape_b[i]:
-                new_shape[i] = shape_a[i]
-                broadcast_b.append(i + gap)
-            elif shape_b[i] > shape_a[i]:
-                new_shape[i] = shape_b[i]
-                broadcast_a.append(i + gap)
-        elif shape_a[i] != shape_b[i]:
-            raise ValueError('Can not broadcast these two shapes: a={}, b={}'.format(shape_a, shape_b))
-    return tuple(new_shape), tuple(broadcast_a), tuple(broadcast_b)
+def element_wise_shape(*shape_list):
+    broadcast = {_shape: [] for _shape in shape_list}
+    new_shape = []
+    for shape in shape_list:
+        if len(shape) > len(new_shape):
+            new_shape = list(shape)
+    for i in range(-len(new_shape), 0):
+        index = len(new_shape) + i
+        dimensions = {}
+        for shape in shape_list:
+            if -i > len(shape):
+                broadcast[shape].append(index)
+            else:
+                dimensions[shape] = shape[i]
+        new_shape[index] = max([_d for _, _d in dimensions.items()])
+        for shape, dimension in dimensions.items():
+            if dimension == 1:
+                broadcast[shape].append(index)
+            elif dimension != new_shape[index]:
+                raise ValueError('Can not broadcast these shapes: {}'.format(shape_list))
+    return (tuple(new_shape),) + tuple(tuple(broadcast[_shape]) for _shape in shape_list)
 
 
 def matrix_multiply_shape(shape_a, shape_b):
@@ -259,35 +259,46 @@ class Log(Operator):
         return shape_a, (), ()
 
 
-class BinaryCondition(Operator):
-    def __init__(self, judgement):
+class Where(Operator):
+    def __init__(self):
+        self.inputs_count = 3
+
+    def compute(self, value_condition, value_a, value_b):
+        return numpy.array(numpy.where(value_condition, value_a, value_b), dtype=float)
+
+    def gradient(self, forward, symbol_condition, symbol_a, symbol_b):
+        return [lambda: forward * where(symbol_condition, forward, Constant(0)),
+                lambda: forward * where(symbol_condition, Constant(0), forward)]
+
+    def shape(self, shape_condition, shape_a, shape_b):
+        return element_wise_shape(shape_condition, shape_a, shape_b)
+
+
+class Equal(Operator):
+    def __init__(self):
         self.inputs_count = 2
-        self.value_dependent = True
-        self.judgement = judgement
-        self.values = None
 
     def compute(self, value_a, value_b):
-        self.values = [value_a, value_b]
-        if self.judgement(value_a, value_b):
-            return value_a
-        else:
-            return value_b
+        return numpy.equal(value_a, value_b)
 
     def gradient(self, forward, symbol_a, symbol_b):
-        if self.judgement(*self.values):
-            return [lambda: forward,
-                    lambda: Constant(0)]
-        else:
-            return [lambda: Constant(0),
-                    lambda: forward]
+        return [lambda: where(symbol_a == symbol_b, forward, Constant(0)),
+                lambda: where(symbol_a == symbol_b, forward, Constant(0))]
 
     def shape(self, shape_a, shape_b):
-        if self.judgement(*self.values):
-            return shape_a
-        else:
-            return shape_b
+        return element_wise_shape(shape_a, shape_b)
 
 
-class Max(BinaryCondition):
+class Maximum(Operator):
     def __init__(self):
-        BinaryCondition.__init__(self, judgement=lambda a, b: a > b)
+        self.inputs_count = 2
+
+    def compute(self, value_a, value_b):
+        return numpy.maximum(value_a, value_b)
+
+    def gradient(self, forward, symbol_a, symbol_b):
+        return [lambda: where(symbol_a > symbol_b, forward, Constant(0)),
+                lambda: where(symbol_b > symbol_a, forward, Constant(0))]
+
+    def shape(self, shape_a, shape_b):
+        return element_wise_shape(shape_a, shape_b)
