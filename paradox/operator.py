@@ -3,7 +3,7 @@ from paradox.symbol import *
 
 
 def element_wise_shape(*shape_list):
-    broadcast = {_shape: [] for _shape in shape_list}
+    broadcast_map = {_shape: [] for _shape in shape_list}
     new_shape = []
     for shape in shape_list:
         if len(shape) > len(new_shape):
@@ -13,16 +13,18 @@ def element_wise_shape(*shape_list):
         dimensions = {}
         for shape in shape_list:
             if -i > len(shape):
-                broadcast[shape].append(index)
+                broadcast_map[shape].append(-1)
             else:
+                broadcast_map[shape].append(0)
                 dimensions[shape] = shape[i]
         new_shape[index] = max([_d for _, _d in dimensions.items()])
         for shape, dimension in dimensions.items():
-            if dimension == 1:
-                broadcast[shape].append(index)
-            elif dimension != new_shape[index]:
-                raise ValueError('Can not broadcast these shapes: {}'.format(shape_list))
-    return (tuple(new_shape),) + tuple(tuple(broadcast[_shape]) for _shape in shape_list)
+            if dimension != new_shape[index]:
+                if dimension == 1:
+                    broadcast_map[shape][-1] = 1
+                else:
+                    raise ValueError('Can not broadcast these shapes: {}'.format(shape_list))
+    return (tuple(new_shape),) + tuple(tuple(broadcast_map[_shape]) for _shape in shape_list)
 
 
 def matrix_multiply_shape(shape_a, shape_b):
@@ -52,14 +54,14 @@ def matrix_multiply_shape(shape_a, shape_b):
                 if shape_a[gap:-2] != shape_b[:-2]:
                     raise ValueError()
                 new_shape = list(shape_a)
-                broadcast_a = ()
-                broadcast_b = tuple(range(gap))
+                broadcast_a = (0,) * len(shape_a)
+                broadcast_b = shape_a[:gap] + (0, 0)
             else:
                 if shape_b[gap:-2] != shape_a[:-2]:
                     raise ValueError()
                 new_shape = list(shape_b)
-                broadcast_a = tuple(range(gap))
-                broadcast_b = ()
+                broadcast_a = shape_b[:gap] + (0, 0)
+                broadcast_b = (0,) * len(shape_b)
             new_shape[-1] = shape_b[-1]
             new_shape[-2] = shape_a[-2]
             return tuple(new_shape), broadcast_a, broadcast_b
@@ -214,7 +216,7 @@ class Transpose(Operator):
         return transpose_shape(shape_a, self.arguments['axes'])
 
 
-class ReduceSum(Operator):
+class Reduce(Operator):
     def __init__(self, axis: int=None, invariant: bool=False):
         self.inputs_count = 1
         self.arguments = {'axis': axis, 'invariant': invariant}
@@ -227,6 +229,26 @@ class ReduceSum(Operator):
 
     def shape(self, shape_a):
         return reduce_shape(shape_a, **self.arguments)
+
+
+class Broadcast(Operator):
+    def __init__(self, shape):
+        self.inputs_count = 1
+        self.arguments = {'shape': shape}
+
+    def compute(self, value_a):
+        return numpy.broadcast_to(value_a, **self.arguments)
+
+    def gradient(self, forward, symbol_a):
+        return [lambda: forward]
+
+    def shape(self, shape_a):
+        return element_wise_shape(shape_a, self.arguments['shape'])[:2]
+
+
+class ReduceSum(Reduce):
+    def __init__(self, axis: int=None, invariant: bool=False):
+        Reduce.__init__(self, axis, invariant)
 
 
 class Power(Operator):
@@ -267,7 +289,8 @@ class Where(Operator):
         return numpy.array(numpy.where(value_condition, value_a, value_b), dtype=float)
 
     def gradient(self, forward, symbol_condition, symbol_a, symbol_b):
-        return [lambda: forward * where(symbol_condition, forward, Constant(0)),
+        return [lambda: Constant(0),
+                lambda: forward * where(symbol_condition, forward, Constant(0)),
                 lambda: forward * where(symbol_condition, Constant(0), forward)]
 
     def shape(self, shape_condition, shape_a, shape_b):
@@ -380,6 +403,21 @@ class Maximum(Operator):
     def gradient(self, forward, symbol_a, symbol_b):
         return [lambda: where(symbol_a > symbol_b, forward, Constant(0)),
                 lambda: where(symbol_b > symbol_a, forward, Constant(0))]
+
+    def shape(self, shape_a, shape_b):
+        return element_wise_shape(shape_a, shape_b)
+
+
+class Minimum(Operator):
+    def __init__(self):
+        self.inputs_count = 2
+
+    def compute(self, value_a, value_b):
+        return numpy.minimum(value_a, value_b)
+
+    def gradient(self, forward, symbol_a, symbol_b):
+        return [lambda: where(symbol_a < symbol_b, forward, Constant(0)),
+                lambda: where(symbol_b < symbol_a, forward, Constant(0))]
 
     def shape(self, shape_a, shape_b):
         return element_wise_shape(shape_a, shape_b)

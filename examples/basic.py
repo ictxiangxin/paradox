@@ -2,9 +2,9 @@ import paradox as pd
 
 A = pd.Constant([[1, 2], [1, 3]], name='A')
 x = pd.Variable([0, 0], name='x')
-b = pd.Constant([3, 4], name='b')
+B = pd.Constant([3, 4], name='b')
 
-loss = pd.reduce_sum((A @ x - b) ** 2) / 2
+loss = pd.reduce_sum((A @ x - B) ** 2) / 2
 
 e = pd.Engine(loss, x)
 print('loss formula =\n{}\n'.format(loss))

@@ -320,6 +320,11 @@ def transpose(a, axes=None):
     return Symbol(operator=Transpose(axes), inputs=__as_symbols([a]))
 
 
+def broadcast(a, shape):
+    from paradox.operator import Broadcast
+    return Symbol(operator=Broadcast(shape), inputs=__as_symbols([a]))
+
+
 def reduce_sum(a, axis=None, invariant=False):
     from paradox.operator import ReduceSum
     return Symbol(operator=ReduceSum(axis, invariant), inputs=__as_symbols([a]))
@@ -358,3 +363,13 @@ def greater(a, b):
 def greater_equal(a, b):
     from paradox.operator import GreaterEqual
     return Symbol(operator=GreaterEqual(), inputs=__as_symbols([a, b]))
+
+
+def maximum(a, b):
+    from paradox.operator import Maximum
+    return Symbol(operator=Maximum(), inputs=__as_symbols([a, b]))
+
+
+def minimum(a, b):
+    from paradox.operator import Minimum
+    return Symbol(operator=Minimum(), inputs=__as_symbols([a, b]))

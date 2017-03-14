@@ -1,4 +1,4 @@
-from paradox.symbol import *
+from paradox.operator import *
 
 
 class Engine:
@@ -74,9 +74,21 @@ class Engine:
                 if forward.operator.value_dependent:
                     self.__compute_value(forward)
                 gradients = forward.operator.gradient(self.gradient(forward), *forward.input)
-                current_gradient = gradients[forward.input.index(variable)]()
-                for i, axis in enumerate(self.broadcast(variable, forward)):
-                    current_gradient = reduce_sum(current_gradient, axis=axis - i)
+                index = None
+                for i, _variable in enumerate(forward.input):
+                    if hash(_variable) == hash(variable):
+                        index = i
+                        break
+                current_gradient = gradients[index]()
+                invariant = 0
+                for i, d in enumerate(self.broadcast(variable, forward)):
+                    if d > 0:
+                        current_gradient = reduce_sum(current_gradient, axis=i + invariant, invariant=True)
+                    elif d < 0:
+                        current_gradient = reduce_sum(current_gradient, axis=i + invariant, invariant=False)
+                        invariant -= 1
+                if isinstance(forward.operator, Reduce):
+                    current_gradient = broadcast(current_gradient, self.shape(variable))
                 if variable not in self.__gradients:
                     self.__gradients[variable] = current_gradient
                 else:
@@ -96,7 +108,7 @@ class Engine:
             broadcasts = shape_broadcasts[1:]
             self.__shape[symbol] = shape
             for input_symbol, input_broadcast in zip(symbol.input, broadcasts):
-                if len(input_broadcast) > 0:
+                if sum([abs(d) for d in input_broadcast]) > 0:
                     self.__broadcast.setdefault(input_symbol, {})
                     self.__broadcast[input_symbol].setdefault(symbol, {})
                     self.__broadcast[input_symbol][symbol] = input_broadcast

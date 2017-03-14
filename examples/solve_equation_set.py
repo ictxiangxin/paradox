@@ -3,16 +3,16 @@ import paradox as pd
 # 定义符号，A为方程系数矩阵，x为自变量，b为常数项。
 A = pd.Constant([[1, 2], [1, 3]], name='A')
 x = pd.Variable([0, 0], name='x')
-b = pd.Constant([3, 4], name='b')
+B = pd.Constant([3, 4], name='b')
 
 # 使用最小二乘误差定义loss。
-loss = pd.reduce_sum((A @ x - b) ** 2)
-
-# 创建梯度下降optimizer
-optimizer = pd.GradientDescentOptimizer(0.01)
+loss = pd.reduce_sum((A @ x - B) ** 2)
 
 # 创建loss的计算引擎，申明变量为x。
 loss_engine = pd.Engine(loss, x)
+
+# 创建梯度下降optimizer。
+optimizer = pd.GradientDescentOptimizer(0.01)
 
 # 迭代至多10000次最小化loss。
 for epoch in range(10000):

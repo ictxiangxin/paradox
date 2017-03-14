@@ -18,6 +18,8 @@ from paradox.symbol import\
     less, \
     less_equal, \
     greater, \
-    greater_equal
+    greater_equal, \
+    maximum, \
+    minimum
 from paradox.engine import Engine
 from paradox.optimizer import GradientDescentOptimizer
