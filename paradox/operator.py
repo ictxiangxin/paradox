@@ -276,6 +276,7 @@ class Where(Operator):
 
 class Equal(Operator):
     def __init__(self):
+        self.operator_sign = '=='
         self.inputs_count = 2
 
     def compute(self, value_a, value_b):
@@ -284,6 +285,86 @@ class Equal(Operator):
     def gradient(self, forward, symbol_a, symbol_b):
         return [lambda: where(symbol_a == symbol_b, forward, Constant(0)),
                 lambda: where(symbol_a == symbol_b, forward, Constant(0))]
+
+    def shape(self, shape_a, shape_b):
+        return element_wise_shape(shape_a, shape_b)
+
+
+class NotEqual(Operator):
+    def __init__(self):
+        self.operator_sign = '!='
+        self.inputs_count = 2
+
+    def compute(self, value_a, value_b):
+        return numpy.not_equal(value_a, value_b)
+
+    def gradient(self, forward, symbol_a, symbol_b):
+        return [lambda: where(symbol_a != symbol_b, forward, Constant(0)),
+                lambda: where(symbol_a != symbol_b, forward, Constant(0))]
+
+    def shape(self, shape_a, shape_b):
+        return element_wise_shape(shape_a, shape_b)
+
+
+class Less(Operator):
+    def __init__(self):
+        self.operator_sign = '<'
+        self.inputs_count = 2
+
+    def compute(self, value_a, value_b):
+        return numpy.less(value_a, value_b)
+
+    def gradient(self, forward, symbol_a, symbol_b):
+        return [lambda: where(symbol_a < symbol_b, forward, Constant(0)),
+                lambda: where(symbol_a < symbol_b, forward, Constant(0))]
+
+    def shape(self, shape_a, shape_b):
+        return element_wise_shape(shape_a, shape_b)
+
+
+class LessEqual(Operator):
+    def __init__(self):
+        self.operator_sign = '<='
+        self.inputs_count = 2
+
+    def compute(self, value_a, value_b):
+        return numpy.less_equal(value_a, value_b)
+
+    def gradient(self, forward, symbol_a, symbol_b):
+        return [lambda: where(symbol_a <= symbol_b, forward, Constant(0)),
+                lambda: where(symbol_a <= symbol_b, forward, Constant(0))]
+
+    def shape(self, shape_a, shape_b):
+        return element_wise_shape(shape_a, shape_b)
+
+
+class Greater(Operator):
+    def __init__(self):
+        self.operator_sign = '>'
+        self.inputs_count = 2
+
+    def compute(self, value_a, value_b):
+        return numpy.greater(value_a, value_b)
+
+    def gradient(self, forward, symbol_a, symbol_b):
+        return [lambda: where(symbol_a > symbol_b, forward, Constant(0)),
+                lambda: where(symbol_a > symbol_b, forward, Constant(0))]
+
+    def shape(self, shape_a, shape_b):
+        return element_wise_shape(shape_a, shape_b)
+
+
+class GreaterEqual(Operator):
+    def __init__(self):
+        self.operator_sign = '>='
+        self.inputs_count = 2
+
+    def compute(self, value_a, value_b):
+        return numpy.greater_equal(value_a, value_b)
+
+    def gradient(self, forward, symbol_a, symbol_b):
+        return [lambda: where(symbol_a >= symbol_b, forward, Constant(0)),
+                lambda: where(symbol_a >= symbol_b, forward, Constant(0))]
 
     def shape(self, shape_a, shape_b):
         return element_wise_shape(shape_a, shape_b)

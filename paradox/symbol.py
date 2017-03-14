@@ -238,6 +238,24 @@ class Symbol:
     def __pow__(self, exponent):
         return power(self, exponent)
 
+    def __rpow__(self, other):
+        return power(other, self)
+
+    def __eq__(self, other):
+        return equal(self, other)
+
+    def __lt__(self, other):
+        return less(self, other)
+
+    def __le__(self, other):
+        return less_equal(self, other)
+
+    def __gt__(self, other):
+        return greater(self, other)
+
+    def __ge__(self, other):
+        return greater_equal(self, other)
+
 
 class Constant(Symbol):
     def __init__(self, value=None, name: str=None, operator=None, inputs=None):
@@ -310,3 +328,33 @@ def reduce_sum(a, axis=None, invariant=False):
 def where(condition, a, b):
     from paradox.operator import Where
     return Symbol(operator=Where(), inputs=__as_symbols([condition, a, b]))
+
+
+def equal(a, b):
+    from paradox.operator import Equal
+    return Symbol(operator=Equal(), inputs=__as_symbols([a, b]))
+
+
+def not_equal(a, b):
+    from paradox.operator import NotEqual
+    return Symbol(operator=NotEqual(), inputs=__as_symbols([a, b]))
+
+
+def less(a, b):
+    from paradox.operator import Less
+    return Symbol(operator=Less(), inputs=__as_symbols([a, b]))
+
+
+def less_equal(a, b):
+    from paradox.operator import LessEqual
+    return Symbol(operator=LessEqual(), inputs=__as_symbols([a, b]))
+
+
+def greater(a, b):
+    from paradox.operator import Greater
+    return Symbol(operator=Greater(), inputs=__as_symbols([a, b]))
+
+
+def greater_equal(a, b):
+    from paradox.operator import GreaterEqual
+    return Symbol(operator=GreaterEqual(), inputs=__as_symbols([a, b]))
