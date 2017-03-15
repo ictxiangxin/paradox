@@ -67,7 +67,7 @@ class Engine:
 
     def __compute_gradient(self, variable: Symbol):
         if hash(self.__symbol) == hash(variable):
-            self.__gradients[variable] = Constant(1)
+            self.__gradients[variable] = broadcast(Constant(1), self.shape(self.__symbol))
             return
         for forward in variable.output:
             if self.gradient(forward) is not None:
