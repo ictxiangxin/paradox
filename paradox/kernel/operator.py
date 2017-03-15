@@ -134,6 +134,21 @@ class Negative(Operator):
         return shape_a, ()
 
 
+class Absolute(Operator):
+    def __init__(self):
+        self.inputs_count = 1
+
+    def compute(self, value_a):
+        return numpy.absolute(value_a)
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: forward * where(symbol_a > 0, 1, -1)]
+
+    def shape(self, shape_a):
+        return shape_a, ()
+
+
 class Plus(Operator):
     def __init__(self):
         self.operator_sign = '+'

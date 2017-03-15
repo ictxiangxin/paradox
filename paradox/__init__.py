@@ -5,6 +5,7 @@ from paradox.kernel.symbol import \
     SymbolCategory
 from paradox.kernel.symbol import\
     negative, \
+    absolute, \
     plus, \
     subtract, \
     multiply, \

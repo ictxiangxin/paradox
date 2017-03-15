@@ -40,7 +40,10 @@ class Symbol:
                 arguments += ['{}={}'.format(k, v) for k, v in self.__operator.arguments.items()]
                 return '{}({})'.format(self.__operator.__class__.__name__, ', '.join(arguments))
             else:
-                return '({} {} {})'.format(self.input[0], self.__operator.operator_sign, self.input[1])
+                if len(self.input) < 2:
+                    return '({}{})'.format(self.__operator.operator_sign, self.input[0])
+                else:
+                    return '({} {} {})'.format(self.input[0], self.__operator.operator_sign, self.input[1])
 
     def __str__(self):
         return self.__repr__()
@@ -286,6 +289,11 @@ def __as_symbols(things):
 def negative(a):
     from paradox.kernel.operator import Negative
     return Symbol(operator=Negative(), inputs=__as_symbols([a]))
+
+
+def absolute(a):
+    from paradox.kernel.operator import Absolute
+    return Symbol(operator=Absolute(), inputs=__as_symbols([a]))
 
 
 def plus(a, b):
