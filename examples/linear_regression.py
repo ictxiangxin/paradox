@@ -24,7 +24,7 @@ w = pd.Variable(0, name='w')
 b = pd.Variable(1, name='b')
 
 # 使用最小二乘误差。
-loss = pd.reduce_sum((w * X + b - Y) ** 2)
+loss = pd.reduce_mean((w * X + b - Y) ** 2)
 
 # 创建loss计算引擎，申明变量为w和b。
 loss_engine = pd.Engine(loss, [w, b])

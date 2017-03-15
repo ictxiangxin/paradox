@@ -10,6 +10,7 @@ from paradox.symbol import\
     matrix_multiply, \
     transpose, \
     reduce_sum, \
+    reduce_mean, \
     power, \
     log, \
     where, \

@@ -6,7 +6,7 @@ x = pd.Variable([0, 0], name='x')
 B = pd.Constant([3, 4], name='b')
 
 # 使用最小二乘误差定义loss。
-loss = pd.reduce_sum((A @ x - B) ** 2)
+loss = pd.reduce_mean((A @ x - B) ** 2)
 
 # 创建loss的计算引擎，申明变量为x。
 loss_engine = pd.Engine(loss, x)

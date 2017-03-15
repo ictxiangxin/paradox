@@ -71,24 +71,21 @@ class Engine:
             return
         for forward in variable.output:
             if self.gradient(forward) is not None:
-                if forward.operator.value_dependent:
-                    self.__compute_value(forward)
-                gradients = forward.operator.gradient(self.gradient(forward), *forward.input)
+                gradients = forward.operator.gradient(self, forward, *forward.input)
                 index = None
                 for i, _variable in enumerate(forward.input):
                     if hash(_variable) == hash(variable):
                         index = i
                         break
                 current_gradient = gradients[index]()
-                invariant = 0
-                for i, d in enumerate(self.broadcast(variable, forward)):
-                    if d > 0:
-                        current_gradient = reduce_sum(current_gradient, axis=i + invariant, invariant=True)
-                    elif d < 0:
-                        current_gradient = reduce_sum(current_gradient, axis=i + invariant, invariant=False)
-                        invariant -= 1
-                if isinstance(forward.operator, Reduce):
-                    current_gradient = broadcast(current_gradient, self.shape(variable))
+                if forward.operator.auto_reduce:
+                    invariant = 0
+                    for i, d in enumerate(self.broadcast(variable, forward)):
+                        if d > 0:
+                            current_gradient = reduce_sum(current_gradient, axis=i + invariant, invariant=True)
+                        elif d < 0:
+                            current_gradient = reduce_sum(current_gradient, axis=i + invariant, invariant=False)
+                            invariant -= 1
                 if variable not in self.__gradients:
                     self.__gradients[variable] = current_gradient
                 else:
@@ -101,8 +98,6 @@ class Engine:
             else:
                 self.__shape[symbol] = symbol.value.shape
         else:
-            if symbol.operator.value_dependent:
-                self.__compute_value(symbol)
             shape_broadcasts = symbol.operator.shape(*[self.shape(s) for s in symbol.input])
             shape = shape_broadcasts[0]
             broadcasts = shape_broadcasts[1:]

@@ -102,7 +102,7 @@ def transpose_shape(shape_a, axes):
 class Operator:
     operator_sign = None
     inputs_count = None
-    value_dependent = False
+    auto_reduce = True
     arguments = {}
 
     @abstractmethod
@@ -126,7 +126,8 @@ class Plus(Operator):
     def compute(self, value_a, value_b):
         return value_a + value_b
 
-    def gradient(self, forward, symbol_a, symbol_b):
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
         return [lambda: forward * Constant(1),
                 lambda: forward * Constant(1)]
 
@@ -142,7 +143,8 @@ class Subtract(Operator):
     def compute(self, value_a, value_b):
         return value_a - value_b
 
-    def gradient(self, forward, symbol_a, symbol_b):
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
         return [lambda: forward * Constant(1),
                 lambda: forward * Constant(-1)]
 
@@ -158,7 +160,8 @@ class Multiply(Operator):
     def compute(self, value_a, value_b):
         return value_a * value_b
 
-    def gradient(self, forward, symbol_a, symbol_b):
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
         return [lambda: forward * symbol_b,
                 lambda: forward * symbol_a]
 
@@ -174,7 +177,8 @@ class Divide(Operator):
     def compute(self, value_a, value_b):
         return value_a / value_b
 
-    def gradient(self, forward, symbol_a, symbol_b):
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
         return [lambda: forward * Constant(1) / symbol_b,
                 lambda: forward * Constant(-1) * symbol_a / (symbol_b ** Constant(2))]
 
@@ -193,7 +197,8 @@ class MatrixMultiply(Operator):
         else:
             return value_a @ value_b
 
-    def gradient(self, forward, symbol_a, symbol_b):
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
         return [lambda: forward @ transpose(symbol_b),
                 lambda: transpose(symbol_a) @ forward]
 
@@ -209,7 +214,8 @@ class Transpose(Operator):
     def compute(self, value_a):
         return numpy.transpose(value_a, axes=self.arguments['axes'])
 
-    def gradient(self, forward, symbol_a):
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
         return [lambda: transpose(forward, axes=self.arguments['axes'])]
 
     def shape(self, shape_a):
@@ -224,8 +230,10 @@ class Reduce(Operator):
     def compute(self, value_a):
         return numpy.sum(value_a, axis=self.arguments['axis'], keepdims=self.arguments['invariant'])
 
-    def gradient(self, forward, symbol_a):
-        return [lambda: forward]
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        shape_a = engine.shape(symbol_a)
+        return [lambda: broadcast(forward, shape_a)]
 
     def shape(self, shape_a):
         return reduce_shape(shape_a, **self.arguments)
@@ -239,7 +247,8 @@ class Broadcast(Operator):
     def compute(self, value_a):
         return numpy.broadcast_to(value_a, **self.arguments)
 
-    def gradient(self, forward, symbol_a):
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
         return [lambda: forward]
 
     def shape(self, shape_a):
@@ -251,6 +260,14 @@ class ReduceSum(Reduce):
         Reduce.__init__(self, axis, invariant)
 
 
+class ReduceMean(Reduce):
+    def __init__(self, axis: int=None, invariant: bool=False):
+        Reduce.__init__(self, axis, invariant)
+
+    def compute(self, value_a):
+        return numpy.mean(value_a, axis=self.arguments['axis'], keepdims=self.arguments['invariant'])
+
+
 class Power(Operator):
     def __init__(self):
         self.operator_sign = '**'
@@ -259,7 +276,8 @@ class Power(Operator):
     def compute(self, value_a, value_b):
         return numpy.power(value_a, value_b)
 
-    def gradient(self, forward, symbol_a, symbol_b):
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
         return [lambda: forward * symbol_b * (symbol_a ** (symbol_b - Constant(1))),
                 lambda: forward * (symbol_a ** symbol_b) * log(symbol_a)]
 
@@ -274,7 +292,8 @@ class Log(Operator):
     def compute(self, value_a):
         return numpy.log(value_a)
 
-    def gradient(self, forward, symbol_a):
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
         return [lambda: forward * Constant(1) / symbol_a]
 
     def shape(self, shape_a):
@@ -288,7 +307,8 @@ class Where(Operator):
     def compute(self, value_condition, value_a, value_b):
         return numpy.array(numpy.where(value_condition, value_a, value_b), dtype=float)
 
-    def gradient(self, forward, symbol_condition, symbol_a, symbol_b):
+    def gradient(self, engine, symbol_forward, symbol_condition, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
         return [lambda: Constant(0),
                 lambda: forward * where(symbol_condition, forward, Constant(0)),
                 lambda: forward * where(symbol_condition, Constant(0), forward)]
@@ -305,7 +325,8 @@ class Equal(Operator):
     def compute(self, value_a, value_b):
         return numpy.equal(value_a, value_b)
 
-    def gradient(self, forward, symbol_a, symbol_b):
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
         return [lambda: where(symbol_a == symbol_b, forward, Constant(0)),
                 lambda: where(symbol_a == symbol_b, forward, Constant(0))]
 
@@ -321,7 +342,8 @@ class NotEqual(Operator):
     def compute(self, value_a, value_b):
         return numpy.not_equal(value_a, value_b)
 
-    def gradient(self, forward, symbol_a, symbol_b):
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
         return [lambda: where(symbol_a != symbol_b, forward, Constant(0)),
                 lambda: where(symbol_a != symbol_b, forward, Constant(0))]
 
@@ -337,7 +359,8 @@ class Less(Operator):
     def compute(self, value_a, value_b):
         return numpy.less(value_a, value_b)
 
-    def gradient(self, forward, symbol_a, symbol_b):
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
         return [lambda: where(symbol_a < symbol_b, forward, Constant(0)),
                 lambda: where(symbol_a < symbol_b, forward, Constant(0))]
 
@@ -353,7 +376,8 @@ class LessEqual(Operator):
     def compute(self, value_a, value_b):
         return numpy.less_equal(value_a, value_b)
 
-    def gradient(self, forward, symbol_a, symbol_b):
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
         return [lambda: where(symbol_a <= symbol_b, forward, Constant(0)),
                 lambda: where(symbol_a <= symbol_b, forward, Constant(0))]
 
@@ -369,7 +393,8 @@ class Greater(Operator):
     def compute(self, value_a, value_b):
         return numpy.greater(value_a, value_b)
 
-    def gradient(self, forward, symbol_a, symbol_b):
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
         return [lambda: where(symbol_a > symbol_b, forward, Constant(0)),
                 lambda: where(symbol_a > symbol_b, forward, Constant(0))]
 
@@ -385,7 +410,8 @@ class GreaterEqual(Operator):
     def compute(self, value_a, value_b):
         return numpy.greater_equal(value_a, value_b)
 
-    def gradient(self, forward, symbol_a, symbol_b):
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
         return [lambda: where(symbol_a >= symbol_b, forward, Constant(0)),
                 lambda: where(symbol_a >= symbol_b, forward, Constant(0))]
 
@@ -400,7 +426,8 @@ class Maximum(Operator):
     def compute(self, value_a, value_b):
         return numpy.maximum(value_a, value_b)
 
-    def gradient(self, forward, symbol_a, symbol_b):
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
         return [lambda: where(symbol_a > symbol_b, forward, Constant(0)),
                 lambda: where(symbol_b > symbol_a, forward, Constant(0))]
 
@@ -415,7 +442,8 @@ class Minimum(Operator):
     def compute(self, value_a, value_b):
         return numpy.minimum(value_a, value_b)
 
-    def gradient(self, forward, symbol_a, symbol_b):
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
         return [lambda: where(symbol_a < symbol_b, forward, Constant(0)),
                 lambda: where(symbol_b < symbol_a, forward, Constant(0))]
 

@@ -24,7 +24,7 @@ W = pd.Variable([[1, 1], [1, 1]], name='w')
 B = pd.Variable([[1], [1]], name='b')
 
 # 定义SVM loss函数。
-loss = pd.reduce_sum(pd.maximum(0, [[1, -1]] @ (W @ c1 + B) + 1) + pd.maximum(0, [[-1, 1]] @ (W @ c2 + B) + 1))
+loss = pd.reduce_mean(pd.maximum(0, [[1, -1]] @ (W @ c1 + B) + 1) + pd.maximum(0, [[-1, 1]] @ (W @ c2 + B) + 1))
 
 # 创建loss计算引擎，申明变量为W和B。
 loss_engine = pd.Engine(loss, [W, B])
