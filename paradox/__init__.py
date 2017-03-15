@@ -4,6 +4,7 @@ from paradox.kernel.symbol import \
     Constant, \
     SymbolCategory
 from paradox.kernel.symbol import\
+    negative, \
     plus, \
     subtract, \
     multiply, \
@@ -21,6 +22,9 @@ from paradox.kernel.symbol import\
     greater, \
     greater_equal, \
     maximum, \
-    minimum
+    minimum, \
+    sine, \
+    cosine, \
+    exponential
 from paradox.kernel.engine import Engine
 from paradox.kernel.optimizer import GradientDescentOptimizer

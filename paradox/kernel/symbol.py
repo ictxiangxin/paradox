@@ -205,6 +205,9 @@ class Symbol:
     def __hash__(self):
         return id(self)
 
+    def __neg__(self):
+        return negative(self)
+
     def __add__(self, other):
         return plus(self, other)
 
@@ -278,6 +281,11 @@ def __as_symbol(thing):
 
 def __as_symbols(things):
     return list(map(__as_symbol, things))
+
+
+def negative(a):
+    from paradox.kernel.operator import Negative
+    return Symbol(operator=Negative(), inputs=__as_symbols([a]))
 
 
 def plus(a, b):
@@ -378,3 +386,18 @@ def maximum(a, b):
 def minimum(a, b):
     from paradox.kernel.operator import Minimum
     return Symbol(operator=Minimum(), inputs=__as_symbols([a, b]))
+
+
+def sine(a):
+    from paradox.kernel.operator import Sine
+    return Symbol(operator=Sine(), inputs=__as_symbols([a]))
+
+
+def cosine(a):
+    from paradox.kernel.operator import Cosine
+    return Symbol(operator=Cosine(), inputs=__as_symbols([a]))
+
+
+def exponential(a):
+    from paradox.kernel.operator import Exponential
+    return Symbol(operator=Exponential(), inputs=__as_symbols([a]))

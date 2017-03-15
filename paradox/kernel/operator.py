@@ -73,26 +73,26 @@ def matrix_multiply_shape(shape_a, shape_b):
 
 def reduce_shape(shape_a, axis, invariant):
     if axis is None:
-        return (), (), ()
+        return (), ()
     else:
         new_shape = list(shape_a)
         if invariant:
             new_shape[axis] = 1
         else:
             del new_shape[axis]
-        return tuple(new_shape), (), ()
+        return tuple(new_shape), ()
 
 
 def transpose_shape(shape_a, axes):
     if axes is None:
-        return tuple(reversed(shape_a)), (), ()
+        return tuple(reversed(shape_a)), ()
     else:
         if len(set(axes)) == len(axes):
             if set(axes) == set(range(len(axes))) and len(axes) == len(shape_a):
                 new_shape = [0] * len(shape_a)
                 for i, d in zip(axes, shape_a):
                     new_shape[i] = d
-                return tuple(new_shape), (), ()
+                return tuple(new_shape), ()
             else:
                 ValueError('Invalid axes for this Shape: shape={}, axes={}'.format(shape_a, axes))
         else:
@@ -116,6 +116,22 @@ class Operator:
     @abstractmethod
     def shape(self, *args, **kwargs):
         pass
+
+
+class Negative(Operator):
+    def __init__(self):
+        self.operator_sign = '-'
+        self.inputs_count = 1
+
+    def compute(self, value_a):
+        return -value_a
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: -forward]
+
+    def shape(self, shape_a):
+        return shape_a, ()
 
 
 class Plus(Operator):
@@ -297,7 +313,7 @@ class Log(Operator):
         return [lambda: forward * Constant(1) / symbol_a]
 
     def shape(self, shape_a):
-        return shape_a, (), ()
+        return shape_a, ()
 
 
 class Where(Operator):
@@ -449,3 +465,48 @@ class Minimum(Operator):
 
     def shape(self, shape_a, shape_b):
         return element_wise_shape(shape_a, shape_b)
+
+
+class Sine(Operator):
+    def __init__(self):
+        self.inputs_count = 1
+
+    def compute(self, value_a):
+        return numpy.sin(value_a)
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: forward * cosine(symbol_a)]
+
+    def shape(self, shape_a):
+        return shape_a, ()
+
+
+class Cosine(Operator):
+    def __init__(self):
+        self.inputs_count = 1
+
+    def compute(self, value_a):
+        return numpy.cos(value_a)
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: forward * -sine(symbol_a)]
+
+    def shape(self, shape_a):
+        return shape_a, ()
+
+
+class Exponential(Operator):
+    def __init__(self):
+        self.inputs_count = 1
+
+    def compute(self, value_a):
+        return numpy.exp(value_a)
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: forward * exponential(symbol_a)]
+
+    def shape(self, shape_a):
+        return shape_a, ()
