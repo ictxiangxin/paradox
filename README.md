@@ -1,12 +1,13 @@
-# Paradox 了解深度学习框架的原理
+# Paradox 小型深度学习框架
 
 > 用python3和numpy实现一个简单的深度学习框架，了解流行框架的原理。
 
 * 写了一些例子放在了`examples`文件夹下。
-* 需要完善的功能和fix的bug还很多。
+* 准备添加一些上层的接口。
 * 基本上实现了图计算和梯度的符号计算。
+* 再添加一些常用的Operators。
 
-> 下一步在解决大部分bug后尝试做符号计算化简的工作。
+> 可能要开始实现CNN和RNN了。
 
 ## 一些例子
 
@@ -253,7 +254,7 @@ predict_engine.bind({T: [x.ravel(), y.ravel()], K: [[-1] * len(x.ravel()), [1] *
 z = predict_engine.value().reshape(x.shape)
 
 # 绘制图像。
-plt.title('Paradox implement 4x2 Neural Network')
+plt.title('Paradox implement 2x4x2 Neural Network')
 plt.plot(c1_x, c1_y, 'ro', label='Category 1')
 plt.plot(c2_x, c2_y, 'bo', label='Category 2')
 plt.contourf(x, y, z, 4, cmap='RdBu', alpha=.8)

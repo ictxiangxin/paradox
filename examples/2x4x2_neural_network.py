@@ -65,7 +65,7 @@ predict_engine.bind({T: [x.ravel(), y.ravel()], K: [[-1] * len(x.ravel()), [1] *
 z = predict_engine.value().reshape(x.shape)
 
 # 绘制图像。
-plt.title('Paradox implement 4x2 Neural Network')
+plt.title('Paradox implement 2x4x2 Neural Network')
 plt.plot(c1_x, c1_y, 'ro', label='Category 1')
 plt.plot(c2_x, c2_y, 'bo', label='Category 2')
 plt.contourf(x, y, z, 4, cmap='RdBu', alpha=.8)
