@@ -1,9 +1,9 @@
-from paradox.symbol import \
+from paradox.kernel.symbol import \
     Symbol, \
     Variable, \
     Constant, \
     SymbolCategory
-from paradox.symbol import\
+from paradox.kernel.symbol import\
     plus, \
     subtract, \
     multiply, \
@@ -22,5 +22,5 @@ from paradox.symbol import\
     greater_equal, \
     maximum, \
     minimum
-from paradox.engine import Engine
-from paradox.optimizer import GradientDescentOptimizer
+from paradox.kernel.engine import Engine
+from paradox.kernel.optimizer import GradientDescentOptimizer

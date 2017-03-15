@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from paradox.engine import Engine
+from paradox.kernel.engine import Engine
 
 
 class Optimizer:

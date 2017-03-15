@@ -94,7 +94,7 @@ class Symbol:
         return self.__operator
 
     def __set_operator(self, operator):
-        from paradox.operator import Operator
+        from paradox.kernel.operator import Operator
         if operator is not None:
             if isinstance(operator, Operator):
                 self.__operator = operator
@@ -281,100 +281,100 @@ def __as_symbols(things):
 
 
 def plus(a, b):
-    from paradox.operator import Plus
+    from paradox.kernel.operator import Plus
     return Symbol(operator=Plus(), inputs=__as_symbols([a, b]))
 
 
 def subtract(a, b):
-    from paradox.operator import Subtract
+    from paradox.kernel.operator import Subtract
     return Symbol(operator=Subtract(), inputs=__as_symbols([a, b]))
 
 
 def multiply(a, b):
-    from paradox.operator import Multiply
+    from paradox.kernel.operator import Multiply
     return Symbol(operator=Multiply(), inputs=__as_symbols([a, b]))
 
 
 def divide(a, b):
-    from paradox.operator import Divide
+    from paradox.kernel.operator import Divide
     return Symbol(operator=Divide(), inputs=__as_symbols([a, b]))
 
 
 def matrix_multiply(a, b):
-    from paradox.operator import MatrixMultiply
+    from paradox.kernel.operator import MatrixMultiply
     return Symbol(operator=MatrixMultiply(), inputs=__as_symbols([a, b]))
 
 
 def power(a, b):
-    from paradox.operator import Power
+    from paradox.kernel.operator import Power
     return Symbol(operator=Power(), inputs=__as_symbols([a, b]))
 
 
 def log(a):
-    from paradox.operator import Log
+    from paradox.kernel.operator import Log
     return Symbol(operator=Log(), inputs=__as_symbols([a]))
 
 
 def transpose(a, axes=None):
-    from paradox.operator import Transpose
+    from paradox.kernel.operator import Transpose
     return Symbol(operator=Transpose(axes), inputs=__as_symbols([a]))
 
 
 def broadcast(a, shape):
-    from paradox.operator import Broadcast
+    from paradox.kernel.operator import Broadcast
     return Symbol(operator=Broadcast(shape), inputs=__as_symbols([a]))
 
 
 def reduce_sum(a, axis=None, invariant=False):
-    from paradox.operator import ReduceSum
+    from paradox.kernel.operator import ReduceSum
     return Symbol(operator=ReduceSum(axis, invariant), inputs=__as_symbols([a]))
 
 
 def reduce_mean(a, axis=None, invariant=False):
-    from paradox.operator import ReduceMean
+    from paradox.kernel.operator import ReduceMean
     return Symbol(operator=ReduceMean(axis, invariant), inputs=__as_symbols([a]))
 
 
 def where(condition, a, b):
-    from paradox.operator import Where
+    from paradox.kernel.operator import Where
     return Symbol(operator=Where(), inputs=__as_symbols([condition, a, b]))
 
 
 def equal(a, b):
-    from paradox.operator import Equal
+    from paradox.kernel.operator import Equal
     return Symbol(operator=Equal(), inputs=__as_symbols([a, b]))
 
 
 def not_equal(a, b):
-    from paradox.operator import NotEqual
+    from paradox.kernel.operator import NotEqual
     return Symbol(operator=NotEqual(), inputs=__as_symbols([a, b]))
 
 
 def less(a, b):
-    from paradox.operator import Less
+    from paradox.kernel.operator import Less
     return Symbol(operator=Less(), inputs=__as_symbols([a, b]))
 
 
 def less_equal(a, b):
-    from paradox.operator import LessEqual
+    from paradox.kernel.operator import LessEqual
     return Symbol(operator=LessEqual(), inputs=__as_symbols([a, b]))
 
 
 def greater(a, b):
-    from paradox.operator import Greater
+    from paradox.kernel.operator import Greater
     return Symbol(operator=Greater(), inputs=__as_symbols([a, b]))
 
 
 def greater_equal(a, b):
-    from paradox.operator import GreaterEqual
+    from paradox.kernel.operator import GreaterEqual
     return Symbol(operator=GreaterEqual(), inputs=__as_symbols([a, b]))
 
 
 def maximum(a, b):
-    from paradox.operator import Maximum
+    from paradox.kernel.operator import Maximum
     return Symbol(operator=Maximum(), inputs=__as_symbols([a, b]))
 
 
 def minimum(a, b):
-    from paradox.operator import Minimum
+    from paradox.kernel.operator import Minimum
     return Symbol(operator=Minimum(), inputs=__as_symbols([a, b]))

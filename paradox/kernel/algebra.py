@@ -1,4 +1,4 @@
-from paradox.operator import *
+from paradox.kernel.operator import *
 
 
 class Template:

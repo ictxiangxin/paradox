@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from paradox.symbol import *
+from paradox.kernel.symbol import *
 
 
 def element_wise_shape(*shape_list):
