@@ -29,3 +29,4 @@ from paradox.kernel.symbol import\
     exponential
 from paradox.kernel.engine import Engine
 from paradox.kernel.optimizer import GradientDescentOptimizer
+from paradox.visualization import VisualLoss

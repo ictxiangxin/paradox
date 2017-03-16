@@ -195,6 +195,14 @@ import paradox as pd
 points_sum = 100
 
 # 在(0, 0)点附近生成一堆点然后以4为半径在周围生成一堆点构成2类随机数据。
+import numpy as np
+import matplotlib.pyplot as plt
+import paradox as pd
+
+# 每类随机生成点的个数。
+points_sum = 100
+
+# 在(0, 0)点附近生成一堆点然后以4为半径在周围生成一堆点构成2类随机数据。
 c1_x, c1_y, c2_x, c2_y = [], [], [], []
 for c1 in range(points_sum):
     c1_x.append(np.random.normal(0, 1))
@@ -226,14 +234,15 @@ optimizer = pd.GradientDescentOptimizer(0.0001)
 # 迭代至多10000次最小化loss。
 for epoch in range(10000):
     optimizer.minimize(loss_engine)
-    loss_value = loss_engine.value()
-    print('loss = {:.8f}'.format(loss_value))
-    if loss_value < 0.0001:  # loss阈值。
-        break
+    if epoch % 100 == 0:  # 每100次epoch检查一次loss。
+        loss_value = loss_engine.value()
+        print('loss = {:.8f}'.format(loss_value))
+        if loss_value < 0.001:  # loss阈值。
+            break
 
 # 申明2个变量用于预测。
 T = pd.Variable()
-K = pd.Variable()
+K = pd.Constant([[-1], [1]])
 
 # 创建预测函数。
 probability = pd.where(pd.reduce_sum(K * pd.maximum(W2 @ pd.maximum(W1 @ T + B1, 0) + B2, 0), axis=0) < 0, -1, 1)
@@ -248,7 +257,7 @@ h = 0.1
 x, y = np.meshgrid(np.arange(np.min(c_x) - 1, np.max(c_x) + 1, h), np.arange(np.min(c_y) - 1, np.max(c_y) + 1, h))
 
 # 绑定变量值。
-predict_engine.bind({T: [x.ravel(), y.ravel()], K: [[-1] * len(x.ravel()), [1] * len(y.ravel())]})
+predict_engine.bind({T: [x.ravel(), y.ravel()]})
 
 # 生成采样点预测值。
 z = predict_engine.value().reshape(x.shape)
@@ -260,6 +269,7 @@ plt.plot(c2_x, c2_y, 'bo', label='Category 2')
 plt.contourf(x, y, z, 4, cmap='RdBu', alpha=.8)
 plt.legend()
 plt.show()
+
 ```
 
 运行结果：
