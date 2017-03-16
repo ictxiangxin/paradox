@@ -17,11 +17,12 @@ for c1 in range(points_sum):
 c_x = c1_x + c2_x
 c_y = c1_y + c2_y
 
+# 定义符号。
 A = pd.Constant([c_x, c_y], name='A')
-W1 = pd.Variable(np.random.random((4, 2)), name='W1')
-W2 = pd.Variable(np.random.random((2, 4)), name='W2')
-B1 = pd.Variable(np.random.random((4, 1)), name='B1')
-B2 = pd.Variable(np.random.random((2, 1)), name='B2')
+W1 = pd.Variable(np.random.random((4, 2)), name='W1')  # 输入层到隐含层的权重矩阵。
+W2 = pd.Variable(np.random.random((2, 4)), name='W2')  # 隐含层到输出层的权重矩阵。
+B1 = pd.Variable(np.random.random((4, 1)), name='B1')  # 隐含层的偏置。
+B2 = pd.Variable(np.random.random((2, 1)), name='B2')  # 输出层的偏置。
 K = pd.Constant([[-1] * points_sum + [1] * points_sum, [1] * points_sum + [-1] * points_sum])
 
 # 构建2x4x2网络，使用ReLu激活函数，SVM loss。
