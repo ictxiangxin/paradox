@@ -24,9 +24,9 @@ from paradox.kernel.symbol import\
     greater_equal, \
     maximum, \
     minimum, \
-    sine, \
-    cosine, \
-    exponential
+    sin, \
+    cos, \
+    exp
 from paradox.kernel.engine import Engine
 from paradox.kernel.optimizer import GradientDescentOptimizer
 from paradox.visualization import VisualLoss

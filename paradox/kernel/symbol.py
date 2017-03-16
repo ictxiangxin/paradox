@@ -396,16 +396,16 @@ def minimum(a, b):
     return Symbol(operator=Minimum(), inputs=__as_symbols([a, b]))
 
 
-def sine(a):
+def sin(a):
     from paradox.kernel.operator import Sine
     return Symbol(operator=Sine(), inputs=__as_symbols([a]))
 
 
-def cosine(a):
+def cos(a):
     from paradox.kernel.operator import Cosine
     return Symbol(operator=Cosine(), inputs=__as_symbols([a]))
 
 
-def exponential(a):
+def exp(a):
     from paradox.kernel.operator import Exponential
     return Symbol(operator=Exponential(), inputs=__as_symbols([a]))

@@ -491,7 +491,7 @@ class Sine(Operator):
 
     def gradient(self, engine, symbol_forward, symbol_a):
         forward = engine.gradient(symbol_forward)
-        return [lambda: forward * cosine(symbol_a)]
+        return [lambda: forward * cos(symbol_a)]
 
     def shape(self, shape_a):
         return shape_a, ()
@@ -506,7 +506,7 @@ class Cosine(Operator):
 
     def gradient(self, engine, symbol_forward, symbol_a):
         forward = engine.gradient(symbol_forward)
-        return [lambda: forward * -sine(symbol_a)]
+        return [lambda: forward * -sin(symbol_a)]
 
     def shape(self, shape_a):
         return shape_a, ()
@@ -521,7 +521,7 @@ class Exponential(Operator):
 
     def gradient(self, engine, symbol_forward, symbol_a):
         forward = engine.gradient(symbol_forward)
-        return [lambda: forward * exponential(symbol_a)]
+        return [lambda: forward * exp(symbol_a)]
 
     def shape(self, shape_a):
         return shape_a, ()
