@@ -21,9 +21,11 @@ class GradientDescentOptimizer(Optimizer):
         variables = engine.variables
         for variable in variables:
             variable.value -= self.__rate * Engine(engine.gradient(variable)).value()
+            engine.modified()
 
     def maximize(self, engine: Engine):
         engine.differentiate()
         variables = engine.variables
         for variable in variables:
             variable.value += self.__rate * Engine(engine.gradient(variable)).value()
+            engine.modified()

@@ -9,6 +9,7 @@ class Engine:
         self.__shape = {}
         self.__broadcast = {}
         self.__bind = {}
+        self.__value_buffer = {}
         self.symbol(symbol)
         self.set_variables(variable)
 
@@ -16,6 +17,7 @@ class Engine:
         self.__gradients = {}
         self.__shape = {}
         self.__broadcast = {}
+        self.__value_buffer = {}
 
     def get_variables(self):
         return self.__variables
@@ -52,6 +54,9 @@ class Engine:
         self.clear()
         return self
 
+    def modified(self):
+        self.__value_buffer = {}
+
     def __compute_value(self, symbol: Symbol):
         if symbol.operator is None:
             if symbol in self.__bind:
@@ -62,8 +67,13 @@ class Engine:
                 else:
                     return symbol.value
         else:
-            compute_inputs = [self.__compute_value(_s) for _s in symbol.input]
-            return symbol.operator.compute(*compute_inputs)
+            if symbol in self.__value_buffer:
+                return self.__value_buffer[symbol]
+            else:
+                compute_inputs = [self.__compute_value(_s) for _s in symbol.input]
+                symbol_value = symbol.operator.compute(*compute_inputs)
+                self.__value_buffer[symbol] = symbol_value
+                return symbol_value
 
     def __compute_gradient(self, variable: Symbol):
         if hash(self.__symbol) == hash(variable):
