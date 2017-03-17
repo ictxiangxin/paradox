@@ -54,13 +54,13 @@ class Engine:
 
     def __compute_value(self, symbol: Symbol):
         if symbol.operator is None:
-            if symbol.value is None:
-                if symbol in self.__bind:
-                    return numpy.array(self.__bind[symbol])
-                else:
-                    raise ValueError('Symbol must bind data: {}'.format(symbol))
+            if symbol in self.__bind:
+                return numpy.array(self.__bind[symbol])
             else:
-                return symbol.value
+                if symbol.value is None:
+                    raise ValueError('Symbol must bind data: {}'.format(symbol))
+                else:
+                    return symbol.value
         else:
             compute_inputs = [self.__compute_value(_s) for _s in symbol.input]
             return symbol.operator.compute(*compute_inputs)

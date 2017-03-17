@@ -5,37 +5,46 @@ import paradox as pd
 # 每类随机生成点的个数。
 points_sum = 100
 
-# 在(0, 0)点附近生成一堆点然后以4为半径在周围生成一堆点构成2类随机数据。
+# 产生一个互相环绕的螺旋形数据分布。
 c1_x, c1_y, c2_x, c2_y = [], [], [], []
+r_step = 5 / points_sum
+theta_step = 3 * np.pi / points_sum
+r = 0
+theta = 0
 for c1 in range(points_sum):
-    c1_x.append(np.random.normal(0, 1))
-    c1_y.append(np.random.normal(0, 1))
-    r = np.random.normal(4, 1)
-    theta = np.random.normal(0, 2 * np.pi)
-    c2_x.append(r * np.cos(theta))
-    c2_y.append(r * np.sin(theta))
+    c1_x.append(r * np.cos(theta))
+    c1_y.append(r * np.sin(theta))
+    c2_x.append(-r * np.cos(theta))
+    c2_y.append(-r * np.sin(theta))
+    r += r_step
+    theta += theta_step
 c_x = c1_x + c2_x
 c_y = c1_y + c2_y
 
+# 定义每个点的分类类别。
+classification = [0] * points_sum + [1] * points_sum
+
 # 定义符号。
 A = pd.Variable([c_x, c_y], name='A')
-W1 = pd.Variable(np.random.random((4, 2)), name='W1')  # 输入层到隐含层的权重矩阵。
-W2 = pd.Variable(np.random.random((2, 4)), name='W2')  # 隐含层到输出层的权重矩阵。
-B1 = pd.Variable(np.random.random((4, 1)), name='B1')  # 隐含层的偏置。
-B2 = pd.Variable(np.random.random((2, 1)), name='B2')  # 输出层的偏置。
-K = pd.Constant([[-1] * points_sum + [1] * points_sum, [1] * points_sum + [-1] * points_sum])
+W1 = pd.Variable(np.random.random((8, 2)), name='W1')  # 输入层到隐含层的权重矩阵。
+W2 = pd.Variable(np.random.random((8, 8)), name='W2')  # 第1层隐含层到输出层的权重矩阵。
+W3 = pd.Variable(np.random.random((2, 8)), name='W3')  # 第2层隐含层到输出层的权重矩阵。
+B1 = pd.Variable(np.random.random((8, 1)), name='B1')  # 第1层隐含层的偏置。
+B2 = pd.Variable(np.random.random((8, 1)), name='B2')  # 第2层隐含层的偏置。
+B3 = pd.Variable(np.random.random((2, 1)), name='B3')  # 输出层的偏置。
 
-model = pd.maximum(W2 @ pd.maximum(W1 @ A + B1, 0) + B2, 0)
+# 构建2x8x8x2网络，使用ReLu激活函数。
+model = pd.nn.relu(W3 @ pd.nn.relu(W2 @ pd.nn.relu(W1 @ A + B1) + B2) + B3)
 
-# 构建2x4x2网络，使用ReLu激活函数，SVM loss。
-loss = pd.reduce_mean(pd.maximum(pd.reduce_sum(K * model, axis=0) + 1, 0))
+# 使用Softmax loss。
+loss = pd.nn.softmax_loss(model, classification)
 
 
 # 创建loss计算引擎，申明变量为W1，W2，B1和B2。
-loss_engine = pd.Engine(loss, [W1, W2, B1, B2])
+loss_engine = pd.Engine(loss, [W1, W2, W3, B1, B2, B3])
 
 # 创建梯度下降optimizer。
-optimizer = pd.GradientDescentOptimizer(0.0001)
+optimizer = pd.GradientDescentOptimizer(0.002)
 
 # 迭代至多10000次最小化loss。
 for epoch in range(10000):
@@ -65,7 +74,7 @@ predict_engine.bind({A: [x.ravel(), y.ravel()]})
 z = predict_engine.value().reshape(x.shape)
 
 # 绘制图像。
-plt.title('Paradox implement 2x4x2 Neural Network')
+plt.title('Paradox implement 2x8x8x2 Neural Network')
 plt.plot(c1_x, c1_y, 'ro', label='Category 1')
 plt.plot(c2_x, c2_y, 'bo', label='Category 2')
 plt.contourf(x, y, z, 4, cmap='RdBu', alpha=.8)
