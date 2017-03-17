@@ -214,9 +214,10 @@ B1 = pd.Variable(np.random.random((4, 1)), name='B1')  # 隐含层的偏置。
 B2 = pd.Variable(np.random.random((2, 1)), name='B2')  # 输出层的偏置。
 K = pd.Constant([[-1] * points_sum + [1] * points_sum, [1] * points_sum + [-1] * points_sum])
 
+# 构建2x4x2网络，使用ReLu激活函数。
 model = pd.maximum(W2 @ pd.maximum(W1 @ A + B1, 0) + B2, 0)
 
-# 构建2x4x2网络，使用ReLu激活函数，SVM loss。
+# 使用SVM loss。
 loss = pd.reduce_mean(pd.maximum(pd.reduce_sum(K * model, axis=0) + 1, 0))
 
 
