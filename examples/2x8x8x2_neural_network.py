@@ -34,7 +34,7 @@ B2 = pd.Variable(np.random.random((8, 1)), name='B2')  # 第2层隐含层的偏�
 B3 = pd.Variable(np.random.random((2, 1)), name='B3')  # 输出层的偏置。
 
 # 构建2x8x8x2网络，使用ReLu激活函数。
-model = pd.nn.relu(W3 @ pd.nn.relu(W2 @ pd.nn.relu(W1 @ A + B1) + B2) + B3)
+model = pd.nn.tanh(W3 @ pd.nn.tanh(W2 @ pd.nn.tanh(W1 @ A + B1) + B2) + B3)
 
 # 使用Softmax loss。
 loss = pd.nn.softmax_loss(model, classification)
@@ -44,7 +44,7 @@ loss = pd.nn.softmax_loss(model, classification)
 loss_engine = pd.Engine(loss, [W1, W2, W3, B1, B2, B3])
 
 # 创建梯度下降optimizer。
-optimizer = pd.GradientDescentOptimizer(0.002)
+optimizer = pd.GradientDescentOptimizer(0.01)
 
 # 迭代至多10000次最小化loss。
 for epoch in range(10000):
