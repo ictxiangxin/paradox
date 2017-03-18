@@ -10,7 +10,7 @@ class Engine:
         self.__broadcast = {}
         self.__bind = {}
         self.__value_buffer = {}
-        self.symbol(symbol)
+        self.symbol = symbol
         self.set_variables(variable)
 
     def clear(self):
@@ -18,6 +18,15 @@ class Engine:
         self.__shape = {}
         self.__broadcast = {}
         self.__value_buffer = {}
+
+    def get_symbol(self):
+        return self.__symbol
+
+    def set_symbol(self, symbol: Symbol):
+        self.__symbol = symbol
+        self.clear()
+
+    symbol = property(get_symbol, set_symbol)
 
     def get_variables(self):
         return self.__variables
@@ -41,18 +50,19 @@ class Engine:
 
     variables = property(get_variables, set_variables)
 
-    def symbol(self, symbol: Symbol):
-        self.__symbol = symbol
-        self.clear()
-        return self
+    def get_bind(self):
+        return self.__bind
 
-    def bind(self, bind_data: dict):
+    def set_bind(self, bind_data: dict):
         for symbol in bind_data:
             if symbol.category == SymbolCategory.constant:
                 raise ValueError('Can not bind data for Constant.')
-        self.__bind = bind_data
+        self.__bind = {}
+        for s, d in bind_data.items():
+            self.__bind[s] = numpy.array(d)
         self.clear()
-        return self
+
+    bind = property(get_bind, set_bind)
 
     def modified(self):
         self.__value_buffer = {}
@@ -104,7 +114,10 @@ class Engine:
     def __compute_shape(self, symbol: Symbol):
         if symbol.operator is None:
             if symbol.value is None:
-                raise ValueError('Symbol must bind data: {}'.format(symbol))
+                if symbol in self.__bind:
+                    self.__shape[symbol] = self.__bind[symbol].shape
+                else:
+                    raise ValueError('Symbol must bind data: {}'.format(symbol))
             else:
                 self.__shape[symbol] = symbol.value.shape
         else:

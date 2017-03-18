@@ -68,7 +68,7 @@ h = 0.1
 x, y = np.meshgrid(np.arange(np.min(c_x) - 1, np.max(c_x) + 1, h), np.arange(np.min(c_y) - 1, np.max(c_y) + 1, h))
 
 # 绑定变量值。
-predict_engine.bind({A: [x.ravel(), y.ravel()]})
+predict_engine.bind = {A: [x.ravel(), y.ravel()]}
 
 # 生成采样点预测值。
 z = predict_engine.value().reshape(x.shape)
