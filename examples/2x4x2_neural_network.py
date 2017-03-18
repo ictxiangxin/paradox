@@ -7,7 +7,7 @@ points_sum = 100
 
 # 在(0, 0)点附近生成一堆点然后以4为半径在周围生成一堆点构成2类随机数据。
 c1_x, c1_y, c2_x, c2_y = [], [], [], []
-for c1 in range(points_sum):
+for _ in range(points_sum):
     c1_x.append(np.random.normal(0, 1))
     c1_y.append(np.random.normal(0, 1))
     r = np.random.normal(4, 1)
@@ -60,7 +60,7 @@ h = 0.1
 x, y = np.meshgrid(np.arange(np.min(c_x) - 1, np.max(c_x) + 1, h), np.arange(np.min(c_y) - 1, np.max(c_y) + 1, h))
 
 # 绑定变量值。
-predict_engine.bind({A: [x.ravel(), y.ravel()]})
+predict_engine.bind = {A: [x.ravel(), y.ravel()]}
 
 # 生成采样点预测值。
 z = predict_engine.value().reshape(x.shape)
@@ -69,6 +69,6 @@ z = predict_engine.value().reshape(x.shape)
 plt.title('Paradox implement 2x4x2 Neural Network')
 plt.plot(c1_x, c1_y, 'ro', label='Category 1')
 plt.plot(c2_x, c2_y, 'bo', label='Category 2')
-plt.contourf(x, y, z, 4, cmap='RdBu', alpha=.8)
+plt.contourf(x, y, z, 2, cmap='RdBu', alpha=.6)
 plt.legend()
 plt.show()

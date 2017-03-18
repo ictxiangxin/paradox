@@ -11,7 +11,7 @@ r_step = 5 / points_sum
 theta_step = 3 * np.pi / points_sum
 r = 0
 theta = 0
-for c1 in range(points_sum):
+for _ in range(points_sum):
     c1_x.append(r * np.cos(theta))
     c1_y.append(r * np.sin(theta))
     c2_x.append(-r * np.cos(theta))
@@ -77,6 +77,6 @@ z = predict_engine.value().reshape(x.shape)
 plt.title('Paradox implement 2x8x8x2 Neural Network')
 plt.plot(c1_x, c1_y, 'ro', label='Category 1')
 plt.plot(c2_x, c2_y, 'bo', label='Category 2')
-plt.contourf(x, y, z, 4, cmap='RdBu', alpha=.8)
+plt.contourf(x, y, z, 2, cmap='RdBu', alpha=.6)
 plt.legend()
 plt.show()

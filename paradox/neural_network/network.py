@@ -62,7 +62,8 @@ class Network:
         self.__train_engine.variables = self.__variables
         self.__train_engine.bind = {self.__input_symbol: data}
         for variable in self.__variables:
-            variable.value = numpy.random.random(variable.value.shape)
+            variable.value = numpy.random.normal(0, 1, variable.value.shape)
+        self.__loss_value = []
         for epoch in range(epochs):
             self.__optimizer.minimize(self.__train_engine)
             if (epoch + 1) % state_cycle == 0:
