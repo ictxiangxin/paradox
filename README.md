@@ -356,7 +356,7 @@ plt.show()
 
 ![LinearRegression](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/2x8x8x2_neural_network.png)
 
-### 2x8x8x2网络实现多分类
+### 2x8x8x8x3网络实现多分类
 
 ```python
 import numpy as np
