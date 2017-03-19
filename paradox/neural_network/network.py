@@ -1,3 +1,4 @@
+import time
 import numpy
 from paradox.kernel.symbol import Variable
 from paradox.kernel.engine import Engine
@@ -63,13 +64,23 @@ class Network:
         self.__train_engine.bind = {self.__input_symbol: data}
         for variable in self.__variables:
             variable.value = numpy.random.normal(0, 1, variable.value.shape)
+        start_time = time.time()
+        cycle_start_time = time.time()
         for epoch in range(epochs):
             self.__optimizer.minimize(self.__train_engine)
             if (epoch + 1) % state_cycle == 0:
+                speed = state_cycle / (time.time() - cycle_start_time)
+                cycle_start_time = time.time()
                 loss_value = self.__train_engine.value()
-                print('Training State [epoch = {} loss = {:.8f}]'.format(epoch + 1, loss_value))
+                print('Training State [epoch = {}/{}, loss = {:.8f}, speed = {:.2f}(epochs/s)'.format(
+                    epoch + 1,
+                    epochs,
+                    loss_value,
+                    speed))
                 if loss_value < loss_threshold:
+                    print('Touch loss threshold: {} < {}'.format(loss_value, loss_threshold))
                     break
+        print('Training Complete [{}]'.format(time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))))
 
     def predict(self, data):
         self.__predict_engine.symbol = self.__current_symbol

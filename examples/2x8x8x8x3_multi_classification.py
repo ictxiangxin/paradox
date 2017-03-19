@@ -13,7 +13,7 @@ c_x = data[0][0] + data[1][0] + data[2][0]
 c_y = data[0][1] + data[1][1] + data[2][1]
 
 # 定义每个点的分类类别。
-classification = [0] * len(data[0][0]) + [1] * len(data[1][0]) + [2] * len(data[w][0])
+classification = [0] * len(data[0][0]) + [1] * len(data[1][0]) + [2] * len(data[2][0])
 
 # 调用高层API生成2x8x8x8x3的网络
 model = pd.nn.Network()
