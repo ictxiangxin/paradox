@@ -406,6 +406,16 @@ def cos(a):
     return Symbol(operator=Cosine(), inputs=__as_symbols([a]))
 
 
+def arcsin(a):
+    from paradox.kernel.operator import ArcSine
+    return Symbol(operator=ArcSine(), inputs=__as_symbols([a]))
+
+
+def arccos(a):
+    from paradox.kernel.operator import ArcCosine
+    return Symbol(operator=ArcCosine(), inputs=__as_symbols([a]))
+
+
 def exp(a):
     from paradox.kernel.operator import Exponential
     return Symbol(operator=Exponential(), inputs=__as_symbols([a]))

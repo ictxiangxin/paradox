@@ -512,6 +512,36 @@ class Cosine(Operator):
         return shape_a, ()
 
 
+class ArcSine(Operator):
+    def __init__(self):
+        self.inputs_count = 1
+
+    def compute(self, value_a):
+        return numpy.arcsin(value_a)
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: forward * Constant(1) / (Constant(1) - symbol_a ** Constant(2)) ** 0.5]
+
+    def shape(self, shape_a):
+        return shape_a, ()
+
+
+class ArcCosine(Operator):
+    def __init__(self):
+        self.inputs_count = 1
+
+    def compute(self, value_a):
+        return numpy.arccos(value_a)
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: forward * -Constant(1) / (Constant(1) - symbol_a ** Constant(2)) ** 0.5]
+
+    def shape(self, shape_a):
+        return shape_a, ()
+
+
 class Exponential(Operator):
     def __init__(self):
         self.inputs_count = 1
