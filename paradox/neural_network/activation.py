@@ -40,9 +40,7 @@ class SoftMax:
 class HyperbolicTangent:
     @staticmethod
     def activation_function(input_symbol: Symbol):
-        a = exp(input_symbol)
-        b = exp(-input_symbol)
-        output_symbol = (a - b) / (a + b)
+        output_symbol = tanh(input_symbol)
         return output_symbol
 
     @staticmethod
@@ -65,7 +63,6 @@ class Sigmoid:
 
 relu = RectifiedLinearUnits.activation_function
 softmax = SoftMax.activation_function
-tanh = HyperbolicTangent.activation_function
 sigmoid = Sigmoid.activation_function
 
 

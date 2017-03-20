@@ -512,6 +512,21 @@ class Cosine(Operator):
         return shape_a, ()
 
 
+class Tangent(Operator):
+    def __init__(self):
+        self.inputs_count = 1
+
+    def compute(self, value_a):
+        return numpy.tan(value_a)
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: forward * Constant(1) / cos(symbol_a) ** 2]
+
+    def shape(self, shape_a):
+        return shape_a, ()
+
+
 class ArcSine(Operator):
     def __init__(self):
         self.inputs_count = 1
@@ -537,6 +552,111 @@ class ArcCosine(Operator):
     def gradient(self, engine, symbol_forward, symbol_a):
         forward = engine.gradient(symbol_forward)
         return [lambda: forward * -Constant(1) / (Constant(1) - symbol_a ** Constant(2)) ** 0.5]
+
+    def shape(self, shape_a):
+        return shape_a, ()
+
+
+class ArcTangent(Operator):
+    def __init__(self):
+        self.inputs_count = 1
+
+    def compute(self, value_a):
+        return numpy.arctan(value_a)
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: forward * Constant(1) / (Constant(1) + symbol_a ** Constant(2))]
+
+    def shape(self, shape_a):
+        return shape_a, ()
+
+
+class HyperbolicSine(Operator):
+    def __init__(self):
+        self.inputs_count = 1
+
+    def compute(self, value_a):
+        return numpy.sinh(value_a)
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: forward * cosh(symbol_a)]
+
+    def shape(self, shape_a):
+        return shape_a, ()
+
+
+class HyperbolicCosine(Operator):
+    def __init__(self):
+        self.inputs_count = 1
+
+    def compute(self, value_a):
+        return numpy.cosh(value_a)
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: forward * sinh(symbol_a)]
+
+    def shape(self, shape_a):
+        return shape_a, ()
+
+
+class HyperbolicTangent(Operator):
+    def __init__(self):
+        self.inputs_count = 1
+
+    def compute(self, value_a):
+        return numpy.tanh(value_a)
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: forward * (Constant(1) - tanh(symbol_a) ** Constant(2))]
+
+    def shape(self, shape_a):
+        return shape_a, ()
+
+
+class HyperbolicArcSine(Operator):
+    def __init__(self):
+        self.inputs_count = 1
+
+    def compute(self, value_a):
+        return numpy.arcsinh(value_a)
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: forward * Constant(1) / (symbol_a ** Constant(2) + Constant(1)) ** Constant(0.5)]
+
+    def shape(self, shape_a):
+        return shape_a, ()
+
+
+class HyperbolicArcCosine(Operator):
+    def __init__(self):
+        self.inputs_count = 1
+
+    def compute(self, value_a):
+        return numpy.arccosh(value_a)
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: forward * Constant(1) / (symbol_a ** Constant(2) - Constant(1)) ** Constant(0.5)]
+
+    def shape(self, shape_a):
+        return shape_a, ()
+
+
+class HyperbolicArcTangent(Operator):
+    def __init__(self):
+        self.inputs_count = 1
+
+    def compute(self, value_a):
+        return numpy.arctanh(value_a)
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: forward * Constant(1) / (Constant(1) - symbol_a ** Constant(2))]
 
     def shape(self, shape_a):
         return shape_a, ()

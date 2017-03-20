@@ -406,6 +406,11 @@ def cos(a):
     return Symbol(operator=Cosine(), inputs=__as_symbols([a]))
 
 
+def tan(a):
+    from paradox.kernel.operator import Tangent
+    return Symbol(operator=Tangent(), inputs=__as_symbols([a]))
+
+
 def arcsin(a):
     from paradox.kernel.operator import ArcSine
     return Symbol(operator=ArcSine(), inputs=__as_symbols([a]))
@@ -414,6 +419,41 @@ def arcsin(a):
 def arccos(a):
     from paradox.kernel.operator import ArcCosine
     return Symbol(operator=ArcCosine(), inputs=__as_symbols([a]))
+
+
+def arctan(a):
+    from paradox.kernel.operator import ArcTangent
+    return Symbol(operator=ArcTangent(), inputs=__as_symbols([a]))
+
+
+def sinh(a):
+    from paradox.kernel.operator import HyperbolicSine
+    return Symbol(operator=HyperbolicSine(), inputs=__as_symbols([a]))
+
+
+def cosh(a):
+    from paradox.kernel.operator import HyperbolicCosine
+    return Symbol(operator=HyperbolicCosine(), inputs=__as_symbols([a]))
+
+
+def tanh(a):
+    from paradox.kernel.operator import HyperbolicTangent
+    return Symbol(operator=HyperbolicTangent(), inputs=__as_symbols([a]))
+
+
+def arcsinh(a):
+    from paradox.kernel.operator import HyperbolicArcSine
+    return Symbol(operator=HyperbolicArcSine(), inputs=__as_symbols([a]))
+
+
+def arccosh(a):
+    from paradox.kernel.operator import HyperbolicArcCosine
+    return Symbol(operator=HyperbolicArcCosine(), inputs=__as_symbols([a]))
+
+
+def arctanh(a):
+    from paradox.kernel.operator import HyperbolicArcTangent
+    return Symbol(operator=HyperbolicArcTangent(), inputs=__as_symbols([a]))
 
 
 def exp(a):

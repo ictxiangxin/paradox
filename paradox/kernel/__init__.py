@@ -26,8 +26,16 @@ from paradox.kernel.symbol import\
     minimum, \
     sin, \
     cos, \
+    tan, \
     arcsin, \
     arccos, \
+    arctan, \
+    sinh, \
+    cosh, \
+    tanh, \
+    arcsinh, \
+    arccosh, \
+    arctanh, \
     exp
 from paradox.kernel.engine import Engine
 from paradox.kernel.optimizer import GradientDescentOptimizer
