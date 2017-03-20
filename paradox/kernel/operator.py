@@ -68,7 +68,7 @@ def matrix_multiply_shape(shape_a, shape_b):
         else:
             raise ValueError()
     except ValueError:
-        raise ValueError('Can not execute matrix multiply these two shapes: a={}, b={}'.format(shape_a, shape_b))
+        raise ValueError('Can not execute matrix multiply with these two shapes: a={}, b={}'.format(shape_a, shape_b))
 
 
 def reduce_shape(shape_a, axis, invariant):

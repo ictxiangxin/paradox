@@ -23,6 +23,8 @@ class Network:
         self.__input_symbol = Variable(name='InputSymbol')
         self.__current_symbol = self.__input_symbol
         self.__current_output = None
+        self.__current_weight = None
+        self.__current_bias = None
         self.__variables = []
         self.__data = None
         self.__optimizer = None
@@ -35,11 +37,16 @@ class Network:
             weight, bias = layer.weight_bias(self.__current_output)
             self.__variables.append(weight)
             self.__variables.append(bias)
+            self.__current_weight = weight
+            self.__current_bias = bias
             self.__current_symbol = weight @ self.__current_symbol + bias
             self.__current_output = layer.output_dimension()
         elif isinstance(layer, Activation):
             activation_function = layer.activation_function()
+            weight_initialization = layer.weight_initialization()
             self.__current_symbol = activation_function(self.__current_symbol)
+            self.__current_weight.value = weight_initialization(self.__current_weight.value.shape)
+            self.__current_bias.value = numpy.random.normal(0, 1, self.__current_bias.value.shape)
         else:
             raise ValueError('Invalid layer type: {}'. format(type(layer)))
 
@@ -62,8 +69,6 @@ class Network:
         self.__train_engine.symbol = loss
         self.__train_engine.variables = self.__variables
         self.__train_engine.bind = {self.__input_symbol: data}
-        for variable in self.__variables:
-            variable.value = numpy.random.normal(0, 1, variable.value.shape)
         start_time = time.time()
         cycle_start_time = time.time()
         for epoch in range(epochs):

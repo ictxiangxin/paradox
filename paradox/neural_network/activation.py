@@ -1,34 +1,79 @@
+import numpy
 from paradox.kernel import *
 
 
-def relu(input_symbol: Symbol):
-    output_symbol = maximum(input_symbol, 0)
-    return output_symbol
+def xavier_initialization(shape):
+    weight = numpy.random.randn(*shape) / numpy.sqrt(shape[0])
+    return weight
 
 
-def softmax(input_symbol: Symbol):
-    exp_symbol = exp(input_symbol)
-    output_symbol = exp_symbol / reduce_sum(exp_symbol, axis=0)
-    return output_symbol
+def he_initialization(shape):
+    weight = numpy.random.randn(*shape) / numpy.sqrt(shape[0] / 2)
+    return weight
 
 
-def tanh(input_symbol: Symbol):
-    a = exp(input_symbol)
-    b = exp(-input_symbol)
-    output_symbol = (a - b) / (a + b)
-    return output_symbol
+class RectifiedLinearUnits:
+    @staticmethod
+    def activation_function(input_symbol: Symbol):
+        output_symbol = maximum(input_symbol, 0)
+        return output_symbol
+
+    @staticmethod
+    def weight_initialization(shape):
+        weight = he_initialization(shape)
+        return weight
 
 
-def sigmoid(input_symbol: Symbol):
-    output_symbol = 1 / (1 + exp(-input_symbol))
-    return output_symbol
+class SoftMax:
+    @staticmethod
+    def activation_function(input_symbol: Symbol):
+        exp_symbol = exp(input_symbol)
+        output_symbol = exp_symbol / reduce_sum(exp_symbol, axis=0)
+        return output_symbol
+
+    @staticmethod
+    def weight_initialization(shape):
+        weight = xavier_initialization(shape)
+        return weight
+
+
+class HyperbolicTangent:
+    @staticmethod
+    def activation_function(input_symbol: Symbol):
+        a = exp(input_symbol)
+        b = exp(-input_symbol)
+        output_symbol = (a - b) / (a + b)
+        return output_symbol
+
+    @staticmethod
+    def weight_initialization(shape):
+        weight = xavier_initialization(shape)
+        return weight
+
+
+class Sigmoid:
+    @staticmethod
+    def activation_function(input_symbol: Symbol):
+        output_symbol = 1 / (1 + exp(-input_symbol))
+        return output_symbol
+
+    @staticmethod
+    def weight_initialization(shape):
+        weight = xavier_initialization(shape)
+        return weight
+
+
+relu = RectifiedLinearUnits.activation_function
+softmax = SoftMax.activation_function
+tanh = HyperbolicTangent.activation_function
+sigmoid = Sigmoid.activation_function
 
 
 activation_map = {
-    'relu': relu,
-    'softmax': softmax,
-    'tanh': tanh,
-    'sigmoid': sigmoid,
+    'relu': RectifiedLinearUnits,
+    'softmax': SoftMax,
+    'tanh': HyperbolicTangent,
+    'sigmoid': Sigmoid,
 }
 
 
@@ -42,4 +87,7 @@ class Activation:
             raise ValueError('No such activation: {}'.format(name))
 
     def activation_function(self):
-        return self.__activation
+        return self.__activation.activation_function
+
+    def weight_initialization(self):
+        return self.__activation.weight_initialization
