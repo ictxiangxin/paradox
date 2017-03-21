@@ -3,7 +3,7 @@ import numpy
 from paradox.kernel.symbol import Variable
 
 
-class Connection:
+class ConnectionLayer:
     @abstractmethod
     def weight_bias(self, input_dimension):
         pass
@@ -17,7 +17,7 @@ class Connection:
         pass
 
 
-class Dense(Connection):
+class Dense(ConnectionLayer):
     def __init__(self, output_dimension: int, input_dimension: int=None):
         self.__input_dimension = input_dimension
         self.__output_dimension = output_dimension
@@ -41,3 +41,25 @@ class Dense(Connection):
 
     def output_dimension(self):
         return self.__output_dimension
+
+
+connection_map = {
+    'dense': Dense,
+}
+
+
+def register_connection(name: str, connection: ConnectionLayer):
+    connection_map[name.lower()] = connection
+
+
+class Connection:
+    def __init__(self, name: str):
+        self.__name = name.lower()
+        self.__connection = None
+        if self.__name in connection_map:
+            self.__connection = connection_map[self.__name]
+        else:
+            raise ValueError('No such connection: {}'.format(name))
+
+    def connection_layer(self):
+        return self.__connection

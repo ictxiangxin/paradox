@@ -7,7 +7,7 @@ from paradox.utils import generate_class_matrix
 LossCategory = Enum('LossCategory', ('classification', 'regression'))
 
 
-class LossFunction:
+class LossLayer:
     loss_type = None
 
     @abstractmethod
@@ -15,7 +15,7 @@ class LossFunction:
         pass
 
 
-class SoftMaxLoss(LossFunction):
+class SoftMaxLoss(LossLayer):
     loss_type = LossCategory.classification
 
     @staticmethod
@@ -28,7 +28,7 @@ class SoftMaxLoss(LossFunction):
         return loss
 
 
-class SVMLoss(LossFunction):
+class SVMLoss(LossLayer):
     loss_type = LossCategory.classification
 
     @staticmethod
@@ -52,7 +52,7 @@ loss_map = {
 }
 
 
-def register_loss(name: str, loss: LossFunction):
+def register_loss(name: str, loss: LossLayer):
     loss_map[name.lower()] = loss
 
 
@@ -65,5 +65,5 @@ class Loss:
         else:
             raise ValueError('No such loss: {}'.format(name))
 
-    def loss_function(self):
-        return self.__loss.loss_function
+    def loss_layer(self):
+        return self.__loss

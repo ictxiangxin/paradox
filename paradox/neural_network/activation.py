@@ -88,8 +88,5 @@ class Activation:
         else:
             raise ValueError('No such activation: {}'.format(name))
 
-    def activation_function(self):
-        return self.__activation.activation_function
-
-    def weight_initialization(self):
-        return self.__activation.weight_initialization
+    def activation_layer(self):
+        return self.__activation

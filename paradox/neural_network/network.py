@@ -4,9 +4,9 @@ import numpy
 from paradox.kernel.symbol import Variable
 from paradox.kernel.engine import Engine
 from paradox.kernel.optimizer import Optimizer, GradientDescentOptimizer
-from paradox.neural_network.connection import Connection
-from paradox.neural_network.activation import Activation
-from paradox.neural_network.loss import Loss
+from paradox.neural_network.connection import ConnectionLayer, Connection
+from paradox.neural_network.activation import ActivationLayer, Activation
+from paradox.neural_network.loss import LossLayer, Loss
 
 
 optimizer_map = {
@@ -41,38 +41,58 @@ class Network:
             self.__add(layers)
 
     def __add(self, layer):
-        if isinstance(layer, Connection):
-            weight, bias = layer.weight_bias(self.__current_output)
-            self.__variables.append(weight)
-            self.__variables.append(bias)
-            self.__current_weight = weight
-            self.__current_bias = bias
-            self.__current_symbol = weight @ self.__current_symbol + bias
-            self.__current_output = layer.output_dimension()
+        if isinstance(layer, ConnectionLayer):
+            self.__add_connection(layer)
+        elif isinstance(layer, Connection):
+            self.__add_connection(layer.connection_layer())
+        elif isinstance(layer, ActivationLayer):
+            self.__add_activation(layer)
         elif isinstance(layer, Activation):
-            activation_function = layer.activation_function()
-            weight_initialization = layer.weight_initialization()
-            self.__current_symbol = activation_function(self.__current_symbol)
-            self.__current_weight.value = weight_initialization(self.__current_weight.value.shape)
-            self.__current_bias.value = numpy.random.normal(0, 1, self.__current_bias.value.shape)
+            self.__add_activation(layer.activation_layer())
         else:
             raise ValueError('Invalid layer type: {}'. format(type(layer)))
+
+    def __add_connection(self, layer: ConnectionLayer):
+        weight, bias = layer.weight_bias(self.__current_output)
+        self.__variables.append(weight)
+        self.__variables.append(bias)
+        self.__current_weight = weight
+        self.__current_bias = bias
+        self.__current_symbol = weight @ self.__current_symbol + bias
+        self.__current_output = layer.output_dimension()
+
+    def __add_activation(self, layer: ActivationLayer):
+        self.__current_symbol = layer.activation_function(self.__current_symbol)
+        self.__current_weight.value = layer.weight_initialization(self.__current_weight.value.shape)
+        self.__current_bias.value = numpy.random.normal(0, 1, self.__current_bias.value.shape)
 
     def get_symbol(self):
         return self.__current_symbol
 
-    def optimizer(self, name: str, *args, **kwargs):
-        name = name.lower()
-        if name in optimizer_map:
-            self.__optimizer = optimizer_map[name](*args, **kwargs)
+    def optimizer(self, optimizer_object, *args, **kwargs):
+        if isinstance(optimizer_object, str):
+            name = optimizer_object.lower()
+            if name in optimizer_map:
+                self.__optimizer = optimizer_map[name](*args, **kwargs)
+            else:
+                raise ValueError('No such optimizer: {}'.format(name))
+        elif isinstance(optimizer_object, Optimizer):
+            self.__optimizer = optimizer_object
         else:
-            raise ValueError('No such optimizer: {}'.format(name))
+            raise ValueError('Invalid optimizer type: {}'.format(type(optimizer_object)))
 
-    def loss(self, name: str):
-        self.__loss = Loss(name)
+    def loss(self, loss_object):
+        if isinstance(loss_object, str):
+            self.__loss = Loss(loss_object).loss_layer()
+        elif isinstance(loss_object, LossLayer):
+            self.__loss = loss_object
+        elif isinstance(loss_object, Loss):
+            self.__loss = loss_object.loss_layer()
+        else:
+            raise ValueError('Invalid loss type: {}'.format(type(loss_object)))
 
     def train(self, data, target, epochs: int=10000, loss_threshold: float=0.001, state_cycle: int=100):
-        loss = self.__loss.loss_function()(self.__current_symbol, target)
+        loss = self.__loss.loss_function(self.__current_symbol, target)
         self.__train_engine.symbol = loss
         self.__train_engine.variables = self.__variables
         self.__train_engine.bind = {self.__input_symbol: data}
