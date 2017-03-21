@@ -1,20 +1,21 @@
 import time
+import collections
 import numpy
 from paradox.kernel.symbol import Variable
 from paradox.kernel.engine import Engine
-from paradox.kernel.optimizer import GradientDescentOptimizer
+from paradox.kernel.optimizer import Optimizer, GradientDescentOptimizer
 from paradox.neural_network.connection import Connection
 from paradox.neural_network.activation import Activation
-from paradox.neural_network.loss import softmax_loss, svm_loss
+from paradox.neural_network.loss import Loss
+
 
 optimizer_map = {
     'gd': GradientDescentOptimizer,
 }
 
-loss_map = {
-    'softmax': softmax_loss,
-    'svm': svm_loss,
-}
+
+def register_optimizer(name: str, optimizer: Optimizer):
+    optimizer_map[name.lower()] = optimizer
 
 
 class Network:
@@ -32,7 +33,14 @@ class Network:
         self.__train_engine = Engine()
         self.__predict_engine = Engine()
 
-    def add(self, layer):
+    def add(self, layers):
+        if isinstance(layers, collections.Iterable):
+            for layer in layers:
+                self.__add(layer)
+        else:
+            self.__add(layers)
+
+    def __add(self, layer):
         if isinstance(layer, Connection):
             weight, bias = layer.weight_bias(self.__current_output)
             self.__variables.append(weight)
@@ -50,6 +58,9 @@ class Network:
         else:
             raise ValueError('Invalid layer type: {}'. format(type(layer)))
 
+    def get_symbol(self):
+        return self.__current_symbol
+
     def optimizer(self, name: str, *args, **kwargs):
         name = name.lower()
         if name in optimizer_map:
@@ -58,14 +69,10 @@ class Network:
             raise ValueError('No such optimizer: {}'.format(name))
 
     def loss(self, name: str):
-        name = name.lower()
-        if name in loss_map:
-            self.__loss = loss_map[name]
-        else:
-            raise ValueError('No such loss: {}'.format(name))
+        self.__loss = Loss(name)
 
     def train(self, data, target, epochs: int=10000, loss_threshold: float=0.001, state_cycle: int=100):
-        loss = self.__loss(self.__current_symbol, target)
+        loss = self.__loss.loss_function()(self.__current_symbol, target)
         self.__train_engine.symbol = loss
         self.__train_engine.variables = self.__variables
         self.__train_engine.bind = {self.__input_symbol: data}

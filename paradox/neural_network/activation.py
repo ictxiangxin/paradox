@@ -1,18 +1,19 @@
-import numpy
+from abc import abstractmethod
 from paradox.kernel import *
+from paradox.utils import xavier_initialization, he_initialization
 
 
-def xavier_initialization(shape):
-    weight = numpy.random.randn(*shape) / numpy.sqrt(shape[0])
-    return weight
+class ActivationLayer:
+    @abstractmethod
+    def activation_function(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def weight_initialization(self, *args, **kwargs):
+        pass
 
 
-def he_initialization(shape):
-    weight = numpy.random.randn(*shape) / numpy.sqrt(shape[0] / 2)
-    return weight
-
-
-class RectifiedLinearUnits:
+class RectifiedLinearUnits(ActivationLayer):
     @staticmethod
     def activation_function(input_symbol: Symbol):
         output_symbol = maximum(input_symbol, 0)
@@ -24,7 +25,7 @@ class RectifiedLinearUnits:
         return weight
 
 
-class SoftMax:
+class SoftMax(ActivationLayer):
     @staticmethod
     def activation_function(input_symbol: Symbol):
         exp_symbol = exp(input_symbol)
@@ -37,7 +38,7 @@ class SoftMax:
         return weight
 
 
-class HyperbolicTangent:
+class HyperbolicTangent(ActivationLayer):
     @staticmethod
     def activation_function(input_symbol: Symbol):
         output_symbol = tanh(input_symbol)
@@ -49,7 +50,7 @@ class HyperbolicTangent:
         return weight
 
 
-class Sigmoid:
+class Sigmoid(ActivationLayer):
     @staticmethod
     def activation_function(input_symbol: Symbol):
         output_symbol = 1 / (1 + exp(-input_symbol))
@@ -72,6 +73,10 @@ activation_map = {
     'tanh': HyperbolicTangent,
     'sigmoid': Sigmoid,
 }
+
+
+def register_activation(name: str, activation: ActivationLayer):
+    activation_map[name.lower()] = activation
 
 
 class Activation:
