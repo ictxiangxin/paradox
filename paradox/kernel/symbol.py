@@ -262,6 +262,9 @@ class Symbol:
     def __ge__(self, other):
         return greater_equal(self, other)
 
+    def __getitem__(self, item):
+        return slice_select(self, item)
+
 
 class Constant(Symbol):
     def __init__(self, value=None, name: str=None, operator=None, inputs=None):
@@ -459,3 +462,18 @@ def arctanh(a):
 def exp(a):
     from paradox.kernel.operator import Exponential
     return Symbol(operator=Exponential(), inputs=__as_symbols([a]))
+
+
+def slice_assign(a, b, slice_tuple):
+    from paradox.kernel.operator import SliceAssign
+    return Symbol(operator=SliceAssign(slice_tuple), inputs=__as_symbols([a, b]))
+
+
+def slice_select(a, slice_tuple):
+    from paradox.kernel.operator import SliceSelect
+    return Symbol(operator=SliceSelect(slice_tuple), inputs=__as_symbols([a]))
+
+
+def concatenate(a, b):
+    from paradox.kernel.operator import Concatenate
+    return Symbol(operator=Concatenate(), inputs=__as_symbols([a, b]))

@@ -36,6 +36,9 @@ from paradox.kernel.symbol import\
     arcsinh, \
     arccosh, \
     arctanh, \
-    exp
+    exp, \
+    slice_assign, \
+    slice_select, \
+    concatenate
 from paradox.kernel.engine import Engine
 from paradox.kernel.optimizer import GradientDescentOptimizer

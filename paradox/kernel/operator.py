@@ -94,9 +94,43 @@ def transpose_shape(shape_a, axes):
                     new_shape[i] = d
                 return tuple(new_shape), ()
             else:
-                ValueError('Invalid axes for this Shape: shape={}, axes={}'.format(shape_a, axes))
+                raise ValueError('Invalid axes for this Shape: shape={}, axes={}'.format(shape_a, axes))
         else:
-            ValueError('Repeated axis in axes: {}'.format(axes))
+            raise ValueError('Repeated axis in axes: {}'.format(axes))
+
+
+def concatenate_shape(axis, *shape_list):
+    new_shape = list(shape_list[0])
+    shape_len = len(new_shape)
+    for shape in shape_list[1:]:
+        if len(shape) == len(shape):
+            for i in range(shape_len):
+                if i == axis:
+                    new_shape[i] += shape[i]
+                else:
+                    if new_shape[i] != shape[i]:
+                        raise ValueError('Concatenate shape not match: {}'.format(shapes))
+        else:
+            raise ValueError('All shapes must have same dimensions')
+    return (tuple(new_shape),) + () * len(shape_list)
+
+
+def slice_shape(shape_a, slice_list):
+    new_shape = list(shape_a)
+    delete_dimension = 0
+    for i, s in enumerate(slice_list):
+        index = i - delete_dimension
+        if index < len(shape_a):
+            if isinstance(s, slice):
+                new_shape[index] = len(([0] * shape_a[index])[s])
+            elif isinstance(s, int):
+                del new_shape[index]
+                delete_dimension += 1
+            else:
+                raise ValueError('Invalid slice type: {}'.format(type(s)))
+        else:
+            raise ValueError('Shape not match slice: shape={} slice={}'.format(shape_a, slice_list))
+    return tuple(new_shape), ()
 
 
 class Operator:
@@ -675,3 +709,62 @@ class Exponential(Operator):
 
     def shape(self, shape_a):
         return shape_a, ()
+
+
+class SliceAssign(Operator):
+    def __init__(self, slice_tuple):
+        self.inputs_count = 2
+        self.arguments = {'slice_tuple': slice_tuple}
+
+    def compute(self, value_a, value_b):
+        value_a[self.arguments['slice_tuple']] = value_b
+        return value_a
+
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        slice_tuple = self.arguments['slice_tuple']
+        forward = engine.gradient(symbol_forward)
+        return [lambda: slice_assign(forward, Constant(numpy.zeros(engine.shape(symbol_b))), slice_tuple),
+                lambda: forward[slice_tuple]]
+
+    def shape(self, shape_a, shape_b):
+        shape_select = slice_shape(shape_a, self.arguments['slice_tuple'])[0]
+        shape_package = element_wise_shape(shape_select, shape_b)
+        if shape_package[0] != shape_select or shape_package[1] != ():
+            raise ValueError('Can not assign: {} to {} with {}'.format(shape_b, shape_a, self.arguments['slice_tuple']))
+        return shape_a, (), shape_package[2]
+
+
+class SliceSelect(Operator):
+    def __init__(self, slice_tuple):
+        self.inputs_count = 1
+        self.arguments = {'slice_tuple': slice_tuple}
+
+    def compute(self, value_a):
+        return numpy.array(value_a[self.arguments['slice_tuple']])
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        symbol_zero = Constant(numpy.zeros(engine.shape(symbol_a)))
+        return [lambda: slice_assign(symbol_zero, self.arguments['slice_tuple'], forward)]
+
+    def shape(self, shape_a):
+        return slice_shape(shape_a, self.arguments['slice_tuple'])
+
+
+class Concatenate(Operator):
+    def __init__(self, axis: int=0):
+        self.inputs_count = 2
+        self.arguments = {'axis': axis}
+
+    def compute(self, value_a, value_b):
+        return numpy.concatenate((value_a, value_b), **self.arguments)
+
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
+        split_dimension = engine.shape(symbol_a)[self.arguments['axis']]
+        total_dimension = engine.shape(symbol_forward)[self.arguments['axis']]
+        return [lambda: forward[[slice(None)] * self.arguments['axis'] + [slice(0, split_dimension)]],
+                lambda: forward[[slice(None)] * self.arguments['axis'] + [slice(split_dimension, total_dimension)]]]
+
+    def shape(self, *shapes):
+        return concatenate_shape(self.arguments['axis'], *shapes)
