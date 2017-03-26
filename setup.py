@@ -25,7 +25,6 @@ if __name__ == '__main__':
                     'paradox.visualization',
                     'paradox.data_set'],
           install_requires=install_requires,
-          entry_points={"console_scripts": ["boson = boson.boson:boson_main"]},
           classifiers=["Natural Language :: English",
                        "Programming Language :: Python",
                        "Operating System :: Microsoft :: Windows",
