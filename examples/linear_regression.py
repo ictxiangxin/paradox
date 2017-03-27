@@ -11,7 +11,7 @@ y_data = []
 # 生成y = 2 * x + 1直线附近的随机点。
 for _ in range(points_sum):
     x = np.random.normal(0, 2)
-    y = x * 2 + 1 + np.random.normal(0, 2)
+    y = 2 * x + 1 + np.random.normal(0, 2)
     x_data.append(x)
     y_data.append(y)
 x_np = np.array(x_data)
@@ -21,7 +21,7 @@ y_np = np.array(y_data)
 X = pd.Constant(x_np, name='x')
 Y = pd.Constant(y_np, name='y')
 w = pd.Variable(0, name='w')
-b = pd.Variable(1, name='b')
+b = pd.Variable(0, name='b')
 
 # 使用最小二乘误差。
 loss = pd.reduce_mean((w * X + b - Y) ** 2)

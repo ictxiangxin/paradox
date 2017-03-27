@@ -18,7 +18,6 @@ class GradientDescentOptimizer(Optimizer):
         self.__gradient_engine = Engine()
 
     def minimize(self, engine: Engine):
-        engine.differentiate()
         variables = engine.variables
         for variable in variables:
             self.__gradient_engine.symbol = engine.gradient(variable)
@@ -27,7 +26,6 @@ class GradientDescentOptimizer(Optimizer):
             engine.modified()
 
     def maximize(self, engine: Engine):
-        engine.differentiate()
         variables = engine.variables
         for variable in variables:
             self.__gradient_engine.symbol(engine.gradient(variable))
