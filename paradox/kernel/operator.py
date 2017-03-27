@@ -717,7 +717,7 @@ class SliceAssign(Operator):
         self.arguments = {'slice_tuple': slice_tuple}
 
     def compute(self, value_a, value_b):
-        value_a[self.arguments['slice_tuple']] = value_b
+        numpy.array(value_a)[self.arguments['slice_tuple']] = value_b
         return value_a
 
     def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
@@ -740,7 +740,7 @@ class SliceSelect(Operator):
         self.arguments = {'slice_tuple': slice_tuple}
 
     def compute(self, value_a):
-        return numpy.array(value_a[self.arguments['slice_tuple']])
+        return value_a[self.arguments['slice_tuple']]
 
     def gradient(self, engine, symbol_forward, symbol_a):
         forward = engine.gradient(symbol_forward)
