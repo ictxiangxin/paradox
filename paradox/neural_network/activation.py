@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from paradox.kernel import *
-from paradox.utils import xavier_initialization, he_initialization
+from paradox.utils import xavier_initialization, he_initialization, normal_initialization
 
 
 class ActivationLayer:
@@ -10,6 +10,10 @@ class ActivationLayer:
 
     @abstractmethod
     def weight_initialization(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def bias_initialization(self, *args, **kwargs):
         pass
 
 
@@ -24,6 +28,11 @@ class RectifiedLinearUnits(ActivationLayer):
         weight = he_initialization(shape)
         return weight
 
+    @staticmethod
+    def bias_initialization(shape):
+        bias = normal_initialization(shape)
+        return bias
+
 
 class SoftMax(ActivationLayer):
     @staticmethod
@@ -37,6 +46,11 @@ class SoftMax(ActivationLayer):
         weight = xavier_initialization(shape)
         return weight
 
+    @staticmethod
+    def bias_initialization(shape):
+        bias = normal_initialization(shape)
+        return bias
+
 
 class HyperbolicTangent(ActivationLayer):
     @staticmethod
@@ -49,6 +63,11 @@ class HyperbolicTangent(ActivationLayer):
         weight = xavier_initialization(shape)
         return weight
 
+    @staticmethod
+    def bias_initialization(shape):
+        bias = normal_initialization(shape)
+        return bias
+
 
 class Sigmoid(ActivationLayer):
     @staticmethod
@@ -60,6 +79,11 @@ class Sigmoid(ActivationLayer):
     def weight_initialization(shape):
         weight = xavier_initialization(shape)
         return weight
+
+    @staticmethod
+    def bias_initialization(shape):
+        bias = normal_initialization(shape)
+        return bias
 
 
 relu = RectifiedLinearUnits.activation_function

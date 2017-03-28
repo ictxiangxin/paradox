@@ -54,11 +54,10 @@ class Engine:
         return self.__bind
 
     def set_bind(self, bind_data: dict):
-        for symbol in bind_data:
-            if symbol.category == SymbolCategory.constant:
-                raise ValueError('Can not bind data for Constant.')
         self.__bind = {}
         for s, d in bind_data.items():
+            if s.category == SymbolCategory.constant:
+                raise ValueError('Can not bind data for Constant.')
             self.__bind[s] = numpy.array(d)
         self.clear()
 
@@ -102,9 +101,9 @@ class Engine:
                     invariant = 0
                     for i, d in enumerate(self.broadcast(variable, forward)):
                         if d > 0:
-                            current_gradient = reduce_sum(current_gradient, axis=i + invariant, invariant=True)
+                            current_gradient = reduce_sum(current_gradient, axis=i+invariant, invariant=True)
                         elif d < 0:
-                            current_gradient = reduce_sum(current_gradient, axis=i + invariant, invariant=False)
+                            current_gradient = reduce_sum(current_gradient, axis=i+invariant, invariant=False)
                             invariant -= 1
                 if variable not in self.__gradients:
                     self.__gradients[variable] = current_gradient

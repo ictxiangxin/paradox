@@ -64,7 +64,7 @@ class Network:
     def __add_activation(self, layer: ActivationLayer):
         self.__current_symbol = layer.activation_function(self.__current_symbol)
         self.__current_weight.value = layer.weight_initialization(self.__current_weight.value.shape)
-        self.__current_bias.value = numpy.random.normal(0, 1, self.__current_bias.value.shape)
+        self.__current_bias.value = layer.bias_initialization(self.__current_bias.value.shape)
 
     def get_symbol(self):
         return self.__current_symbol

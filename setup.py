@@ -5,6 +5,7 @@ except ImportError:
 
 install_requires = [
     'numpy>=1.10',
+    'matplotlib>=2.0',
 ]
 
 if __name__ == '__main__':
