@@ -1,6 +1,7 @@
 from enum import Enum
 import numpy
 
+
 SymbolCategory = Enum('SymbolCategory', ('variable', 'constant'))
 
 
