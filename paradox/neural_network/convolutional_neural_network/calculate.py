@@ -67,3 +67,6 @@ def convolution_2d(data, kernel, mode=ConvolutionMode.full):
             raise ValueError('Never reached.')
     else:
         raise ValueError('These shapes can not execute convolve-2d: {} {}'.format(data.shape, kernel.shape))
+
+# TODO: Make these function treat tensor compute.
+# TODO: Add convolution_3d.

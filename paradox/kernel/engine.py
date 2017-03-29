@@ -63,6 +63,14 @@ class Engine:
 
     bind = property(get_bind, set_bind)
 
+    def get_value_buffer(self):
+        return self.__value_buffer
+
+    def set_value_buffer(self, value_buffer: dict):
+        self.__value_buffer = value_buffer
+
+    value_buffer = property(get_value_buffer, set_value_buffer)
+
     def modified(self):
         self.__value_buffer = {}
 

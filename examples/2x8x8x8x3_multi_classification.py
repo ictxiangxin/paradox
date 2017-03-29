@@ -17,21 +17,21 @@ classification = [0] * len(data[0][0]) + [1] * len(data[1][0]) + [2] * len(data[
 
 # 调用高层API生成2x8x8x8x3的网络
 model = pd.nn.Network()
-model.add(pd.nn.Dense(8, input_dimension=2))  # 2维输入8维输出的全连接层。
+model.add(pd.nn.Dense(16, input_dimension=2))  # 2维输入8维输出的全连接层。
 model.add(pd.nn.Activation('tanh'))  # 使用tanh激活函数。
-model.add(pd.nn.Dense(8))
+model.add(pd.nn.Dense(16))
 model.add(pd.nn.Activation('tanh'))
-model.add(pd.nn.Dense(8))
+model.add(pd.nn.Dense(16))
 model.add(pd.nn.Activation('tanh'))
 model.add(pd.nn.Dense(3))
 model.add(pd.nn.Activation('tanh'))
 model.loss('softmax')  # 使用softmax loss。
 
 # 使用梯度下降优化器。
-model.optimizer('gd', rate=0.0002)
+model.optimizer('gd', rate=0.0002, consistent=True)
 
 # 执行训练。
-model.train([c_x, c_y], classification, epochs=20000)
+model.train([c_x, c_y], classification, epochs=50000)
 
 # 设置网格密度为0.1。
 h = 0.1
