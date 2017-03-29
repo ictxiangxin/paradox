@@ -9,7 +9,8 @@ class Engine:
         self.__shape = {}
         self.__broadcast = {}
         self.__bind = {}
-        self.__value_buffer = {}
+        self.__value_cache = {}
+        self.__symbol_set = set()
         self.symbol = symbol
         self.set_variables(variable)
 
@@ -17,7 +18,7 @@ class Engine:
         self.__gradients = {}
         self.__shape = {}
         self.__broadcast = {}
-        self.__value_buffer = {}
+        self.__value_cache = {}
 
     def get_symbol(self):
         return self.__symbol
@@ -63,16 +64,16 @@ class Engine:
 
     bind = property(get_bind, set_bind)
 
-    def get_value_buffer(self):
-        return self.__value_buffer
+    def get_value_cache(self):
+        return self.__value_cache
 
-    def set_value_buffer(self, value_buffer: dict):
-        self.__value_buffer = value_buffer
+    def set_value_cache(self, value_buffer: dict):
+        self.__value_cache = value_buffer
 
-    value_buffer = property(get_value_buffer, set_value_buffer)
+    value_cache = property(get_value_cache, set_value_cache)
 
     def modified(self):
-        self.__value_buffer = {}
+        self.__value_cache = {}
 
     def __compute_value(self, symbol: Symbol):
         if symbol.operator is None:
@@ -84,12 +85,12 @@ class Engine:
                 else:
                     return symbol.value
         else:
-            if symbol in self.__value_buffer:
-                return self.__value_buffer[symbol]
+            if symbol in self.__value_cache:
+                return self.__value_cache[symbol]
             else:
                 compute_inputs = [self.__compute_value(_s) for _s in symbol.input]
                 symbol_value = symbol.operator.compute(*compute_inputs)
-                self.__value_buffer[symbol] = symbol_value
+                self.__value_cache[symbol] = symbol_value
                 return symbol_value
 
     def __compute_gradient(self, variable: Symbol):

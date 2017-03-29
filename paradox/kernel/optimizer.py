@@ -21,14 +21,14 @@ class GradientDescentOptimizer(Optimizer):
     def optimize(self, engine: Engine, calculate_function):
         variables = engine.variables
         for variable in variables:
-            value_buffer = self.__gradient_engine.value_buffer
+            value_cache = self.__gradient_engine.value_cache
             self.__gradient_engine.symbol = engine.gradient(variable)
             self.__gradient_engine.bind = engine.bind
             if self.__consistent:
-                self.__gradient_engine.value_buffer = value_buffer
+                self.__gradient_engine.value_cache = value_cache
             variable.value = calculate_function(variable.value, self.__rate * self.__gradient_engine.value())
             engine.modified()
-        self.__gradient_engine.value_buffer = {}
+        self.__gradient_engine.modified()
 
     def minimize(self, engine: Engine):
         self.optimize(engine, lambda v, g: v - g)
