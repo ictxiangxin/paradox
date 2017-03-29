@@ -15,7 +15,7 @@ c_y = data[0][1] + data[1][1] + data[2][1]
 # 定义每个点的分类类别。
 classification = [0] * len(data[0][0]) + [1] * len(data[1][0]) + [2] * len(data[2][0])
 
-# 调用高层API生成2x8x8x8x3的网络
+# 调用高层API生成2x16x16x16x3的网络
 model = pd.nn.Network()
 model.add(pd.nn.Dense(16, input_dimension=2))  # 2维输入8维输出的全连接层。
 model.add(pd.nn.Activation('tanh'))  # 使用tanh激活函数。
@@ -27,7 +27,7 @@ model.add(pd.nn.Dense(3))
 model.add(pd.nn.Activation('tanh'))
 model.loss('softmax')  # 使用softmax loss。
 
-# 使用梯度下降优化器。
+# 使用梯度下降优化器，使用一致性update大幅提升性能。
 model.optimizer('gd', rate=0.0002, consistent=True)
 
 # 执行训练。
@@ -43,7 +43,7 @@ x, y = np.meshgrid(np.arange(np.min(c_x) - 1, np.max(c_x) + 1, h), np.arange(np.
 z = model.predict([x.ravel(), y.ravel()]).argmax(axis=0).reshape(x.shape)
 
 # 绘制图像。
-plt.title('2x8x8x8x3 Multi-Classification')
+plt.title('2x16x16x16x3 Multi-Classification')
 plt.plot(data[0][0], data[0][1], 'bo', label='Category 1')
 plt.plot(data[1][0], data[1][1], 'ro', label='Category 2')
 plt.plot(data[2][0], data[2][1], 'go', label='Category 3')

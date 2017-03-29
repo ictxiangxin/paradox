@@ -196,7 +196,7 @@ points_sum = 100
 
 # 在(0, 0)点附近生成一堆点然后以4为半径在周围生成一堆点构成2类随机数据。
 c1_x, c1_y, c2_x, c2_y = [], [], [], []
-for c1 in range(points_sum):
+for _ in range(points_sum):
     c1_x.append(np.random.normal(0, 1))
     c1_y.append(np.random.normal(0, 1))
     r = np.random.normal(4, 1)
@@ -225,7 +225,7 @@ loss = pd.reduce_mean(pd.maximum(pd.reduce_sum(K * model, axis=0) + 1, 0))
 loss_engine = pd.Engine(loss, [W1, W2, B1, B2])
 
 # 创建梯度下降optimizer。
-optimizer = pd.GradientDescentOptimizer(0.0001)
+optimizer = pd.GradientDescentOptimizer(0.0003)
 
 # 迭代至多10000次最小化loss。
 for epoch in range(10000):
@@ -249,7 +249,7 @@ h = 0.1
 x, y = np.meshgrid(np.arange(np.min(c_x) - 1, np.max(c_x) + 1, h), np.arange(np.min(c_y) - 1, np.max(c_y) + 1, h))
 
 # 绑定变量值。
-predict_engine.bind({A: [x.ravel(), y.ravel()]})
+predict_engine.bind = {A: [x.ravel(), y.ravel()]}
 
 # 生成采样点预测值。
 z = predict_engine.value().reshape(x.shape)
@@ -258,7 +258,7 @@ z = predict_engine.value().reshape(x.shape)
 plt.title('Paradox implement 2x4x2 Neural Network')
 plt.plot(c1_x, c1_y, 'ro', label='Category 1')
 plt.plot(c2_x, c2_y, 'bo', label='Category 2')
-plt.contourf(x, y, z, 4, cmap='RdBu', alpha=.8)
+plt.contourf(x, y, z, 2, cmap='RdBu', alpha=.6)
 plt.legend()
 plt.show()
 ```
@@ -283,7 +283,7 @@ r_step = 5 / points_sum
 theta_step = 3 * np.pi / points_sum
 r = 0
 theta = 0
-for c1 in range(points_sum):
+for _ in range(points_sum):
     c1_x.append(r * np.cos(theta))
     c1_y.append(r * np.sin(theta))
     c2_x.append(-r * np.cos(theta))
@@ -316,7 +316,7 @@ loss = pd.nn.softmax_loss(model, classification)
 loss_engine = pd.Engine(loss, [W1, W2, W3, B1, B2, B3])
 
 # 创建梯度下降optimizer。
-optimizer = pd.GradientDescentOptimizer(0.002)
+optimizer = pd.GradientDescentOptimizer(0.001)
 
 # 迭代至多10000次最小化loss。
 for epoch in range(10000):
@@ -340,7 +340,7 @@ h = 0.1
 x, y = np.meshgrid(np.arange(np.min(c_x) - 1, np.max(c_x) + 1, h), np.arange(np.min(c_y) - 1, np.max(c_y) + 1, h))
 
 # 绑定变量值。
-predict_engine.bind({A: [x.ravel(), y.ravel()]})
+predict_engine.bind = {A: [x.ravel(), y.ravel()]}
 
 # 生成采样点预测值。
 z = predict_engine.value().reshape(x.shape)
@@ -349,7 +349,7 @@ z = predict_engine.value().reshape(x.shape)
 plt.title('Paradox implement 2x8x8x2 Neural Network')
 plt.plot(c1_x, c1_y, 'ro', label='Category 1')
 plt.plot(c2_x, c2_y, 'bo', label='Category 2')
-plt.contourf(x, y, z, 4, cmap='RdBu', alpha=.8)
+plt.contourf(x, y, z, 2, cmap='RdBu', alpha=.6)
 plt.legend()
 plt.show()
 ```
@@ -358,7 +358,7 @@ plt.show()
 
 ![LinearRegression](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/2x8x8x2_neural_network.png)
 
-### 2x8x8x8x3网络实现多分类
+### 2x16x16x16x3网络实现多分类
 
 ```python
 import numpy as np
@@ -369,32 +369,32 @@ import paradox as pd
 points_sum = 100
 
 # 调用paradox的数据生成器生成三螺旋的3类数据。
-data = pd.data.helical_2d(100, 3, max_radius=2*np.pi)
+data = pd.data.helical_2d(points_sum, 3, max_radius=2*np.pi)
 
 # 组合数据。
 c_x = data[0][0] + data[1][0] + data[2][0]
 c_y = data[0][1] + data[1][1] + data[2][1]
 
 # 定义每个点的分类类别。
-classification = [0] * points_sum + [1] * points_sum + [2] * points_sum
+classification = [0] * len(data[0][0]) + [1] * len(data[1][0]) + [2] * len(data[2][0])
 
-# 调用高层API生成2x8x8x8x3的网络
+# 调用高层API生成2x16x16x16x3的网络
 model = pd.nn.Network()
-model.add(pd.nn.Dense(8, input_dimension=2))  # 2维输入8维输出的全连接层。
+model.add(pd.nn.Dense(16, input_dimension=2))  # 2维输入8维输出的全连接层。
 model.add(pd.nn.Activation('tanh'))  # 使用tanh激活函数。
-model.add(pd.nn.Dense(8))
+model.add(pd.nn.Dense(16))
 model.add(pd.nn.Activation('tanh'))
-model.add(pd.nn.Dense(8))
+model.add(pd.nn.Dense(16))
 model.add(pd.nn.Activation('tanh'))
 model.add(pd.nn.Dense(3))
 model.add(pd.nn.Activation('tanh'))
 model.loss('softmax')  # 使用softmax loss。
 
-# 使用梯度下降优化器。
-model.optimizer('gd', rate=0.0002)
+# 使用梯度下降优化器，使用一致性update大幅提升性能。
+model.optimizer('gd', rate=0.0002, consistent=True)
 
 # 执行训练。
-model.train([c_x, c_y], classification, epochs=20000)
+model.train([c_x, c_y], classification, epochs=50000)
 
 # 设置网格密度为0.1。
 h = 0.1
@@ -406,7 +406,7 @@ x, y = np.meshgrid(np.arange(np.min(c_x) - 1, np.max(c_x) + 1, h), np.arange(np.
 z = model.predict([x.ravel(), y.ravel()]).argmax(axis=0).reshape(x.shape)
 
 # 绘制图像。
-plt.title('2x8x8x8x3 Multi-Classification')
+plt.title('2x16x16x16x3 Multi-Classification')
 plt.plot(data[0][0], data[0][1], 'bo', label='Category 1')
 plt.plot(data[1][0], data[1][1], 'ro', label='Category 2')
 plt.plot(data[2][0], data[2][1], 'go', label='Category 3')
@@ -417,7 +417,7 @@ plt.show()
 
 运行结果：
 
-![LinearRegression](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/2x8x8x8x3_multi_classification.png)
+![LinearRegression](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/2x16x16x16x3_multi_classification.png)
 
 ### 2x8x8x8x8x2网络分类网格状数据
 ```python
