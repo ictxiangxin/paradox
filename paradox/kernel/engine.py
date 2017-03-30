@@ -10,7 +10,6 @@ class Engine:
         self.__broadcast = {}
         self.__bind = {}
         self.__value_cache = {}
-        self.__symbol_set = set()
         self.symbol = symbol
         self.set_variables(variable)
 

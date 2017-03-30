@@ -24,7 +24,7 @@ def __get_convolution_mode_string(mode):
         raise ValueError('Invalid mode type: {}'.format(type(mode)))
 
 
-def __valid_convolution(data: numpy.ndarray, kernel: numpy.ndarray):
+def __valid_convolution_2d(data: numpy.ndarray, kernel: numpy.ndarray):
     convolution_result = numpy.zeros((data.shape[0] - kernel.shape[0] + 1, data.shape[1] - kernel.shape[1] + 1))
     for i in range(kernel.shape[0], data.shape[0] + 1):
         for j in range(kernel.shape[1], data.shape[1] + 1):
@@ -50,19 +50,19 @@ def convolution_2d(data, kernel, mode=ConvolutionMode.full):
         raise ValueError('Kernel shape smaller than data shape: {} {}'.format(data.shape, kernel.shape))
     if len(data.shape) == len(kernel.shape) == 2:
         if mode_string == 'valid':
-            return __valid_convolution(data, kernel)
+            return __valid_convolution_2d(data, kernel)
         elif mode_string == 'same':
             expand_data = numpy.zeros((data.shape[0] + kernel.shape[0] - 1, data.shape[1] + kernel.shape[1] - 1))
             x_padding = kernel.shape[0] // 2
             y_padding = kernel.shape[1] // 2
             expand_data[x_padding: x_padding + data.shape[0], y_padding: y_padding + data.shape[1]] = data
-            return __valid_convolution(expand_data, kernel)
+            return __valid_convolution_2d(expand_data, kernel)
         elif mode_string == 'full':
             expand_data = numpy.zeros((data.shape[0] + (kernel.shape[0] - 1) * 2, data.shape[1] + (kernel.shape[1] - 1) * 2))
             x_padding = kernel.shape[0] - 1
             y_padding = kernel.shape[1] - 1
             expand_data[x_padding: x_padding + data.shape[0], y_padding: y_padding + data.shape[1]] = data
-            return __valid_convolution(expand_data, kernel)
+            return __valid_convolution_2d(expand_data, kernel)
         else:
             raise ValueError('Never reached.')
     else:
