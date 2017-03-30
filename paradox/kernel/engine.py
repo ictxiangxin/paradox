@@ -109,9 +109,9 @@ class Engine:
                     invariant = 0
                     for i, d in enumerate(self.broadcast(variable, forward)):
                         if d > 0:
-                            current_gradient = reduce_sum(current_gradient, axis=i+invariant, invariant=True)
+                            current_gradient = reduce_sum(current_gradient, axis=i + invariant, invariant=True)
                         elif d < 0:
-                            current_gradient = reduce_sum(current_gradient, axis=i+invariant, invariant=False)
+                            current_gradient = reduce_sum(current_gradient, axis=i + invariant, invariant=False)
                             invariant -= 1
                 if variable not in self.__gradients:
                     self.__gradients[variable] = current_gradient
