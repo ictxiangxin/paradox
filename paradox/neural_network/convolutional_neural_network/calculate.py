@@ -63,11 +63,12 @@ def convolution_1d(data: numpy.ndarray, kernel: numpy.ndarray, mode=ConvolutionM
                 key[r] %= final_shape[r]
             else:
                 break
+        key = tuple(key)
         result.append(__convolution_1d(data[key].ravel(), kernel[key].ravel(), mode_string))
     return numpy.array(result).reshape(final_shape + result[0].shape)
 
 
-def convolution_2d(data, kernel, mode=ConvolutionMode.full):
+def __convolution_2d(data: numpy.ndarray, kernel: numpy.ndarray, mode: str):
     mode_string = __get_convolution_mode_string(mode)
     if data.shape[0] < kernel.shape[0] or data.shape[1] < kernel.shape[1]:
         raise ValueError('Kernel shape smaller than data shape: {} {}'.format(data.shape, kernel.shape))
@@ -91,5 +92,28 @@ def convolution_2d(data, kernel, mode=ConvolutionMode.full):
     else:
         raise ValueError('These shapes can not execute convolve-2d: {} {}'.format(data.shape, kernel.shape))
 
-# TODO: Make these function treat tensor compute.
+
+def convolution_2d(data, kernel, mode=ConvolutionMode.full):
+    mode_string = __get_convolution_mode_string(mode)
+    result = []
+    data_prefix_shape = data.shape[:-2]
+    kernel_prefix_shape = kernel.shape[:-2]
+    final_shape = element_wise_shape(data_prefix_shape, kernel_prefix_shape)[0]
+    data = numpy.broadcast_to(data, final_shape + data.shape[-2:])
+    kernel = numpy.broadcast_to(kernel, final_shape + kernel.shape[-2:])
+    scale = reduce(lambda a, b: a * b, final_shape)
+    for i in range(scale):
+        key = [0] * len(final_shape)
+        key[-1] = i
+        for r in range(len(final_shape) - 1, -1, -1):
+            if key[r] > final_shape[r]:
+                key[r - 1] = key[r] // final_shape[r]
+                key[r] %= final_shape[r]
+            else:
+                break
+        key = tuple(key)
+        result.append(__convolution_2d(data[key], kernel[key], mode_string))
+    return numpy.array(result).reshape(final_shape + result[0].shape)
+
+
 # TODO: Add convolution_3d.
