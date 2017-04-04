@@ -478,3 +478,13 @@ def slice_select(a, slice_tuple):
 def concatenate(a, b):
     from paradox.kernel.operator import Concatenate
     return Symbol(operator=Concatenate(), inputs=as_symbols([a, b]))
+
+
+def rotate90(a, count, axes):
+    from paradox.kernel.operator import Rotate90
+    return Symbol(operator=Rotate90(count, axes), inputs=as_symbols([a]))
+
+
+def flip(a, axis):
+    from paradox.kernel.operator import Flip
+    return Symbol(operator=Flip(axis), inputs=as_symbols([a]))

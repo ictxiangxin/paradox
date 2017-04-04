@@ -133,6 +133,15 @@ def slice_shape(shape_a, slice_list):
     return tuple(new_shape), ()
 
 
+def rotate90_shape(shape_a, count, axes):
+    new_shape = list(shape_a)
+    if count % 2 == 0:
+        return tuple(new_shape), ()
+    else:
+        new_shape[axes[0]], new_shape[axes[1]] = new_shape[axes[1]], new_shape[axes[0]]
+        return tuple(new_shape), ()
+
+
 class Operator:
     operator_sign = None
     inputs_count = None
@@ -768,3 +777,35 @@ class Concatenate(Operator):
 
     def shape(self, *shapes):
         return concatenate_shape(self.arguments['axis'], *shapes)
+
+
+class Rotate90(Operator):
+    def __init__(self, count: int=1, axes: tuple=None):
+        self.inputs_count = 1
+        self.arguments = {'count': count, 'axes': axes}
+
+    def compute(self, value_a):
+        return numpy.rot90(value_a, k=self.arguments['count'], axes=self.arguments['axes'])
+
+    def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: rotate90(forward, -self.arguments['count'] % 4, self.arguments['axes'])]
+
+    def shape(self, shape_a):
+        return rotate90_shape(shape_a, **self.arguments)
+
+
+class Flip(Operator):
+    def __init__(self, axis: int):
+        self.inputs_count = 1
+        self.arguments = {'axis': axis}
+
+    def compute(self, value_a):
+        return numpy.flip(value_a, self.arguments['axis'])
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: flip(forward, self.arguments['axis'])]
+
+    def shape(self, shape_a):
+        return shape_a, ()

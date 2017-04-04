@@ -39,6 +39,8 @@ from paradox.kernel.symbol import\
     exp, \
     slice_assign, \
     slice_select, \
-    concatenate
+    concatenate, \
+    rotate90, \
+    flip
 from paradox.kernel.engine import Engine
 from paradox.kernel.optimizer import GradientDescentOptimizer
