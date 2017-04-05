@@ -4,12 +4,11 @@ import numpy
 from paradox.kernel.operator import element_wise_shape
 
 
-ConvolutionMode = Enum('ConvolutionMode', ('valid', 'same', 'full'))
+ConvolutionMode = Enum('ConvolutionMode', ('valid', 'full'))
 
 
 convolution_map = {
     'valid': ConvolutionMode.valid,
-    'same': ConvolutionMode.same,
     'full': ConvolutionMode.full,
 }
 
@@ -26,7 +25,21 @@ def __get_convolution_mode_string(mode):
         raise ValueError('Invalid mode type: {}'.format(type(mode)))
 
 
-def __compute_valid_convolution_2d(data: numpy.ndarray, kernel: numpy.ndarray):
+def __array_key_traversal(array_shape):
+    scale = reduce(lambda a, b: a * b, array_shape)
+    for i in range(scale):
+        key = [0] * len(array_shape)
+        key[-1] = i
+        for r in range(len(array_shape) - 1, -1, -1):
+            if key[r] > array_shape[r]:
+                key[r - 1] = key[r] // array_shape[r]
+                key[r] %= array_shape[r]
+            else:
+                break
+        yield tuple(key)
+
+
+def __compute_valid_convolution_2d(data, kernel):
     convolution_result = numpy.zeros((data.shape[0] - kernel.shape[0] + 1, data.shape[1] - kernel.shape[1] + 1))
     for i in range(kernel.shape[0], data.shape[0] + 1):
         for j in range(kernel.shape[1], data.shape[1] + 1):
@@ -36,7 +49,7 @@ def __compute_valid_convolution_2d(data: numpy.ndarray, kernel: numpy.ndarray):
     return convolution_result
 
 
-def __compute_convolution_1d(data: numpy.ndarray, kernel: numpy.ndarray, mode: str):
+def __compute_convolution_1d(data, kernel, mode: str):
     if data.shape[0] < kernel.shape[0]:
         raise ValueError('Kernel shape smaller than data shape: {} {}'.format(data.shape, kernel.shape))
     if len(data.shape) == len(kernel.shape) == 1:
@@ -45,7 +58,7 @@ def __compute_convolution_1d(data: numpy.ndarray, kernel: numpy.ndarray, mode: s
         raise ValueError('These shapes can not execute convolve-1d: {} {}'.format(data.shape, kernel.shape))
 
 
-def compute_convolution_1d(data: numpy.ndarray, kernel: numpy.ndarray, mode=ConvolutionMode.full):
+def compute_convolution_1d(data, kernel, mode=ConvolutionMode.valid):
     mode_string = __get_convolution_mode_string(mode)
     result = []
     data_prefix_shape = data.shape[:-1]
@@ -54,36 +67,20 @@ def compute_convolution_1d(data: numpy.ndarray, kernel: numpy.ndarray, mode=Conv
     data = numpy.broadcast_to(data, final_shape + (data.shape[-1],))
     kernel = numpy.broadcast_to(kernel, final_shape + (kernel.shape[-1],))
     if final_shape:
-        scale = reduce(lambda a, b: a * b, final_shape)
-        for i in range(scale):
-            key = [0] * len(final_shape)
-            key[-1] = i
-            for r in range(len(final_shape) - 1, -1, -1):
-                if key[r] > final_shape[r]:
-                    key[r - 1] = key[r] // final_shape[r]
-                    key[r] %= final_shape[r]
-                else:
-                    break
-            key = tuple(key)
+        for key in __array_key_traversal(final_shape):
             result.append(__compute_convolution_1d(data[key].ravel(), kernel[key].ravel(), mode_string))
         return numpy.array(result).reshape(final_shape + result[0].shape)
     else:
         return __compute_convolution_1d(data, kernel, mode_string)
 
 
-def __compute_convolution_2d(data: numpy.ndarray, kernel: numpy.ndarray, mode: str):
+def __compute_convolution_2d(data, kernel, mode: str):
     mode_string = __get_convolution_mode_string(mode)
     if data.shape[0] < kernel.shape[0] or data.shape[1] < kernel.shape[1]:
         raise ValueError('Kernel shape smaller than data shape: {} {}'.format(data.shape, kernel.shape))
     if len(data.shape) == len(kernel.shape) == 2:
         if mode_string == 'valid':
             return __compute_valid_convolution_2d(data, kernel)
-        elif mode_string == 'same':
-            expand_data = numpy.zeros((data.shape[0] + kernel.shape[0] - 1, data.shape[1] + kernel.shape[1] - 1))
-            x_padding = kernel.shape[0] // 2
-            y_padding = kernel.shape[1] // 2
-            expand_data[x_padding: x_padding + data.shape[0], y_padding: y_padding + data.shape[1]] = data
-            return __compute_valid_convolution_2d(expand_data, kernel)
         elif mode_string == 'full':
             expand_data = numpy.zeros((data.shape[0] + (kernel.shape[0] - 1) * 2, data.shape[1] + (kernel.shape[1] - 1) * 2))
             x_padding = kernel.shape[0] - 1
@@ -96,7 +93,7 @@ def __compute_convolution_2d(data: numpy.ndarray, kernel: numpy.ndarray, mode: s
         raise ValueError('These shapes can not execute convolve-2d: {} {}'.format(data.shape, kernel.shape))
 
 
-def compute_convolution_2d(data, kernel, mode=ConvolutionMode.full):
+def compute_convolution_2d(data, kernel, mode=ConvolutionMode.valid):
     mode_string = __get_convolution_mode_string(mode)
     result = []
     data_prefix_shape = data.shape[:-2]
@@ -105,21 +102,8 @@ def compute_convolution_2d(data, kernel, mode=ConvolutionMode.full):
     data = numpy.broadcast_to(data, final_shape + data.shape[-2:])
     kernel = numpy.broadcast_to(kernel, final_shape + kernel.shape[-2:])
     if final_shape:
-        scale = reduce(lambda a, b: a * b, final_shape)
-        for i in range(scale):
-            key = [0] * len(final_shape)
-            key[-1] = i
-            for r in range(len(final_shape) - 1, -1, -1):
-                if key[r] > final_shape[r]:
-                    key[r - 1] = key[r] // final_shape[r]
-                    key[r] %= final_shape[r]
-                else:
-                    break
-            key = tuple(key)
+        for key in __array_key_traversal(final_shape):
             result.append(__compute_convolution_2d(data[key], kernel[key], mode_string))
         return numpy.array(result).reshape(final_shape + result[0].shape)
     else:
         return __compute_convolution_2d(data, kernel, mode_string)
-
-
-# TODO: Add convolution_3d.
