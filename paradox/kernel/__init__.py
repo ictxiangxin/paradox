@@ -11,6 +11,7 @@ from paradox.kernel.symbol import\
     multiply, \
     matrix_multiply, \
     transpose, \
+    broadcast, \
     reduce_sum, \
     reduce_mean, \
     power, \

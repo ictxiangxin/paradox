@@ -1,12 +1,17 @@
+import numpy
 from paradox.kernel import flip, rotate90
 from paradox.kernel.operator import Operator, element_wise_shape
 from paradox.neural_network.convolutional_neural_network.compute import \
     ConvolutionMode, \
     compute_convolution_1d, \
-    compute_convolution_2d
+    compute_convolution_2d, \
+    compute_max_pooling_1d, \
+    compute_max_unpooling_1d
 from paradox.neural_network.convolutional_neural_network.function import \
     convolution_1d, \
-    convolution_2d
+    convolution_2d, \
+    max_pooling_1d, \
+    max_unpooling_1d
 
 
 def convolution_shape(shape_data, shape_kernel, mode, dimension):
@@ -17,6 +22,22 @@ def convolution_shape(shape_data, shape_kernel, mode, dimension):
         new_shape = prefix_shape + tuple(shape_data[i] + shape_kernel[i] - 1 for i in range(-dimension, 0))
     else:
         raise ValueError('Invalid convolution mode: {}'.format(mode))
+    return new_shape, prefix_broadcast_data + (0,) * dimension, prefix_broadcast_kernel + (0,) * dimension
+
+
+def max_pooling_shape(shape_data, size, step, dimension):
+    prefix_shape = shape_data[:-dimension]
+    if not isinstance(size, tuple):
+        size = (size,)
+    if not isinstance(step, tuple):
+        step = (step,)
+    new_shape = prefix_shape + tuple(len(range(0, shape_data[i] - size[i] + 1, step[i])) for i in range(-dimension, 0))
+    return new_shape, ()
+
+
+def max_unpooling_shape(shape_data, shape_pooling, dimension):
+    prefix_shape, prefix_broadcast_data, prefix_broadcast_kernel = element_wise_shape(shape_data[:-dimension], shape_pooling[:-dimension])
+    new_shape = prefix_shape + tuple(shape_data[i] for i in range(-dimension, 0))
     return new_shape, prefix_broadcast_data + (0,) * dimension, prefix_broadcast_kernel + (0,) * dimension
 
 
@@ -66,3 +87,53 @@ class Convolution2D(Operator):
 
     def shape(self, shape_data, shape_kernel):
         return convolution_shape(shape_data, shape_kernel, self.arguments['mode'], 2)
+
+
+class MaxPooling1D(Operator):
+    def __init__(self, size: int, step: int):
+        self.inputs_count = 1
+        self.arguments = {'size': size, 'step': step}
+
+    def compute(self, value_data):
+        return compute_max_pooling_1d(value_data, **self.arguments)
+
+    def gradient(self, engine, symbol_forward, symbol_data):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: max_unpooling_1d(symbol_data, forward, **self.arguments)]
+
+    def shape(self, shape_data):
+        return max_pooling_shape(shape_data, dimension=1, **self.arguments)
+
+
+class MaxReferencePooling1D(Operator):
+    def __init__(self, size: int, step: int):
+        self.inputs_count = 2
+        self.arguments = {'size': size, 'step': step}
+
+    def compute(self, value_data, reference_data):
+        return compute_max_pooling_1d(value_data, reference=reference_data, **self.arguments)
+
+    def gradient(self, engine, symbol_forward, symbol_data, symbol_reference):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: max_unpooling_1d(symbol_reference, forward, **self.arguments),
+                lambda: max_unpooling_1d(symbol_reference, numpy.ones(engine.shape(forward)), **self.arguments)]
+
+    def shape(self, shape_data):
+        return max_pooling_shape(shape_data, dimension=1, **self.arguments)
+
+
+class MaxUnpooling1D(Operator):
+    def __init__(self, size: int, step: int):
+        self.inputs_count = 2
+        self.arguments = {'size': size, 'step': step}
+
+    def compute(self, value_data, value_pooling):
+        return compute_max_unpooling_1d(value_data, value_pooling, **self.arguments)
+
+    def gradient(self, engine, symbol_forward, symbol_data, symbol_pooling):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: max_unpooling_1d(symbol_data, numpy.ones(engine.shape(symbol_pooling)), **self.arguments),
+                lambda: max_pooling_1d(forward, reference=symbol_data, **self.arguments)]
+
+    def shape(self, shape_data, shape_pooling):
+        return max_unpooling_shape(shape_data, shape_pooling, 1)

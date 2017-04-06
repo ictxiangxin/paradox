@@ -64,7 +64,7 @@ def compute_convolution_1d(data, kernel, mode=ConvolutionMode.valid):
     data_prefix_shape = data.shape[:-1]
     kernel_prefix_shape = kernel.shape[:-1]
     final_shape = element_wise_shape(data_prefix_shape, kernel_prefix_shape)[0]
-    data = numpy.broadcast_to(data, final_shape + (data.shape[-1],))
+    data = numpy.broadcast_to(data, final_shape + data.shape[-1:])
     kernel = numpy.broadcast_to(kernel, final_shape + (kernel.shape[-1],))
     if final_shape:
         for key in __array_key_traversal(final_shape):
@@ -107,3 +107,48 @@ def compute_convolution_2d(data, kernel, mode=ConvolutionMode.valid):
         return numpy.array(result).reshape(final_shape + result[0].shape)
     else:
         return __compute_convolution_2d(data, kernel, mode_string)
+
+
+def __compute_max_pooling_1d(data, size: int, step: int, reference=None):
+    pooling_array = []
+    if reference is None:
+        reference = data
+    for i in range(0, len(data) - size + 1, step):
+        pooling_array.append(data[i + numpy.argmax(reference[i: i + size])])
+    return numpy.array(pooling_array)
+
+
+def compute_max_pooling_1d(data, size: int, step: int=1, reference=None):
+    result = []
+    if reference is None:
+        reference = data
+    data_prefix_shape = data.shape[:-1]
+    if data_prefix_shape:
+        for key in __array_key_traversal(data_prefix_shape):
+            result.append(__compute_max_pooling_1d(data[key].ravel(), size, step, reference[key].ravel()))
+        return numpy.array(result).reshape(data_prefix_shape + result[0].shape)
+    else:
+        return __compute_max_pooling_1d(data, size, step)
+
+
+def __compute_max_unpooling_1d(data, pooling, size: int, step: int=1):
+    unpooling_array = numpy.zeros(data.shape)
+    for c, i in enumerate(range(0, len(data) - size + 1, step)):
+        max_index = numpy.argmax(data[i: i + size])
+        unpooling_array[i + max_index] += pooling[c]
+    return unpooling_array
+
+
+def compute_max_unpooling_1d(data, pooling, size: int, step: int=1):
+    result = []
+    data_prefix_shape = data.shape[:-1]
+    kernel_prefix_shape = pooling.shape[:-1]
+    final_shape = element_wise_shape(data_prefix_shape, kernel_prefix_shape)[0]
+    data = numpy.broadcast_to(data, final_shape + (data.shape[-1],))
+    pooling = numpy.broadcast_to(pooling, final_shape + pooling.shape[-1:])
+    if final_shape:
+        for key in __array_key_traversal(final_shape):
+            result.append(__compute_max_unpooling_1d(data[key].ravel(), pooling[key].ravel(), size, step))
+        return numpy.array(result).reshape(final_shape + result[0].shape)
+    else:
+        return __compute_max_unpooling_1d(data, pooling, size, step)
