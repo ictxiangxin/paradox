@@ -6,12 +6,16 @@ from paradox.neural_network.convolutional_neural_network.compute import \
     compute_convolution_1d, \
     compute_convolution_2d, \
     compute_max_pooling_1d, \
-    compute_max_unpooling_1d
+    compute_max_pooling_2d, \
+    compute_max_unpooling_1d, \
+    compute_max_unpooling_2d
 from paradox.neural_network.convolutional_neural_network.function import \
     convolution_1d, \
     convolution_2d, \
     max_pooling_1d, \
-    max_unpooling_1d
+    max_pooling_2d, \
+    max_unpooling_1d, \
+    max_unpooling_2d
 
 
 def convolution_shape(shape_data, shape_kernel, mode, dimension):
@@ -105,6 +109,22 @@ class MaxPooling1D(Operator):
         return max_pooling_shape(shape_data, dimension=1, **self.arguments)
 
 
+class MaxPooling2D(Operator):
+    def __init__(self, size: tuple, step: tuple):
+        self.inputs_count = 1
+        self.arguments = {'size': size, 'step': step}
+
+    def compute(self, value_data):
+        return compute_max_pooling_2d(value_data, **self.arguments)
+
+    def gradient(self, engine, symbol_forward, symbol_data):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: max_unpooling_2d(symbol_data, forward, **self.arguments)]
+
+    def shape(self, shape_data):
+        return max_pooling_shape(shape_data, dimension=2, **self.arguments)
+
+
 class MaxReferencePooling1D(Operator):
     def __init__(self, size: int, step: int):
         self.inputs_count = 2
@@ -122,6 +142,23 @@ class MaxReferencePooling1D(Operator):
         return max_pooling_shape(shape_data, dimension=1, **self.arguments)
 
 
+class MaxReferencePooling2D(Operator):
+    def __init__(self, size: tuple, step: tuple):
+        self.inputs_count = 2
+        self.arguments = {'size': size, 'step': step}
+
+    def compute(self, value_data, reference_data):
+        return compute_max_pooling_2d(value_data, reference=reference_data, **self.arguments)
+
+    def gradient(self, engine, symbol_forward, symbol_data, symbol_reference):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: max_unpooling_2d(symbol_reference, forward, **self.arguments),
+                lambda: max_unpooling_2d(symbol_reference, numpy.ones(engine.shape(forward)), **self.arguments)]
+
+    def shape(self, shape_data):
+        return max_pooling_shape(shape_data, dimension=2, **self.arguments)
+
+
 class MaxUnpooling1D(Operator):
     def __init__(self, size: int, step: int):
         self.inputs_count = 2
@@ -137,3 +174,20 @@ class MaxUnpooling1D(Operator):
 
     def shape(self, shape_data, shape_pooling):
         return max_unpooling_shape(shape_data, shape_pooling, 1)
+
+
+class MaxUnpooling2D(Operator):
+    def __init__(self, size: tuple, step: tuple):
+        self.inputs_count = 2
+        self.arguments = {'size': size, 'step': step}
+
+    def compute(self, value_data, value_pooling):
+        return compute_max_unpooling_2d(value_data, value_pooling, **self.arguments)
+
+    def gradient(self, engine, symbol_forward, symbol_data, symbol_pooling):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: max_unpooling_2d(symbol_data, numpy.ones(engine.shape(symbol_pooling)), **self.arguments),
+                lambda: max_pooling_2d(forward, reference=symbol_data, **self.arguments)]
+
+    def shape(self, shape_data, shape_pooling):
+        return max_unpooling_shape(shape_data, shape_pooling, 2)
