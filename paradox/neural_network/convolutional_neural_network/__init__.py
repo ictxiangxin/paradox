@@ -34,3 +34,17 @@ from paradox.neural_network.convolutional_neural_network.function import \
     average_pooling_2d, \
     average_unpooling_1d, \
     average_unpooling_2d
+from paradox.neural_network.convolutional_neural_network.layer import \
+    Convolution1DLayer, \
+    Convolution2DLayer, \
+    Convolution, \
+    MaxPooling1DLayer, \
+    MaxPooling2DLayer, \
+    AveragePooling1DLayer, \
+    AveragePooling2DLayer, \
+    PoolingLayer, \
+    MaxUnpooling1DLayer, \
+    MaxUnpooling2DLayer, \
+    AverageUnpooling1DLayer, \
+    AverageUnpooling2DLayer, \
+    Unpooling

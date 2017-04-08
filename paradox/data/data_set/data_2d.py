@@ -29,10 +29,10 @@ def grid_data(number: int,
               raw: int=2,
               column: int=2,
               width: float=5,
-              hight: float=5,
+              height: float=5,
               ):
     data = [[[], []], [[], []]]
-    raw_step = hight / raw
+    raw_step = height / raw
     column_step = width / column
     for _ in range(number):
         for i in range(raw):
