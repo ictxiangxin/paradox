@@ -42,7 +42,7 @@ from paradox.neural_network.convolutional_neural_network.layer import \
     MaxPooling2DLayer, \
     AveragePooling1DLayer, \
     AveragePooling2DLayer, \
-    PoolingLayer, \
+    Pooling, \
     MaxUnpooling1DLayer, \
     MaxUnpooling2DLayer, \
     AverageUnpooling1DLayer, \

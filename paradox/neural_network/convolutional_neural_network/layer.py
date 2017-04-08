@@ -18,7 +18,7 @@ class ConvolutionLayer:
     def __init__(self, kernel_shape, mode):
         self.__kernel_shape = kernel_shape
         self.__mode = mode
-        self.__kernel = Variable(numpy.zeros(self.__kernel_shape))
+        self.__kernel = Variable(numpy.random.normal(0, 1, self.__kernel_shape))
 
     def kernel(self):
         return self.__kernel
@@ -52,11 +52,11 @@ def register_convolution(name: str, convolution: ConvolutionLayer):
 
 
 class Convolution:
-    def __init__(self, name: str, *args):
+    def __init__(self, name: str, *args, **kwargs):
         self.__name = name.lower()
         self.__convolution = None
         if self.__name in convolution_map:
-            self.__convolution = convolution_map[self.__name](*args)
+            self.__convolution = convolution_map[self.__name](*args, **kwargs)
         else:
             raise ValueError('No such convolution: {}'.format(name))
 
@@ -113,11 +113,11 @@ def register_pooling(name: str, pooling: PoolingLayer):
 
 
 class Pooling:
-    def __init__(self, name: str, *args):
+    def __init__(self, name: str, *args, **kwargs):
         self.__name = name.lower()
         self.__pooling = None
         if self.__name in pooling_map:
-            self.__pooling = pooling_map[self.__name](*args)
+            self.__pooling = pooling_map[self.__name](*args, **kwargs)
         else:
             raise ValueError('No such pooling: {}'.format(name))
 
@@ -174,11 +174,11 @@ def register_unpooling(name: str, unpooling: UnpoolingLayer):
 
 
 class Unpooling:
-    def __init__(self, name: str, *args):
+    def __init__(self, name: str, *args, **kwargs):
         self.__name = name.lower()
         self.__unpooling = None
         if self.__name in unpooling_map:
-            self.__unpooling = unpooling_map[self.__name](*args)
+            self.__unpooling = unpooling_map[self.__name](*args, **kwargs)
         else:
             raise ValueError('No such unpooling: {}'.format(name))
 
