@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from functools import reduce
 from paradox.kernel.symbol import *
 
 
@@ -319,6 +320,9 @@ class Broadcast(Operator):
         self.arguments = {'shape': shape}
 
     def compute(self, value_a):
+        if len(value_a.shape) == 1 and len(self.arguments['shape']) > 1:
+            if value_a.shape[0] == self.arguments['shape'][0]:
+                value_a = value_a.reshape((value_a.shape[0], 1))
         return numpy.broadcast_to(value_a, **self.arguments)
 
     def gradient(self, engine, symbol_forward, symbol_a):
@@ -809,3 +813,40 @@ class Flip(Operator):
 
     def shape(self, shape_a):
         return shape_a, ()
+
+
+class Reshape(Operator):
+    def __init__(self, shape):
+        self.inputs_count = 1
+        self.arguments = {'shape': shape}
+
+    def compute(self, value_a):
+        return numpy.reshape(value_a, self.arguments['shape'])
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: reshape(forward, engine.shape(symbol_a))]
+
+    def shape(self, shape_a):
+        return self.arguments['shape'], ()
+
+
+class Spread(Operator):
+    def __init__(self, position):
+        self.inputs_count = 1
+        self.arguments = {'position': position}
+
+    def compute(self, value_a):
+        shape_a = value_a.shape
+        spread_dimension = reduce(lambda a, b: a * b, shape_a[self.arguments['position']:])
+        new_shape = shape_a[:self.arguments['position']] + (spread_dimension,)
+        return numpy.reshape(value_a, new_shape)
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: reshape(forward, engine.shape(symbol_a))]
+
+    def shape(self, shape_a):
+        spread_dimension = reduce(lambda a, b: a * b, shape_a[self.arguments['position']:])
+        new_shape = shape_a[:self.arguments['position']] + (spread_dimension,)
+        return new_shape, ()

@@ -488,3 +488,13 @@ def rotate90(a, count, axes):
 def flip(a, axis):
     from paradox.kernel.operator import Flip
     return Symbol(operator=Flip(axis), inputs=as_symbols([a]))
+
+
+def reshape(a, shape):
+    from paradox.kernel.operator import Reshape
+    return Symbol(operator=Reshape(shape), inputs=as_symbols([a]))
+
+
+def spread(a, position):
+    from paradox.kernel.operator import Spread
+    return Symbol(operator=Spread(position), inputs=as_symbols([a]))
