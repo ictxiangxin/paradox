@@ -32,8 +32,8 @@ class Dense(ConnectionLayer):
             if input_dimension is not None:
                 if self.__input_dimension != input_dimension:
                     raise ValueError('Not match input dimension: {} {}'.format(self.__input_dimension, input_dimension))
-        weight = Variable(numpy.zeros((self.__output_dimension, self.__input_dimension)))
-        bias = Variable(numpy.zeros((self.__output_dimension, 1)))
+        weight = Variable(numpy.zeros((self.__input_dimension, self.__output_dimension)))
+        bias = Variable(numpy.zeros((1, self.__output_dimension)))
         return weight, bias
 
     def input_dimension(self):
@@ -53,11 +53,11 @@ def register_connection(name: str, connection: ConnectionLayer):
 
 
 class Connection:
-    def __init__(self, name: str, *args):
+    def __init__(self, name: str, *args, **kwargs):
         self.__name = name.lower()
         self.__connection = None
         if self.__name in connection_map:
-            self.__connection = connection_map[self.__name](*args)
+            self.__connection = connection_map[self.__name](*args, **kwargs)
         else:
             raise ValueError('No such connection: {}'.format(name))
 

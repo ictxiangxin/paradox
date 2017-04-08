@@ -1,5 +1,6 @@
 import time
 import collections
+from paradox.kernel.operator import Operator
 from paradox.kernel.symbol import Variable
 from paradox.kernel.engine import Engine
 from paradox.kernel.optimizer import Optimizer, GradientDescentOptimizer
@@ -42,7 +43,9 @@ class Network:
             self.__add(layers)
 
     def __add(self, layer):
-        if isinstance(layer, ConnectionLayer):
+        if isinstance(layer, Operator):
+            self.__add_operator(layer)
+        elif isinstance(layer, ConnectionLayer):
             self.__add_connection(layer)
         elif isinstance(layer, Connection):
             self.__add_connection(layer.connection_layer())
@@ -65,13 +68,16 @@ class Network:
         else:
             raise ValueError('Invalid layer type: {}'. format(type(layer)))
 
+    def __add_operator(self, layer: Operator):
+        self.__current_symbol = Variable(operator=layer, inputs=[self.__current_symbol])
+
     def __add_connection(self, layer: ConnectionLayer):
         weight, bias = layer.weight_bias(self.__current_output)
         self.__variables.append(weight)
         self.__variables.append(bias)
         self.__current_weight = weight
         self.__current_bias = bias
-        self.__current_symbol = weight @ self.__current_symbol + bias
+        self.__current_symbol = self.__current_symbol @ weight + bias
         self.__current_output = layer.output_dimension()
 
     def __add_activation(self, layer: ActivationLayer):
@@ -81,13 +87,13 @@ class Network:
 
     def __add_convolution(self, layer: ConvolutionLayer):
         self.__variables.append(layer.kernel())
-        self.__current_symbol = layer.convolution_function(self.__current_symbol, layer.kernel(), layer.mode())
+        self.__current_symbol = layer.convolution_function()(self.__current_symbol, layer.kernel(), layer.mode())
 
     def __add_pooling(self, layer: PoolingLayer):
-        self.__current_symbol = layer.pooling_function(self.__current_symbol, layer.size(), layer.step())
+        self.__current_symbol = layer.pooling_function()(self.__current_symbol, layer.size(), layer.step())
 
     def __add_unpooling(self, layer: UnpoolingLayer):
-        self.__current_symbol = layer.unpooling_function(self.__current_symbol, layer.size(), layer.step())
+        self.__current_symbol = layer.unpooling_function()(self.__current_symbol, layer.size(), layer.step())
 
     def get_symbol(self):
         return self.__current_symbol

@@ -9,7 +9,7 @@ def generate_class_matrix(classification, default: int=0):
             index_map[c] = index
             index += 1
     dimension = len(index_map)
-    class_matrix = default * numpy.ones([dimension, len(classification)])
+    class_matrix = default * numpy.ones([len(classification), dimension])
     for i, c in enumerate(classification):
-        class_matrix[index_map[c], i] = 1
+        class_matrix[i, index_map[c]] = 1
     return class_matrix

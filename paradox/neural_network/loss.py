@@ -23,7 +23,7 @@ class SoftMaxLoss(LossLayer):
         class_matrix = generate_class_matrix(classification)
         class_symbol = Symbol(class_matrix)
         exp_symbol = exp(input_symbol)
-        softmax_value = reduce_sum(class_symbol * exp_symbol, axis=0) / reduce_sum(exp_symbol, axis=0)
+        softmax_value = reduce_sum(class_symbol * exp_symbol, axis=1) / reduce_sum(exp_symbol, axis=1)
         loss = reduce_mean(-log(softmax_value))
         return loss
 
@@ -38,7 +38,7 @@ class SVMLoss(LossLayer):
         class_matrix *= -(dimension - 1)
         class_matrix[class_matrix == 0] = 1
         class_symbol = Symbol(class_matrix)
-        loss = reduce_mean(maximum(reduce_sum(class_symbol * input_symbol, axis=0) + (dimension - 1), 0))
+        loss = reduce_mean(maximum(reduce_sum(class_symbol * input_symbol, axis=1) + (dimension - 1), 1))
         return loss
 
 
@@ -57,11 +57,11 @@ def register_loss(name: str, loss: LossLayer):
 
 
 class Loss:
-    def __init__(self, name: str, *args):
+    def __init__(self, name: str, *args, **kwargs):
         self.__name = name.lower()
         self.__loss = None
         if self.__name in loss_map:
-            self.__loss = loss_map[self.__name](*args)
+            self.__loss = loss_map[self.__name](*args, **kwargs)
         else:
             raise ValueError('No such loss: {}'.format(name))
 
