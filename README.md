@@ -394,7 +394,7 @@ model.loss('softmax')  # 使用softmax loss。
 model.optimizer('gd', rate=0.0002, consistent=True)
 
 # 执行训练。
-model.train([c_x, c_y], classification, epochs=50000)
+model.train(np.array([c_x, c_y]).transpose(), classification, epochs=50000)
 
 # 设置网格密度为0.1。
 h = 0.1
@@ -403,7 +403,7 @@ h = 0.1
 x, y = np.meshgrid(np.arange(np.min(c_x) - 1, np.max(c_x) + 1, h), np.arange(np.min(c_y) - 1, np.max(c_y) + 1, h))
 
 # 生成采样点预测值。
-z = model.predict([x.ravel(), y.ravel()]).argmax(axis=0).reshape(x.shape)
+z = model.predict(np.array([x.ravel(), y.ravel()]).transpose()).argmax(axis=1).reshape(x.shape)
 
 # 绘制图像。
 plt.title('2x16x16x16x3 Multi-Classification')
@@ -456,7 +456,7 @@ model.loss('softmax')  # 使用softmax loss。
 model.optimizer('gd', rate=0.0003)
 
 # 执行训练。
-model.train([c_x, c_y], classification, epochs=30000)
+model.train(np.array([c_x, c_y]).transpose(), classification, epochs=30000)
 
 # 设置网格密度为0.1。
 h = 0.1
@@ -465,7 +465,7 @@ h = 0.1
 x, y = np.meshgrid(np.arange(np.min(c_x) - .1, np.max(c_x) + .1, h), np.arange(np.min(c_y) - .1, np.max(c_y) + .1, h))
 
 # 生成采样点预测值。
-z = model.predict([x.ravel(), y.ravel()]).argmax(axis=0).reshape(x.shape)
+z = model.predict(np.array([x.ravel(), y.ravel()]).transpose()).argmax(axis=1).reshape(x.shape)
 
 # 绘制图像。
 plt.title('2x8x8x8x8x2 Grid Classification')
