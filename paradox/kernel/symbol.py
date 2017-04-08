@@ -38,7 +38,7 @@ class Symbol:
         else:
             if self.__operator.operator_sign is None:
                 arguments = list(map(str, self.input))
-                arguments += ['{}={}'.format(k, v) for k, v in self.__operator.arguments.items()]
+                arguments += ['{}={}'.format(k, '\'' + v + '\'' if isinstance(v, str) else v) for k, v in self.__operator.arguments.items()]
                 return '{}({})'.format(self.__operator.__class__.__name__, ', '.join(arguments))
             else:
                 if len(self.input) < 2:
