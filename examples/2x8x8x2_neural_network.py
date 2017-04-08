@@ -25,16 +25,16 @@ c_y = c1_y + c2_y
 classification = [0] * points_sum + [1] * points_sum
 
 # 定义符号。
-A = pd.Variable([c_x, c_y], name='A')
-W1 = pd.Variable(np.random.random((8, 2)), name='W1')  # 输入层到隐含层的权重矩阵。
+A = pd.Variable(np.array([c_x, c_y]).transpose(), name='A')
+W1 = pd.Variable(np.random.random((2, 8)), name='W1')  # 输入层到隐含层的权重矩阵。
 W2 = pd.Variable(np.random.random((8, 8)), name='W2')  # 第1层隐含层到输出层的权重矩阵。
-W3 = pd.Variable(np.random.random((2, 8)), name='W3')  # 第2层隐含层到输出层的权重矩阵。
-B1 = pd.Variable(np.random.random((8, 1)), name='B1')  # 第1层隐含层的偏置。
-B2 = pd.Variable(np.random.random((8, 1)), name='B2')  # 第2层隐含层的偏置。
-B3 = pd.Variable(np.random.random((2, 1)), name='B3')  # 输出层的偏置。
+W3 = pd.Variable(np.random.random((8, 2)), name='W3')  # 第2层隐含层到输出层的权重矩阵。
+B1 = pd.Variable(np.random.random((1, 8)), name='B1')  # 第1层隐含层的偏置。
+B2 = pd.Variable(np.random.random((1, 8)), name='B2')  # 第2层隐含层的偏置。
+B3 = pd.Variable(np.random.random((1, 2)), name='B3')  # 输出层的偏置。
 
 # 构建2x8x8x2网络，使用ReLu激活函数。
-model = pd.nn.relu(W3 @ pd.nn.relu(W2 @ pd.nn.relu(W1 @ A + B1) + B2) + B3)
+model = pd.nn.relu(pd.nn.relu(pd.nn.relu(A @ W1 + B1) @ W2 + B2) @ W3 + B3)
 
 # 使用Softmax loss。
 loss = pd.nn.softmax_loss(model, classification)
@@ -56,7 +56,7 @@ for epoch in range(10000):
             break
 
 # 创建预测函数。
-predict = pd.where(pd.reduce_sum([[-1], [1]] * model, axis=0) < 0, -1, 1)
+predict = pd.where(pd.reduce_sum([[-1, 1]] * model, axis=1) < 0, -1, 1)
 
 # 创建预测函数计算引擎。
 predict_engine = pd.Engine(predict)
@@ -68,7 +68,7 @@ h = 0.1
 x, y = np.meshgrid(np.arange(np.min(c_x) - 1, np.max(c_x) + 1, h), np.arange(np.min(c_y) - 1, np.max(c_y) + 1, h))
 
 # 绑定变量值。
-predict_engine.bind = {A: [x.ravel(), y.ravel()]}
+predict_engine.bind = {A: np.array([x.ravel(), y.ravel()]).transpose()}
 
 # 生成采样点预测值。
 z = predict_engine.value().reshape(x.shape)

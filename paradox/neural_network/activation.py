@@ -38,7 +38,7 @@ class SoftMax(ActivationLayer):
     @staticmethod
     def activation_function(input_symbol: Symbol):
         exp_symbol = exp(input_symbol)
-        output_symbol = exp_symbol / reduce_sum(exp_symbol, axis=0)
+        output_symbol = exp_symbol / reduce_sum(exp_symbol, axis=1)
         return output_symbol
 
     @staticmethod
