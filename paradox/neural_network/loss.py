@@ -57,11 +57,11 @@ def register_loss(name: str, loss: LossLayer):
 
 
 class Loss:
-    def __init__(self, name: str):
+    def __init__(self, name: str, *args):
         self.__name = name.lower()
         self.__loss = None
         if self.__name in loss_map:
-            self.__loss = loss_map[self.__name]
+            self.__loss = loss_map[self.__name](*args)
         else:
             raise ValueError('No such loss: {}'.format(name))
 

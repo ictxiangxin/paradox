@@ -1,12 +1,13 @@
 import time
 import collections
-import numpy
 from paradox.kernel.symbol import Variable
 from paradox.kernel.engine import Engine
 from paradox.kernel.optimizer import Optimizer, GradientDescentOptimizer
+from paradox.neural_network.loss import LossLayer, Loss
 from paradox.neural_network.connection import ConnectionLayer, Connection
 from paradox.neural_network.activation import ActivationLayer, Activation
-from paradox.neural_network.loss import LossLayer, Loss
+from paradox.neural_network.convolutional_neural_network.layer import ConvolutionLayer, PoolingLayer, UnpoolingLayer
+from paradox.neural_network.convolutional_neural_network.layer import Convolution, Pooling, Unpooling
 
 
 optimizer_map = {
@@ -49,6 +50,18 @@ class Network:
             self.__add_activation(layer)
         elif isinstance(layer, Activation):
             self.__add_activation(layer.activation_layer())
+        elif isinstance(layer, ConvolutionLayer):
+            self.__add_convolution(layer)
+        elif isinstance(layer, Convolution):
+            self.__add_convolution(layer.convolution_layer())
+        elif isinstance(layer, PoolingLayer):
+            self.__add_pooling(layer)
+        elif isinstance(layer, Pooling):
+            self.__add_pooling(layer.pooling_layer())
+        elif isinstance(layer, UnpoolingLayer):
+            self.__add_unpooling(layer)
+        elif isinstance(layer, Unpooling):
+            self.__add_unpooling(layer.unpooling_layer())
         else:
             raise ValueError('Invalid layer type: {}'. format(type(layer)))
 
@@ -65,6 +78,16 @@ class Network:
         self.__current_symbol = layer.activation_function(self.__current_symbol)
         self.__current_weight.value = layer.weight_initialization(self.__current_weight.value.shape)
         self.__current_bias.value = layer.bias_initialization(self.__current_bias.value.shape)
+
+    def __add_convolution(self, layer: ConvolutionLayer):
+        self.__variables.append(layer.kernel())
+        self.__current_symbol = layer.convolution_function(self.__current_symbol, layer.kernel(), layer.mode())
+
+    def __add_pooling(self, layer: PoolingLayer):
+        self.__current_symbol = layer.pooling_function(self.__current_symbol, layer.size(), layer.step())
+
+    def __add_unpooling(self, layer: UnpoolingLayer):
+        self.__current_symbol = layer.unpooling_function(self.__current_symbol, layer.size(), layer.step())
 
     def get_symbol(self):
         return self.__current_symbol

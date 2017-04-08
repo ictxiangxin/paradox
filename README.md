@@ -9,7 +9,7 @@
 
 > 可能要开始实现CNN和RNN了。
 
-## 一些例子
+## 代码示例
 
 ### 递归下降解线性方程组
 
@@ -182,7 +182,7 @@ plt.show()
 
 运行结果：
 
-![LinearRegression](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/linear_svm.png)
+![LinearSVM](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/linear_svm.png)
 
 ### 2x4x2神经网络环状数据分类
 
@@ -265,7 +265,7 @@ plt.show()
 
 运行结果：
 
-![LinearRegression](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/2x4x2_neural_network.png)
+![2x4x2NeuralNetwork](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/2x4x2_neural_network.png)
 
 ### 2x8x8x2神经网络螺旋型数据分类
 
@@ -356,7 +356,7 @@ plt.show()
 
 运行结果：
 
-![LinearRegression](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/2x8x8x2_neural_network.png)
+![2x8x8x2NeuralNetwork](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/2x8x8x2_neural_network.png)
 
 ### 2x16x16x16x3网络实现多分类
 
@@ -417,7 +417,7 @@ plt.show()
 
 运行结果：
 
-![LinearRegression](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/2x16x16x16x3_multi_classification.png)
+![2x16x16x16x3NeuralNetwork](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/2x16x16x16x3_multi_classification.png)
 
 ### 2x8x8x8x8x2网络分类网格状数据
 ```python
@@ -478,4 +478,4 @@ plt.show()
 
 运行结果：
 
-![LinearRegression](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/2x8x8x8x8x2_grid_classification.png)
+![2x8x8x8x8x2NeuralNetwork](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/2x8x8x8x8x2_grid_classification.png)

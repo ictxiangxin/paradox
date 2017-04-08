@@ -53,11 +53,11 @@ def register_connection(name: str, connection: ConnectionLayer):
 
 
 class Connection:
-    def __init__(self, name: str):
+    def __init__(self, name: str, *args):
         self.__name = name.lower()
         self.__connection = None
         if self.__name in connection_map:
-            self.__connection = connection_map[self.__name]
+            self.__connection = connection_map[self.__name](*args)
         else:
             raise ValueError('No such connection: {}'.format(name))
 

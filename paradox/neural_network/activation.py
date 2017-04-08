@@ -104,11 +104,11 @@ def register_activation(name: str, activation: ActivationLayer):
 
 
 class Activation:
-    def __init__(self, name: str):
+    def __init__(self, name: str, *args):
         self.__name = name.lower()
         self.__activation = None
         if self.__name in activation_map:
-            self.__activation = activation_map[self.__name]
+            self.__activation = activation_map[self.__name](*args)
         else:
             raise ValueError('No such activation: {}'.format(name))
 
