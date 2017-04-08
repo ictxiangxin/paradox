@@ -44,6 +44,16 @@ def average_pooling_1d(data, size: int, step: int):
     return Symbol(operator=AveragePooling1D(size, step), inputs=as_symbols([data]))
 
 
+def average_pooling_2d(data, size: tuple, step: tuple):
+    from paradox.neural_network.convolutional_neural_network.operator import AveragePooling2D
+    return Symbol(operator=AveragePooling2D(size, step), inputs=as_symbols([data]))
+
+
 def average_unpooling_1d(pooling, size: int, step: int, unpooling_size: int=None):
     from paradox.neural_network.convolutional_neural_network.operator import AverageUnpooling1D
     return Symbol(operator=AverageUnpooling1D(size, step, unpooling_size), inputs=as_symbols([pooling]))
+
+
+def average_unpooling_2d(pooling, size: tuple, step: tuple, unpooling_size: tuple=None):
+    from paradox.neural_network.convolutional_neural_network.operator import AverageUnpooling2D
+    return Symbol(operator=AverageUnpooling2D(size, step, unpooling_size), inputs=as_symbols([pooling]))

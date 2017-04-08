@@ -10,7 +10,9 @@ from paradox.neural_network.convolutional_neural_network.compute import \
     compute_max_unpooling_1d, \
     compute_max_unpooling_2d, \
     compute_average_pooling_1d, \
-    compute_average_unpooling_1d
+    compute_average_pooling_2d, \
+    compute_average_unpooling_1d, \
+    compute_average_unpooling_2d
 from paradox.neural_network.convolutional_neural_network.function import \
     convolution_1d, \
     convolution_2d, \
@@ -19,7 +21,9 @@ from paradox.neural_network.convolutional_neural_network.function import \
     max_unpooling_1d, \
     max_unpooling_2d, \
     average_pooling_1d, \
-    average_unpooling_1d
+    average_pooling_2d, \
+    average_unpooling_1d, \
+    average_unpooling_2d
 
 
 def convolution_shape(shape_data, shape_kernel, mode, dimension):
@@ -219,6 +223,22 @@ class AveragePooling1D(Operator):
         return pooling_shape(shape_data, dimension=1, **self.arguments)
 
 
+class AveragePooling2D(Operator):
+    def __init__(self, size: tuple, step: tuple):
+        self.inputs_count = 1
+        self.arguments = {'size': size, 'step': step}
+
+    def compute(self, value_data):
+        return compute_average_pooling_2d(value_data, **self.arguments)
+
+    def gradient(self, engine, symbol_forward, symbol_data):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: average_unpooling_2d(forward, unpooling_size=engine.shape(symbol_data)[-2:], **self.arguments)]
+
+    def shape(self, shape_data):
+        return pooling_shape(shape_data, dimension=2, **self.arguments)
+
+
 class AverageUnpooling1D(Operator):
     def __init__(self, size: int, step: int, unpooling_size: int=None):
         self.inputs_count = 1
@@ -234,3 +254,18 @@ class AverageUnpooling1D(Operator):
     def shape(self, shape_data):
         return average_unpooling_shape(shape_data, dimension=1, **self.arguments)
 
+
+class AverageUnpooling2D(Operator):
+    def __init__(self, size: tuple, step: tuple, unpooling_size: tuple=None):
+        self.inputs_count = 1
+        self.arguments = {'size': size, 'step': step, 'unpooling_size': unpooling_size}
+
+    def compute(self, value_pooling):
+        return compute_average_unpooling_2d(value_pooling, **self.arguments)
+
+    def gradient(self, engine, symbol_forward, symbol_pooling):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: average_pooling_2d(forward, **self.arguments)]
+
+    def shape(self, shape_data):
+        return average_unpooling_shape(shape_data, dimension=2, **self.arguments)

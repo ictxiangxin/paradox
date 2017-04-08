@@ -129,7 +129,7 @@ def compute_max_pooling_1d(data, size, step, reference=None):
             if reference is None:
                 result.append(__compute_max_pooling_1d(data[key], size, step))
             else:
-                result.append(__compute_max_pooling_1d(data[key], size, step, reference[key].ravel()))
+                result.append(__compute_max_pooling_1d(data[key], size, step, reference[key]))
         return numpy.array(result).reshape(data_prefix_shape + result[0].shape)
     else:
         return __compute_max_pooling_1d(data, size, step)
@@ -237,20 +237,65 @@ def compute_average_pooling_1d(data, size, step):
 
 
 def __compute_average_unpooling_1d(pooling, size, step, unpooling_size=None):
-    unpooling_array = numpy.zeros(size + (len(pooling) - 1) * step)
+    unpooling_array = numpy.zeros(size + (pooling.shape[0] - 1) * step)
     for p_i, i in enumerate(range(0, unpooling_array.shape[0] - size + 1, step)):
         unpooling_array[i: i + size] += pooling[p_i] * numpy.ones(size)
     if unpooling_size is not None:
-        unpooling_array = numpy.concatenate((unpooling_array, [0] * (unpooling_size - len(unpooling_array))))
+        unpooling_array = numpy.concatenate((unpooling_array, numpy.zeros(unpooling_size - unpooling_array.shape[0])))
     return unpooling_array
 
 
-def compute_average_unpooling_1d(data, size, step, unpooling_size=None):
+def compute_average_unpooling_1d(pooling, size, step, unpooling_size=None):
     result = []
-    data_prefix_shape = data.shape[:-1]
+    data_prefix_shape = pooling.shape[:-1]
     if data_prefix_shape:
         for key in __array_key_traversal(data_prefix_shape):
-            result.append(__compute_average_unpooling_1d(data[key], size, step, unpooling_size))
+            result.append(__compute_average_unpooling_1d(pooling[key], size, step, unpooling_size))
         return numpy.array(result).reshape(data_prefix_shape + result[0].shape)
     else:
-        return __compute_average_unpooling_1d(data, size, step, unpooling_size)
+        return __compute_average_unpooling_1d(pooling, size, step, unpooling_size)
+
+
+def __compute_average_pooling_2d(data, size, step):
+    if data.shape[0] < size[0] or data.shape[1] < size[1]:
+        raise ValueError('Data shape smaller than size: {} {}'.format(data.shape, size))
+    pooling_array = []
+    for i in range(0, data.shape[0] - size[0] + 1, step[0]):
+        for j in range(0, data.shape[1] - size[1] + 1, step[1]):
+            if i // step[0] >= len(pooling_array):
+                pooling_array.append([])
+            pooling_array[i // step[0]].append(numpy.mean(data[i: i + size[0], j: j + size[1]]))
+    return numpy.array(pooling_array)
+
+
+def compute_average_pooling_2d(data, size, step):
+    result = []
+    data_prefix_shape = data.shape[:-2]
+    if data_prefix_shape:
+        for key in __array_key_traversal(data_prefix_shape):
+            result.append(__compute_average_pooling_2d(data[key], size, step))
+        return numpy.array(result).reshape(data_prefix_shape + result[0].shape)
+    else:
+        return __compute_average_pooling_2d(data, size, step)
+
+
+def __compute_average_unpooling_2d(pooling, size, step, unpooling_size=None):
+    unpooling_array = numpy.zeros([size[0] + (pooling.shape[0] - 1) * step[0], size[1] + (pooling.shape[1] - 1) * step[1]])
+    for p_i, i in enumerate(range(0, unpooling_array.shape[0] - size[0] + 1, step[0])):
+        for p_j, j in enumerate(range(0, unpooling_array.shape[1] - size[1] + 1, step[1])):
+            unpooling_array[i: i + size[0], j: j + size[1]] += pooling[p_i, p_j] * numpy.ones(size)
+    if unpooling_size is not None:
+        unpooling_array = numpy.concatenate((unpooling_array, numpy.zeros([unpooling_size[0] - unpooling_array.shape[0], unpooling_array.shape[1]])), axis=0)
+        unpooling_array = numpy.concatenate((unpooling_array, numpy.zeros([unpooling_array.shape[0], unpooling_size[1] - unpooling_array.shape[1]])), axis=1)
+    return unpooling_array
+
+
+def compute_average_unpooling_2d(pooling, size, step, unpooling_size=None):
+    result = []
+    data_prefix_shape = pooling.shape[:-2]
+    if data_prefix_shape:
+        for key in __array_key_traversal(data_prefix_shape):
+            result.append(__compute_average_unpooling_2d(pooling[key], size, step, unpooling_size))
+        return numpy.array(result).reshape(data_prefix_shape + result[0].shape)
+    else:
+        return __compute_average_unpooling_2d(pooling, size, step, unpooling_size)

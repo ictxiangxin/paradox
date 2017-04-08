@@ -7,7 +7,9 @@ from paradox.neural_network.convolutional_neural_network.compute import \
     compute_max_unpooling_1d, \
     compute_max_unpooling_2d, \
     compute_average_pooling_1d, \
-    compute_average_unpooling_1d
+    compute_average_pooling_2d, \
+    compute_average_unpooling_1d, \
+    compute_average_unpooling_2d
 from paradox.neural_network.convolutional_neural_network.operator import \
     Convolution1D, \
     Convolution2D, \
@@ -18,7 +20,9 @@ from paradox.neural_network.convolutional_neural_network.operator import \
     MaxUnpooling1D, \
     MaxUnpooling2D, \
     AveragePooling1D, \
-    AverageUnpooling1D
+    AveragePooling2D, \
+    AverageUnpooling1D, \
+    AverageUnpooling2D
 from paradox.neural_network.convolutional_neural_network.function import \
     convolution_1d, \
     convolution_2d, \
@@ -27,4 +31,6 @@ from paradox.neural_network.convolutional_neural_network.function import \
     max_unpooling_1d, \
     max_unpooling_2d, \
     average_pooling_1d, \
-    average_unpooling_1d
+    average_pooling_2d, \
+    average_unpooling_1d, \
+    average_unpooling_2d
