@@ -45,7 +45,7 @@ class MNIST:
             magic, number = struct.unpack_from('>II', data, offset)
             offset += struct.calcsize('>II')
             if magic != 0x801:
-                raise ValueError('This is not MNIST image file: {}'.format(file))
+                raise ValueError('This is not MNIST label file: {}'.format(file))
             for i in range(number):
                 labels.append(struct.unpack_from('>1B', data, offset)[0])
                 offset += struct.calcsize('>1B')
