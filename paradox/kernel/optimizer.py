@@ -27,7 +27,7 @@ class GradientDescentOptimizer(Optimizer):
             if self.__consistent:
                 self.__gradient_engine.value_cache = value_cache
             variable.value = calculate_function(variable.value, self.__rate * self.__gradient_engine.value())
-            engine.modified()
+        engine.modified()
         self.__gradient_engine.modified()
 
     def minimize(self, engine: Engine):

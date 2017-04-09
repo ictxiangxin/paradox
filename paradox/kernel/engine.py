@@ -120,13 +120,13 @@ class Engine:
 
     def __compute_shape(self, symbol: Symbol):
         if symbol.operator is None:
-            if symbol.value is None:
-                if symbol in self.__bind:
-                    self.__shape[symbol] = self.__bind[symbol].shape
-                else:
-                    raise ValueError('Symbol must bind data: {}'.format(symbol))
+            if symbol in self.__bind:
+                self.__shape[symbol] = self.__bind[symbol].shape
             else:
-                self.__shape[symbol] = symbol.value.shape
+                if symbol.value is None:
+                    raise ValueError('Symbol must bind data: {}'.format(symbol))
+                else:
+                    self.__shape[symbol] = symbol.value.shape
         else:
             shape_broadcasts = symbol.operator.shape(*[self.shape(s) for s in symbol.input])
             shape = shape_broadcasts[0]
