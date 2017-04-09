@@ -157,7 +157,7 @@ class Network:
                         speed = state_cycle / (time.time() - cycle_start_time)
                         cycle_start_time = time.time()
                         loss_value = self.__train_engine.value()
-                        print('Training State [epoch = {}/{}, loss = {:.8f}, speed = {:.2f}(iteration/s), {}]'.format(
+                        print('Training State [epoch = {}/{}, loss = {:.8f}, speed = {:.2f}(iteration/s){}]'.format(
                             epoch + 1,
                             epochs,
                             loss_value,
@@ -185,4 +185,5 @@ class Network:
         for output_format, plugin_function in self.__plugin:
             output_format_list.append(output_format)
             result_list.append(plugin_function())
-        return ', '.join(output_format_list).format(*result_list)
+        plugin_output = ', '.join(output_format_list).format(*result_list)
+        return ', ' + plugin_output if plugin_output else ''

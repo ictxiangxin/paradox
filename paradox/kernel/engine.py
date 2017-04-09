@@ -54,12 +54,21 @@ class Engine:
         return self.__bind
 
     def set_bind(self, bind_data: dict):
+        old_bind = self.__bind
         self.__bind = {}
+        need_clear = False
         for s, d in bind_data.items():
             if s.category == SymbolCategory.constant:
                 raise ValueError('Can not bind data for Constant.')
-            self.__bind[s] = numpy.array(d)
-        self.clear()
+            d_array = numpy.array(d)
+            if s in old_bind:
+                if old_bind[s].shape != d_array.shape:
+                    need_clear = True
+            else:
+                need_clear = True
+            self.__bind[s] = d_array
+        if need_clear:
+            self.clear()
 
     bind = property(get_bind, set_bind)
 
