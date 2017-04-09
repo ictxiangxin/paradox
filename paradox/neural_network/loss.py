@@ -1,7 +1,7 @@
 from enum import Enum
 from abc import abstractmethod
 from paradox.kernel import *
-from paradox.utils import generate_class_matrix
+from paradox.utils import generate_label_matrix
 
 
 LossCategory = Enum('LossCategory', ('classification', 'regression'))
@@ -51,12 +51,12 @@ svm_loss = SVMLoss.loss_function
 
 
 def softmax_loss_with_label(input_symbol: Symbol, classification, get_label_symbol: bool=False):
-    class_matrix = generate_class_matrix(classification)
+    class_matrix, _, _ = generate_label_matrix(classification)
     return softmax_loss(input_symbol, class_matrix, get_label_symbol)
 
 
 def svm_loss_with_label(input_symbol: Symbol, classification, get_label_symbol: bool=False):
-    class_matrix = generate_class_matrix(classification)
+    class_matrix, _, _ = generate_label_matrix(classification)
     return svm_loss(input_symbol, class_matrix, get_label_symbol)
 
 
