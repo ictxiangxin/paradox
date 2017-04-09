@@ -294,7 +294,7 @@ c_x = c1_x + c2_x
 c_y = c1_y + c2_y
 
 # 定义每个点的分类类别。
-classification = [0] * points_sum + [1] * points_sum
+classification = pd.utils.generate_label_matrix([0] * points_sum + [1] * points_sum)[0]
 
 # 定义符号。
 A = pd.Variable(np.array([c_x, c_y]).transpose(), name='A')
@@ -352,7 +352,6 @@ plt.plot(c2_x, c2_y, 'bo', label='Category 2')
 plt.contourf(x, y, z, 2, cmap='RdBu', alpha=.6)
 plt.legend()
 plt.show()
-
 ```
 
 运行结果：
@@ -377,7 +376,7 @@ c_x = data[0][0] + data[1][0] + data[2][0]
 c_y = data[0][1] + data[1][1] + data[2][1]
 
 # 定义每个点的分类类别。
-classification = [0] * len(data[0][0]) + [1] * len(data[1][0]) + [2] * len(data[2][0])
+classification = pd.utils.generate_label_matrix([0] * len(data[0][0]) + [1] * len(data[1][0]) + [2] * len(data[2][0]))[0]
 
 # 调用高层API生成2x16x16x16x3的网络
 model = pd.nn.Network()
@@ -395,7 +394,7 @@ model.loss('softmax')  # 使用softmax loss。
 model.optimizer('gd', rate=0.003, consistent=True)
 
 # 执行训练。
-model.train(np.array([c_x, c_y]).transpose(), classification, epochs=50000)
+model.train(np.array([c_x, c_y]).transpose(), classification, epochs=10000)
 
 # 设置网格密度为0.1。
 h = 0.1
@@ -437,7 +436,7 @@ c_x = data[0][0] + data[1][0]
 c_y = data[0][1] + data[1][1]
 
 # 定义每个点的分类类别。
-classification = [0] * len(data[0][0]) + [1] * len(data[1][0])
+classification = pd.utils.generate_label_matrix([0] * len(data[0][0]) + [1] * len(data[1][0]))[0]
 
 # 调用高层API生成2x8x8x8x8x2的网络，5层网络。
 model = pd.nn.Network()

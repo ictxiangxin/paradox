@@ -22,7 +22,7 @@ c_x = c1_x + c2_x
 c_y = c1_y + c2_y
 
 # 定义每个点的分类类别。
-classification = [0] * points_sum + [1] * points_sum
+classification = pd.utils.generate_label_matrix([0] * points_sum + [1] * points_sum)[0]
 
 # 定义符号。
 A = pd.Variable(np.array([c_x, c_y]).transpose(), name='A')

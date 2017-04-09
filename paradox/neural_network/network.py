@@ -129,12 +129,17 @@ class Network:
               batch_size: int=0,
               loss_threshold: float=0.001,
               state_cycle: int=100):
+        data = numpy.array(data)
+        target = numpy.array(target)
         if data.shape[0] != target.shape[0]:
             raise ValueError('Data dimension not match target dimension: {} {}'.format(data.shape[0], target.shape[0]))
         data_scale = data.shape[0]
-        if batch_size == 0:
-            batch_size = data_scale
-        loss, target_symbol = self.__loss.loss_function(self.__current_symbol, target[:batch_size], True)
+        target_symbol = None
+        if batch_size != 0:
+            loss, target_symbol = self.__loss.loss_function(self.__current_symbol, target[:batch_size], True)
+        else:
+            loss = self.__loss.loss_function(self.__current_symbol, target)
+            self.__train_engine.bind = {self.__input_symbol: data}
         self.__train_engine.symbol = loss
         self.__train_engine.variables = self.__variables
         start_time = time.time()
@@ -142,9 +147,10 @@ class Network:
         try:
             iteration = 0
             for epoch in range(epochs):
-                for i in range(0, data_scale, batch_size):
-                    self.__train_engine.bind = {self.__input_symbol: data[i: min([i + batch_size, data_scale])],
-                                                target_symbol: target[i: min([i + batch_size, data_scale])]}
+                for i in ([0] if batch_size == 0 else range(0, data_scale, batch_size)):
+                    if batch_size != 0:
+                        self.__train_engine.bind = {self.__input_symbol: data[i: min([i + batch_size, data_scale])],
+                                                    target_symbol: target[i: min([i + batch_size, data_scale])]}
                     self.__optimizer.minimize(self.__train_engine)
                     iteration += 1
                     if iteration % state_cycle == 0:

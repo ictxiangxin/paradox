@@ -13,7 +13,7 @@ c_x = data[0][0] + data[1][0]
 c_y = data[0][1] + data[1][1]
 
 # 定义每个点的分类类别。
-classification = [0] * len(data[0][0]) + [1] * len(data[1][0])
+classification = pd.utils.generate_label_matrix([0] * len(data[0][0]) + [1] * len(data[1][0]))[0]
 
 # 调用高层API生成2x8x8x8x8x2的网络，5层网络。
 model = pd.nn.Network()

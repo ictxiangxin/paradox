@@ -297,7 +297,7 @@ class Transpose(Operator):
         return transpose_shape(shape_a, self.arguments['axes'])
 
 
-class Reduce(Operator):
+class ReduceSum(Operator):
     def __init__(self, axis: int=None, invariant: bool=False):
         self.inputs_count = 1
         self.arguments = {'axis': axis, 'invariant': invariant}
@@ -308,10 +308,55 @@ class Reduce(Operator):
     def gradient(self, engine, symbol_forward, symbol_a):
         forward = engine.gradient(symbol_forward)
         shape_a = engine.shape(symbol_a)
-        return [lambda: broadcast(forward, shape_a)]
+        axis = self.arguments['axis']
+        if axis:
+            return [lambda: broadcast(expand(forward, axis), shape_a)]
+        else:
+            return [lambda: broadcast(forward, shape_a)]
 
     def shape(self, shape_a):
         return reduce_shape(shape_a, **self.arguments)
+
+
+class ReduceMean(Operator):
+    def __init__(self, axis: int=None, invariant: bool=False):
+        self.inputs_count = 1
+        self.arguments = {'axis': axis, 'invariant': invariant}
+
+    def compute(self, value_a):
+        return numpy.mean(value_a, axis=self.arguments['axis'], keepdims=self.arguments['invariant'])
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        shape_a = engine.shape(symbol_a)
+        axis = self.arguments['axis']
+        if axis:
+            return [lambda: broadcast(expand(forward, axis), shape_a)]
+        else:
+            return [lambda: broadcast(forward, shape_a)]
+
+    def shape(self, shape_a):
+        return reduce_shape(shape_a, **self.arguments)
+
+
+class Expand(Operator):
+    def __init__(self, axis: int):
+        self.inputs_count = 1
+        self.arguments = {'axis': axis}
+
+    def compute(self, value_a):
+        return numpy.expand_dims(value_a, **self.arguments)
+
+    def gradient(self, engine, symbol_forward, symbol_a):
+        forward = engine.gradient(symbol_forward)
+        return [lambda: reduce_mean(forward, **self.arguments)]
+
+    def shape(self, shape_a):
+        new_shape = list(shape_a)
+        new_shape.insert(self.arguments['axis'], 1)
+        broadcast_a = [0] * len(shape_a)
+        broadcast_a.insert(self.arguments['axis'], 1)
+        return tuple(new_shape), tuple(broadcast_a)
 
 
 class Broadcast(Operator):
@@ -331,19 +376,6 @@ class Broadcast(Operator):
 
     def shape(self, shape_a):
         return element_wise_shape(shape_a, self.arguments['shape'])[:2]
-
-
-class ReduceSum(Reduce):
-    def __init__(self, axis: int=None, invariant: bool=False):
-        Reduce.__init__(self, axis, invariant)
-
-
-class ReduceMean(Reduce):
-    def __init__(self, axis: int=None, invariant: bool=False):
-        Reduce.__init__(self, axis, invariant)
-
-    def compute(self, value_a):
-        return numpy.mean(value_a, axis=self.arguments['axis'], keepdims=self.arguments['invariant'])
 
 
 class Power(Operator):

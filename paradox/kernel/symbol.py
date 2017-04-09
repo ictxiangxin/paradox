@@ -335,24 +335,29 @@ def log(a):
     return Symbol(operator=Log(), inputs=as_symbols([a]))
 
 
-def transpose(a, axes=None):
+def transpose(a, axes: int=None):
     from paradox.kernel.operator import Transpose
     return Symbol(operator=Transpose(axes), inputs=as_symbols([a]))
+
+
+def reduce_sum(a, axis: int=None, invariant=False):
+    from paradox.kernel.operator import ReduceSum
+    return Symbol(operator=ReduceSum(axis, invariant), inputs=as_symbols([a]))
+
+
+def reduce_mean(a, axis: int=None, invariant=False):
+    from paradox.kernel.operator import ReduceMean
+    return Symbol(operator=ReduceMean(axis, invariant), inputs=as_symbols([a]))
+
+
+def expand(a, axis: int):
+    from paradox.kernel.operator import Expand
+    return Symbol(operator=Expand(axis), inputs=as_symbols([a]))
 
 
 def broadcast(a, shape):
     from paradox.kernel.operator import Broadcast
     return Symbol(operator=Broadcast(shape), inputs=as_symbols([a]))
-
-
-def reduce_sum(a, axis=None, invariant=False):
-    from paradox.kernel.operator import ReduceSum
-    return Symbol(operator=ReduceSum(axis, invariant), inputs=as_symbols([a]))
-
-
-def reduce_mean(a, axis=None, invariant=False):
-    from paradox.kernel.operator import ReduceMean
-    return Symbol(operator=ReduceMean(axis, invariant), inputs=as_symbols([a]))
 
 
 def where(condition, a, b):
