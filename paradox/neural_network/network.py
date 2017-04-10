@@ -1,4 +1,3 @@
-import time
 import collections
 from functools import reduce
 import numpy
@@ -11,6 +10,7 @@ from paradox.neural_network.connection import ConnectionLayer, Connection
 from paradox.neural_network.activation import ActivationLayer, Activation
 from paradox.neural_network.convolutional_neural_network.layer import ConvolutionLayer, PoolingLayer, UnpoolingLayer
 from paradox.neural_network.convolutional_neural_network.layer import Convolution, Pooling, Unpooling
+from paradox.neural_network.plugin import Plugin, TrainingStatePlugin
 
 
 optimizer_map = {
@@ -24,6 +24,11 @@ def register_optimizer(name: str, optimizer: Optimizer):
 
 class Network:
     def __init__(self):
+        self.epoch = None
+        self.iteration = None
+        self.epochs = None
+        self.batch_size = None
+        self.engine = Engine()
         self.__layer = []
         self.__input_symbol = Variable(name='InputSymbol')
         self.__current_symbol = self.__input_symbol
@@ -34,9 +39,9 @@ class Network:
         self.__data = None
         self.__optimizer = None
         self.__loss = None
-        self.__train_engine = Engine()
         self.__predict_engine = Engine()
-        self.__plugin = []
+        self.__plugin = collections.OrderedDict()
+        self.load_default_plugin()
 
     def __valid_current_output(self):
         if self.__current_output is None:
@@ -144,15 +149,10 @@ class Network:
         else:
             raise ValueError('Invalid loss type: {}'.format(type(loss_object)))
 
-    def train(self,
-              data,
-              target,
-              epochs: int=10000,
-              batch_size: int=0,
-              loss_threshold: float=0.001,
-              state_cycle: int=100):
+    def train(self, data, target, epochs: int=10000, batch_size: int=0):
         data = numpy.array(data)
         target = numpy.array(target)
+        self.epochs = epochs
         if data.shape[0] != target.shape[0]:
             raise ValueError('Data dimension not match target dimension: {} {}'.format(data.shape[0], target.shape[0]))
         data_scale = data.shape[0]
@@ -161,36 +161,27 @@ class Network:
             loss, target_symbol = self.__loss.loss_function(self.__current_symbol, target[:batch_size], True)
         else:
             loss = self.__loss.loss_function(self.__current_symbol, target)
-            self.__train_engine.bind = {self.__input_symbol: data}
-        self.__train_engine.symbol = loss
-        self.__train_engine.variables = self.__variables
-        start_time = time.time()
-        cycle_start_time = time.time()
+            self.engine.bind = {self.__input_symbol: data}
+        self.engine.symbol = loss
+        self.engine.variables = self.__variables
         try:
-            iteration = 0
-            for epoch in range(epochs):
+            self.iteration = 0
+            self.run_plugin('begin_training')
+            for epoch in range(self.epochs):
+                self.epoch = epoch + 1
+                self.run_plugin('begin_epoch')
                 for i in ([0] if batch_size == 0 else range(0, data_scale, batch_size)):
                     if batch_size != 0:
-                        self.__train_engine.bind = {self.__input_symbol: data[i: min([i + batch_size, data_scale])],
-                                                    target_symbol: target[i: min([i + batch_size, data_scale])]}
-                    self.__optimizer.minimize(self.__train_engine)
-                    iteration += 1
-                    if iteration % state_cycle == 0:
-                        speed = state_cycle / (time.time() - cycle_start_time)
-                        cycle_start_time = time.time()
-                        loss_value = self.__train_engine.value()
-                        print('Training State [epoch = {}/{}, loss = {:.8f}, speed = {:.2f}(iterations/s){}]'.format(
-                            epoch + 1,
-                            epochs,
-                            loss_value,
-                            speed,
-                            self.run_plugin()))
-                        if loss_value < loss_threshold:
-                            print('Touch loss threshold: {} < {}'.format(loss_value, loss_threshold))
-                            break
+                        self.engine.bind = {self.__input_symbol: data[i: min([i + batch_size, data_scale])],
+                                            target_symbol: target[i: min([i + batch_size, data_scale])]}
+                    self.iteration += 1
+                    self.run_plugin('begin_iteration')
+                    self.__optimizer.minimize(self.engine)
+                    self.run_plugin('end_iteration')
+                self.run_plugin('end_epoch')
         except KeyboardInterrupt:
             print('Keyboard Interrupt')
-        print('Training Complete [{}]'.format(time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))))
+        self.run_plugin('end_training')
 
     def predict(self, data):
         self.__predict_engine.symbol = self.__current_symbol
@@ -198,14 +189,23 @@ class Network:
         predict_data = self.__predict_engine.value()
         return predict_data
 
-    def add_plugin(self, plugin_function, output_format):
-        self.__plugin.append((output_format, plugin_function))
+    def load_default_plugin(self):
+        default_plugin = [
+            ('Training State', TrainingStatePlugin()),
+        ]
+        for name, plugin in default_plugin:
+            self.add_plugin(name, plugin)
 
-    def run_plugin(self):
-        output_format_list = []
-        result_list = []
-        for output_format, plugin_function in self.__plugin:
-            output_format_list.append(output_format)
-            result_list.append(plugin_function())
-        plugin_output = ', '.join(output_format_list).format(*result_list)
-        return ', ' + plugin_output if plugin_output else ''
+    def add_plugin(self, name: str, plugin: Plugin):
+        self.__plugin[name] = plugin
+        plugin.bind_network(self)
+
+    def run_plugin(self, stage: str):
+        for _, plugin in self.__plugin.items():
+            getattr(plugin, stage)()
+
+    def plugin(self, name: str):
+        if name in self.__plugin:
+            return self.__plugin[name]
+        else:
+            raise ValueError('No such plugin: {}'.format(name))

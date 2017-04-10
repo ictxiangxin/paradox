@@ -25,3 +25,6 @@ from paradox.neural_network.connection import \
 from paradox.neural_network.network import \
     register_optimizer, \
     Network
+from paradox.neural_network.plugin import \
+    Plugin, \
+    TrainingStatePlugin
