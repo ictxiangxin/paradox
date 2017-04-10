@@ -535,4 +535,5 @@ model.train(mnist_data['train_image'], lm, epochs=10, batch_size=batch_size)
 ```
 
 运行结果：
+
 ![ConvolutionalNerualNetwork](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/convolutional_nerual_network.png)
