@@ -12,19 +12,27 @@ from paradox.neural_network.convolutional_neural_network.function import \
     average_pooling_2d, \
     average_unpooling_1d, \
     average_unpooling_2d
+from paradox.neural_network.convolutional_neural_network.operator import \
+    convolution_shape, \
+    pooling_shape, \
+    unpooling_shape
 
 
 class ConvolutionLayer:
-    def __init__(self, kernel_shape, mode):
-        self.__kernel_shape = kernel_shape
-        self.__mode = mode
-        self.__kernel = Variable(numpy.random.normal(0, 1, self.__kernel_shape))
+    kernel_shape = None
+    mode = None
+    input_shape = None
+    kernel = None
 
-    def kernel(self):
-        return self.__kernel
+    def __init__(self, kernel_shape, mode, input_shape=None):
+        self.kernel_shape = kernel_shape
+        self.mode = mode
+        self.input_shape = input_shape
+        self.kernel = Variable(numpy.random.normal(0, 1, self.kernel_shape))
 
-    def mode(self):
-        return self.__mode
+    @abstractmethod
+    def get_output_shape(self):
+        pass
 
     @abstractmethod
     def convolution_function(self):
@@ -32,13 +40,25 @@ class ConvolutionLayer:
 
 
 class Convolution1DLayer(ConvolutionLayer):
+    def __init__(self, kernel_shape, mode, input_shape=None):
+        ConvolutionLayer.__init__(self, kernel_shape, mode, input_shape)
+
     def convolution_function(self):
         return convolution_1d
 
+    def get_output_shape(self):
+        return convolution_shape(self.input_shape, self.kernel_shape, self.mode, 1)[0]
+
 
 class Convolution2DLayer(ConvolutionLayer):
+    def __init__(self, kernel_shape, mode, input_shape=None):
+        ConvolutionLayer.__init__(self, kernel_shape, mode, input_shape)
+
     def convolution_function(self):
         return convolution_2d
+
+    def get_output_shape(self):
+        return convolution_shape(self.input_shape, self.kernel_shape, self.mode, 2)[0]
 
 
 convolution_map = {
@@ -65,15 +85,21 @@ class Convolution:
 
 
 class PoolingLayer:
-    def __init__(self, size, step):
-        self.__size = size
-        self.__step = step
+    size = None
+    step = None
+    input_shape = None
 
-    def size(self):
-        return self.__size
+    def __init__(self, size, step, input_shape=None):
+        self.size = size
+        self.step = step
+        self.input_shape = input_shape
 
-    def step(self):
-        return self.__step
+    def set_input_shape(self, input_shape):
+        self.input_shape = input_shape
+
+    @abstractmethod
+    def get_output_shape(self):
+        pass
 
     @abstractmethod
     def pooling_function(self):
@@ -84,20 +110,32 @@ class MaxPooling1DLayer(PoolingLayer):
     def pooling_function(self):
         return max_pooling_1d
 
+    def get_output_shape(self):
+        return pooling_shape(self.input_shape, self.size, self.step, 1)[0]
+
 
 class MaxPooling2DLayer(PoolingLayer):
     def pooling_function(self):
         return max_pooling_2d
+
+    def get_output_shape(self):
+        return pooling_shape(self.input_shape, self.size, self.step, 2)[0]
 
 
 class AveragePooling1DLayer(PoolingLayer):
     def pooling_function(self):
         return average_pooling_1d
 
+    def get_output_shape(self):
+        return pooling_shape(self.input_shape, self.size, self.step, 1)[0]
+
 
 class AveragePooling2DLayer(PoolingLayer):
     def pooling_function(self):
         return average_pooling_2d
+
+    def get_output_shape(self):
+        return pooling_shape(self.input_shape, self.size, self.step, 2)[0]
 
 
 pooling_map = {
@@ -126,15 +164,17 @@ class Pooling:
 
 
 class UnpoolingLayer:
-    def __init__(self, size, step):
-        self.__size = size
-        self.__step = step
+    def __init__(self, size, step, input_shape=None):
+        self.size = size
+        self.step = step
+        self.input_shape = input_shape
 
-    def size(self):
-        return self.__size
+    def set_input_shape(self, input_shape):
+        self.input_shape = input_shape
 
-    def step(self):
-        return self.__step
+    @abstractmethod
+    def get_output_shape(self):
+        pass
 
     @abstractmethod
     def unpooling_function(self):
@@ -145,20 +185,32 @@ class MaxUnpooling1DLayer(UnpoolingLayer):
     def unpooling_function(self):
         return max_unpooling_1d
 
+    def get_output_shape(self):
+        return unpooling_shape(self.input_shape, self.size, self.step, None, 1)[0]
+
 
 class MaxUnpooling2DLayer(UnpoolingLayer):
     def unpooling_function(self):
         return max_unpooling_2d
+
+    def get_output_shape(self):
+        return unpooling_shape(self.input_shape, self.size, self.step, None, 2)[0]
 
 
 class AverageUnpooling1DLayer(UnpoolingLayer):
     def unpooling_function(self):
         return average_unpooling_1d
 
+    def get_output_shape(self):
+        return unpooling_shape(self.input_shape, self.size, self.step, None, 2)[0]
+
 
 class AverageUnpooling2DLayer(UnpoolingLayer):
     def unpooling_function(self):
         return average_unpooling_2d
+
+    def get_output_shape(self):
+        return unpooling_shape(self.input_shape, self.size, self.step, None, 2)[0]
 
 
 unpooling_map = {

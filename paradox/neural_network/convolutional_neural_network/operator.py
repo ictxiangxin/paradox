@@ -64,9 +64,9 @@ def max_unpooling_shape(shape_data, shape_pooling, dimension):
     return new_shape, prefix_broadcast_data + (0,) * dimension, prefix_broadcast_kernel + (0,) * dimension
 
 
-def average_unpooling_shape(shape_pooling, size, step, unpooling_size, dimension):
+def unpooling_shape(shape_pooling, size, step, unpooling_size, dimension):
     prefix_shape, prefix_broadcast_data, prefix_broadcast_kernel = element_wise_shape(shape_pooling[:-dimension], shape_pooling[:-dimension])
-    new_shape = prefix_shape + tuple((size + (shape_pooling[i] - 1) * step) if unpooling_size is None else unpooling_size[i] for i in range(-dimension, 0))
+    new_shape = prefix_shape + tuple((size[i] + (shape_pooling[i] - 1) * step[i]) if unpooling_size is None else unpooling_size[i] for i in range(-dimension, 0))
     return new_shape, prefix_broadcast_data + (0,) * dimension, prefix_broadcast_kernel + (0,) * dimension
 
 
@@ -305,7 +305,7 @@ class AverageUnpooling1D(Operator):
         return [lambda: average_pooling_1d(forward, **self.arguments)]
 
     def shape(self, shape_data):
-        return average_unpooling_shape(shape_data, dimension=1, **self.arguments)
+        return unpooling_shape(shape_data, dimension=1, **self.arguments)
 
 
 class AverageUnpooling2D(Operator):
@@ -321,4 +321,4 @@ class AverageUnpooling2D(Operator):
         return [lambda: average_pooling_2d(forward, **self.arguments)]
 
     def shape(self, shape_data):
-        return average_unpooling_shape(shape_data, dimension=2, **self.arguments)
+        return unpooling_shape(shape_data, dimension=2, **self.arguments)

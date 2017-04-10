@@ -1,8 +1,9 @@
 import time
 import collections
+from functools import reduce
 import numpy
 from paradox.kernel.operator import Operator
-from paradox.kernel.symbol import Variable
+from paradox.kernel.symbol import Variable, spread
 from paradox.kernel.engine import Engine
 from paradox.kernel.optimizer import Optimizer, GradientDescentOptimizer
 from paradox.neural_network.loss import LossLayer, Loss
@@ -36,6 +37,12 @@ class Network:
         self.__train_engine = Engine()
         self.__predict_engine = Engine()
         self.__plugin = []
+
+    def __valid_current_output(self):
+        if self.__current_output is None:
+            raise ValueError('Current output is None.')
+        else:
+            return self.__current_output
 
     def add(self, layers):
         if isinstance(layers, collections.Iterable):
@@ -74,13 +81,19 @@ class Network:
         self.__current_symbol = Variable(operator=layer, inputs=[self.__current_symbol])
 
     def __add_connection(self, layer: ConnectionLayer):
-        weight, bias = layer.weight_bias(self.__current_output)
+        if layer.input_dimension is None:
+            current_output = self.__valid_current_output()
+            if not isinstance(current_output, int):
+                self.__current_symbol = spread(self.__current_symbol, 1 - len(current_output))
+                current_output = reduce(lambda a, b: a * b, current_output[1:])
+            layer.set_input_dimension(current_output)
+        weight, bias = layer.weight_bias()
         self.__variables.append(weight)
         self.__variables.append(bias)
         self.__current_weight = weight
         self.__current_bias = bias
         self.__current_symbol = self.__current_symbol @ weight + bias
-        self.__current_output = layer.output_dimension()
+        self.__current_output = layer.output_dimension
 
     def __add_activation(self, layer: ActivationLayer):
         self.__current_symbol = layer.activation_function(self.__current_symbol)
@@ -88,14 +101,23 @@ class Network:
         self.__current_bias.value = layer.bias_initialization(self.__current_bias.value.shape)
 
     def __add_convolution(self, layer: ConvolutionLayer):
-        self.__variables.append(layer.kernel())
-        self.__current_symbol = layer.convolution_function()(self.__current_symbol, layer.kernel(), layer.mode())
+        self.__variables.append(layer.kernel)
+        self.__current_symbol = layer.convolution_function()(self.__current_symbol, layer.kernel, layer.mode)
+        if layer.input_shape is None:
+            layer.input_shape = self.__valid_current_output()
+        self.__current_output = layer.get_output_shape()
 
     def __add_pooling(self, layer: PoolingLayer):
-        self.__current_symbol = layer.pooling_function()(self.__current_symbol, layer.size(), layer.step())
+        self.__current_symbol = layer.pooling_function()(self.__current_symbol, layer.size, layer.step)
+        if layer.input_shape is None:
+            layer.input_shape = self.__valid_current_output()
+        self.__current_output = layer.get_output_shape()
 
     def __add_unpooling(self, layer: UnpoolingLayer):
-        self.__current_symbol = layer.unpooling_function()(self.__current_symbol, layer.size(), layer.step())
+        self.__current_symbol = layer.unpooling_function()(self.__current_symbol, layer.size, layer.step)
+        if layer.input_shape is None:
+            layer.input_shape = self.__valid_current_output()
+        self.__current_output = layer.get_output_shape()
 
     def get_symbol(self):
         return self.__current_symbol
