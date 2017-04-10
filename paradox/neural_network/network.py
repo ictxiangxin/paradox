@@ -157,7 +157,7 @@ class Network:
                         speed = state_cycle / (time.time() - cycle_start_time)
                         cycle_start_time = time.time()
                         loss_value = self.__train_engine.value()
-                        print('Training State [epoch = {}/{}, loss = {:.8f}, speed = {:.2f}(iteration/s){}]'.format(
+                        print('Training State [epoch = {}/{}, loss = {:.8f}, speed = {:.2f}(iterations/s){}]'.format(
                             epoch + 1,
                             epochs,
                             loss_value,
