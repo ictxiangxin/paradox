@@ -5,7 +5,6 @@ except ImportError:
 
 install_requires = [
     'numpy>=1.10',
-    'matplotlib>=2.0',
 ]
 
 if __name__ == '__main__':
@@ -23,8 +22,9 @@ if __name__ == '__main__':
                     'paradox.neural_network',
                     'paradox.neural_network.convolutional_neural_network',
                     'paradox.utils',
-                    'paradox.visualization',
-                    'paradox.data_set'],
+                    'paradox.data',
+                    'paradox.data.data_handler',
+                    'paradox.data.data_set'],
           install_requires=install_requires,
           classifiers=["Natural Language :: English",
                        "Programming Language :: Python",
