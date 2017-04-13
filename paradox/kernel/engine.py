@@ -105,15 +105,18 @@ class Engine:
         if hash(self.__symbol) == hash(variable):
             self.__gradients[variable] = broadcast(Constant(1), self.shape(self.__symbol))
             return
-        for forward in variable.output:
+        for forward in set(variable.output):
             if self.gradient(forward) is not None:
                 gradients = forward.operator.gradient(self, forward, *forward.input)
-                index = None
+                current_gradient = None
+                count = 0
                 for i, _variable in enumerate(forward.input):
                     if hash(_variable) == hash(variable):
-                        index = i
-                        break
-                current_gradient = gradients[index]()
+                        if count == 0:
+                            current_gradient = gradients[i]()
+                        else:
+                            current_gradient += gradients[i]()
+                        count += 1
                 if forward.operator.auto_reduce:
                     invariant = 0
                     for i, d in enumerate(self.broadcast(variable, forward)):
