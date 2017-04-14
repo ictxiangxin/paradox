@@ -12,7 +12,7 @@ class Symbol:
         self.__operator = None
         self.__output = []
         self.__value = None
-        self.__scala = False
+        self.__scalar = False
         self.__category = None
         self.init(value, name, operator, inputs, category)
 
@@ -57,7 +57,7 @@ class Symbol:
             if self.__value is None:
                 self.__name = self.__class__.__name__
             else:
-                if self.is_scala():
+                if self.is_scalar():
                     self.__name = str(self.__value)
                 else:
                     self.__name = self.__class__.__name__
@@ -90,7 +90,7 @@ class Symbol:
                 raise ValueError('Can not change value for Constant')
             else:
                 self.__value = numpy.array(tensor, dtype=float)
-                self.__scala = len(self.value.shape) == 0
+                self.__scalar = len(self.value.shape) == 0
 
     value = property(__get_value, __set_value)
 
@@ -150,11 +150,11 @@ class Symbol:
             if inputs_count is None:
                 inputs_count = len(inputs)
             self.__input = []
-            self.__scala = True
+            self.__scalar = True
             for symbol in inputs[:inputs_count]:
                 if isinstance(symbol, Symbol):
-                    if not symbol.is_scala():
-                        self.__scala = False
+                    if not symbol.is_scalar():
+                        self.__scalar = False
                     self.__add_input(symbol)
                     symbol.__add_output(self)
                 else:
@@ -189,7 +189,6 @@ class Symbol:
     def destroy(self):
         self.clear_input()
         self.clear_output()
-        self.__output = []
         self.__value = None
         self.__operator = None
 
@@ -197,8 +196,8 @@ class Symbol:
         self.__name = None
         self.__set_name(None)
 
-    def is_scala(self):
-        return self.__scala
+    def is_scalar(self):
+        return self.__scalar
 
     def is_constant(self):
         return self.__category == SymbolCategory.constant
