@@ -2,24 +2,26 @@ from enum import Enum
 import numpy
 
 
-SymbolCategory = Enum('SymbolCategory', ('variable', 'constant'))
+SymbolCategory = Enum('SymbolCategory', ('variable', 'constant', 'placeholder'))
 
 
 class Symbol:
-    def __init__(self, value=None, name: str=None, operator=None, inputs=None, category: SymbolCategory=None):
+    def __init__(self, value=None, shape: tuple=None, name: str=None, operator=None, inputs=None, category: SymbolCategory=None):
         self.__name = None
         self.__input = []
         self.__operator = None
         self.__output = []
         self.__value = None
+        self.__shape = None
         self.__scalar = False
         self.__category = None
-        self.init(value, name, operator, inputs, category)
+        self.init(value, shape, name, operator, inputs, category)
 
-    def init(self, value=None, name: str=None, operator=None, inputs=None, category: SymbolCategory=None):
+    def init(self, value=None, shape: tuple=None, name: str=None, operator=None, inputs=None, category: SymbolCategory=None):
         if isinstance(value, Symbol):
             self.name = value.name
             self.value = value.value
+            self.shape = value.shape
             for _input in value.input:
                 self.__add_input(_input.clone())
             self.__set_operator(value.__operator)
@@ -28,6 +30,7 @@ class Symbol:
             self.__set_category(value.category)
         else:
             self.__set_value(value)
+            self.__set_shape(shape)
             self.arithmetic_compute(operator, inputs)
             self.__set_category(category)
             self.__set_name(name)
@@ -74,10 +77,19 @@ class Symbol:
             if self.__category is None:
                 self.__category = SymbolCategory.variable
         else:
-            if category == SymbolCategory.constant and self.__value is None:
-                raise ValueError('Constant Symbol must have value.')
-            else:
+            if category == SymbolCategory.variable:
                 self.__category = category
+            elif category == SymbolCategory.constant:
+                if self.__operator is not None:
+                    raise ValueError('Operator Symbol can not be Constant.')
+                if self.__value is None:
+                    raise ValueError('Constant Symbol must have value.')
+            elif category == SymbolCategory.placeholder:
+                if self.__operator is not None:
+                    raise ValueError('Operator Symbol can not be Placeholder.')
+                self.__category = category
+                if self.__value is not None:
+                    self.__set_shape(self.__value.shape)
 
     category = property(__get_category, __set_category)
 
@@ -87,12 +99,36 @@ class Symbol:
     def __set_value(self, tensor):
         if tensor is not None:
             if self.__category == SymbolCategory.constant:
-                raise ValueError('Can not change value for Constant')
+                raise ValueError('Can not change value for Constant.')
             else:
-                self.__value = numpy.array(tensor, dtype=float)
-                self.__scalar = len(self.value.shape) == 0
+                if self.__operator is None:
+                    self.__value = numpy.array(tensor, dtype=float)
+                    self.__scalar = len(self.value.shape) == 0
+                    self.__set_category(SymbolCategory.variable)
+                else:
+                    raise ValueError('Can not assign value for Operator Symbol.')
+        else:
+            self.__set_category(SymbolCategory.placeholder)
 
     value = property(__get_value, __set_value)
+
+    def __get_shape(self):
+        if self.__category == SymbolCategory.placeholder:
+            return self.__shape
+        else:
+            if self.__operator is None:
+                return self.__value.shape
+            else:
+                raise ValueError('Operator Symbol has no shape.')
+
+    def __set_shape(self, shape: tuple):
+        if shape is not None:
+            if self.__category == SymbolCategory.placeholder:
+                self.__shape = shape
+            else:
+                raise ValueError('Only Placeholder can set shape.')
+
+    shape = property(__get_shape, __set_shape)
 
     def __get_operator(self):
         return self.__operator
@@ -103,7 +139,7 @@ class Symbol:
             if isinstance(operator, Operator):
                 self.__operator = operator
             else:
-                raise ValueError('Operator must be Operator class.')
+                raise ValueError('Operator must be Operator.')
 
     operator = property(__get_operator, __set_operator)
 
@@ -116,7 +152,7 @@ class Symbol:
         if isinstance(symbol, Symbol):
             self.__input.append(symbol)
         else:
-            raise ValueError('Input must be Symbol class.')
+            raise ValueError('Input must be Symbol.')
 
     def __remove_input(self, symbol):
         new_input = []
@@ -134,7 +170,7 @@ class Symbol:
         if isinstance(symbol, Symbol):
             self.__output.append(symbol)
         else:
-            raise ValueError('Output must be Symbol class.')
+            raise ValueError('Output must be Symbol.')
 
     def __remove_output(self, symbol):
         new_output = []
@@ -158,7 +194,7 @@ class Symbol:
                     self.__add_input(symbol)
                     symbol.__add_output(self)
                 else:
-                    raise ValueError('Input must be Symbol class.')
+                    raise ValueError('Input must be Symbol.')
 
     def clone(self):
         clone_symbol = Symbol()
@@ -204,6 +240,9 @@ class Symbol:
 
     def is_variable(self):
         return self.__category == SymbolCategory.variable
+
+    def is_placeholder(self):
+        return self.__category == SymbolCategory.placeholder
 
     def __hash__(self):
         return id(self)
@@ -267,15 +306,21 @@ class Symbol:
 
 
 class Constant(Symbol):
-    def __init__(self, value=None, name: str=None, operator=None, inputs=None):
+    def __init__(self, value=None, shape: tuple=None, name: str=None, operator=None, inputs=None):
         Symbol.__init__(self)
-        self.init(value, name, operator, inputs, SymbolCategory.constant)
+        self.init(value, shape, name, operator, inputs, SymbolCategory.constant)
 
 
 class Variable(Symbol):
-    def __init__(self, value=None, name: str=None, operator=None, inputs=None):
+    def __init__(self, value=None, shape: tuple=None, name: str=None, operator=None, inputs=None):
         Symbol.__init__(self)
-        self.init(value, name, operator, inputs, SymbolCategory.variable)
+        self.init(value, shape, name, operator, inputs, SymbolCategory.variable)
+
+
+class Placeholder(Symbol):
+    def __init__(self, value=None, shape: tuple=None, name: str=None, operator=None, inputs=None):
+        Symbol.__init__(self)
+        self.init(value, shape, name, operator, inputs, SymbolCategory.placeholder)
 
 
 def as_symbol(thing):

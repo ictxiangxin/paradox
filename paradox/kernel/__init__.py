@@ -2,6 +2,7 @@ from paradox.kernel.symbol import \
     Symbol, \
     Variable, \
     Constant, \
+    Placeholder, \
     SymbolCategory
 from paradox.kernel.symbol import\
     negative, \

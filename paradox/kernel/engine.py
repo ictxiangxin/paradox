@@ -88,7 +88,7 @@ class Engine:
             if symbol in self.__bind:
                 return numpy.array(self.__bind[symbol])
             else:
-                if symbol.value is None:
+                if symbol.value is None or symbol.is_placeholder():
                     raise ValueError('Symbol must bind data: {}'.format(symbol))
                 else:
                     return symbol.value
@@ -135,10 +135,10 @@ class Engine:
             if symbol in self.__bind:
                 self.__shape[symbol] = self.__bind[symbol].shape
             else:
-                if symbol.value is None:
-                    raise ValueError('Symbol must bind data: {}'.format(symbol))
+                if symbol.shape is None:
+                    raise ValueError('Placeholder must bind data or set shape: {}'.format(symbol))
                 else:
-                    self.__shape[symbol] = symbol.value.shape
+                    self.__shape[symbol] = symbol.shape
         else:
             shape_broadcasts = symbol.operator.shape(*[self.shape(s) for s in symbol.input])
             shape = shape_broadcasts[0]
