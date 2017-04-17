@@ -5,7 +5,7 @@ import numpy
 class SymbolCategory(Enum):
     variable = 0
     constant = 1
-    placeholder = 1
+    placeholder = 2
     operator = 3
 
 
@@ -34,9 +34,9 @@ class Symbol:
             self.__set_category(value.category)
         else:
             self.__set_value(value)
-            self.__set_shape(shape)
-            self.arithmetic_compute(operator, inputs)
             self.__set_category(category)
+            self.__set_shape(shape)
+            self.symbolic_compute(operator, inputs)
             self.__set_name(name)
 
     def __repr__(self):
@@ -81,19 +81,26 @@ class Symbol:
             if self.__category is None:
                 self.__category = SymbolCategory.variable
         else:
+            if self.__category == SymbolCategory.operator:
+                raise ValueError('Can not change category of Operator Symbol.')
             if category == SymbolCategory.variable:
                 self.__category = category
             elif category == SymbolCategory.constant:
-                if self.__operator is not None:
-                    raise ValueError('Operator Symbol can not be Constant.')
+                self.__category = category
                 if self.__value is None:
+                    print(category)
                     raise ValueError('Constant Symbol must have value.')
             elif category == SymbolCategory.placeholder:
-                if self.__operator is not None:
-                    raise ValueError('Operator Symbol can not be Placeholder.')
                 self.__category = category
                 if self.__value is not None:
                     self.__set_shape(self.__value.shape)
+            elif category == SymbolCategory.operator:
+                if self.__category is None:
+                    self.__category = category
+                else:
+                    raise ValueError('Can not convert other Symbol to Operator Symbol.')
+            else:
+                raise ValueError('Invalid category: {}'.format(category))
 
     category = property(__get_category, __set_category)
 
@@ -111,8 +118,6 @@ class Symbol:
                     self.__set_category(SymbolCategory.variable)
                 else:
                     raise ValueError('Can not assign value for Operator Symbol.')
-        else:
-            self.__set_category(SymbolCategory.placeholder)
 
     value = property(__get_value, __set_value)
 
@@ -183,7 +188,7 @@ class Symbol:
                 new_output.append(o)
         self.__output = new_output
 
-    def arithmetic_compute(self, operator, inputs):
+    def symbolic_compute(self, operator, inputs):
         if operator is not None and inputs:
             self.__set_operator(operator)
             inputs_count = operator.inputs_count
@@ -247,6 +252,9 @@ class Symbol:
 
     def is_placeholder(self):
         return self.__category == SymbolCategory.placeholder
+
+    def is_operator(self):
+        return self.__category == SymbolCategory.operator
 
     def __hash__(self):
         return id(self)
@@ -340,214 +348,214 @@ def as_symbols(things):
 
 def negative(a):
     from paradox.kernel.operator import Negative
-    return Symbol(operator=Negative(), inputs=as_symbols([a]))
+    return Symbol(operator=Negative(), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def absolute(a):
     from paradox.kernel.operator import Absolute
-    return Symbol(operator=Absolute(), inputs=as_symbols([a]))
+    return Symbol(operator=Absolute(), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def plus(a, b):
     from paradox.kernel.operator import Plus
-    return Symbol(operator=Plus(), inputs=as_symbols([a, b]))
+    return Symbol(operator=Plus(), inputs=as_symbols([a, b]), category=SymbolCategory.operator)
 
 
 def subtract(a, b):
     from paradox.kernel.operator import Subtract
-    return Symbol(operator=Subtract(), inputs=as_symbols([a, b]))
+    return Symbol(operator=Subtract(), inputs=as_symbols([a, b]), category=SymbolCategory.operator)
 
 
 def multiply(a, b):
     from paradox.kernel.operator import Multiply
-    return Symbol(operator=Multiply(), inputs=as_symbols([a, b]))
+    return Symbol(operator=Multiply(), inputs=as_symbols([a, b]), category=SymbolCategory.operator)
 
 
 def divide(a, b):
     from paradox.kernel.operator import Divide
-    return Symbol(operator=Divide(), inputs=as_symbols([a, b]))
+    return Symbol(operator=Divide(), inputs=as_symbols([a, b]), category=SymbolCategory.operator)
 
 
 def matrix_multiply(a, b):
     from paradox.kernel.operator import MatrixMultiply
-    return Symbol(operator=MatrixMultiply(), inputs=as_symbols([a, b]))
+    return Symbol(operator=MatrixMultiply(), inputs=as_symbols([a, b]), category=SymbolCategory.operator)
 
 
 def power(a, b):
     from paradox.kernel.operator import Power
-    return Symbol(operator=Power(), inputs=as_symbols([a, b]))
+    return Symbol(operator=Power(), inputs=as_symbols([a, b]), category=SymbolCategory.operator)
 
 
 def log(a):
     from paradox.kernel.operator import Log
-    return Symbol(operator=Log(), inputs=as_symbols([a]))
+    return Symbol(operator=Log(), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def transpose(a, axes: int=None):
     from paradox.kernel.operator import Transpose
-    return Symbol(operator=Transpose(axes), inputs=as_symbols([a]))
+    return Symbol(operator=Transpose(axes), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def reduce_sum(a, axis: int=None, invariant=False):
     from paradox.kernel.operator import ReduceSum
-    return Symbol(operator=ReduceSum(axis, invariant), inputs=as_symbols([a]))
+    return Symbol(operator=ReduceSum(axis, invariant), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def reduce_mean(a, axis: int=None, invariant=False):
     from paradox.kernel.operator import ReduceMean
-    return Symbol(operator=ReduceMean(axis, invariant), inputs=as_symbols([a]))
+    return Symbol(operator=ReduceMean(axis, invariant), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def expand(a, axis: int):
     from paradox.kernel.operator import Expand
-    return Symbol(operator=Expand(axis), inputs=as_symbols([a]))
+    return Symbol(operator=Expand(axis), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def broadcast(a, shape):
     from paradox.kernel.operator import Broadcast
-    return Symbol(operator=Broadcast(shape), inputs=as_symbols([a]))
+    return Symbol(operator=Broadcast(shape), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def where(condition, a, b):
     from paradox.kernel.operator import Where
-    return Symbol(operator=Where(), inputs=as_symbols([condition, a, b]))
+    return Symbol(operator=Where(), inputs=as_symbols([condition, a, b]), category=SymbolCategory.operator)
 
 
 def equal(a, b):
     from paradox.kernel.operator import Equal
-    return Symbol(operator=Equal(), inputs=as_symbols([a, b]))
+    return Symbol(operator=Equal(), inputs=as_symbols([a, b]), category=SymbolCategory.operator)
 
 
 def not_equal(a, b):
     from paradox.kernel.operator import NotEqual
-    return Symbol(operator=NotEqual(), inputs=as_symbols([a, b]))
+    return Symbol(operator=NotEqual(), inputs=as_symbols([a, b]), category=SymbolCategory.operator)
 
 
 def less(a, b):
     from paradox.kernel.operator import Less
-    return Symbol(operator=Less(), inputs=as_symbols([a, b]))
+    return Symbol(operator=Less(), inputs=as_symbols([a, b]), category=SymbolCategory.operator)
 
 
 def less_equal(a, b):
     from paradox.kernel.operator import LessEqual
-    return Symbol(operator=LessEqual(), inputs=as_symbols([a, b]))
+    return Symbol(operator=LessEqual(), inputs=as_symbols([a, b]), category=SymbolCategory.operator)
 
 
 def greater(a, b):
     from paradox.kernel.operator import Greater
-    return Symbol(operator=Greater(), inputs=as_symbols([a, b]))
+    return Symbol(operator=Greater(), inputs=as_symbols([a, b]), category=SymbolCategory.operator)
 
 
 def greater_equal(a, b):
     from paradox.kernel.operator import GreaterEqual
-    return Symbol(operator=GreaterEqual(), inputs=as_symbols([a, b]))
+    return Symbol(operator=GreaterEqual(), inputs=as_symbols([a, b]), category=SymbolCategory.operator)
 
 
 def maximum(a, b):
     from paradox.kernel.operator import Maximum
-    return Symbol(operator=Maximum(), inputs=as_symbols([a, b]))
+    return Symbol(operator=Maximum(), inputs=as_symbols([a, b]), category=SymbolCategory.operator)
 
 
 def minimum(a, b):
     from paradox.kernel.operator import Minimum
-    return Symbol(operator=Minimum(), inputs=as_symbols([a, b]))
+    return Symbol(operator=Minimum(), inputs=as_symbols([a, b]), category=SymbolCategory.operator)
 
 
 def sin(a):
     from paradox.kernel.operator import Sine
-    return Symbol(operator=Sine(), inputs=as_symbols([a]))
+    return Symbol(operator=Sine(), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def cos(a):
     from paradox.kernel.operator import Cosine
-    return Symbol(operator=Cosine(), inputs=as_symbols([a]))
+    return Symbol(operator=Cosine(), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def tan(a):
     from paradox.kernel.operator import Tangent
-    return Symbol(operator=Tangent(), inputs=as_symbols([a]))
+    return Symbol(operator=Tangent(), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def arcsin(a):
     from paradox.kernel.operator import ArcSine
-    return Symbol(operator=ArcSine(), inputs=as_symbols([a]))
+    return Symbol(operator=ArcSine(), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def arccos(a):
     from paradox.kernel.operator import ArcCosine
-    return Symbol(operator=ArcCosine(), inputs=as_symbols([a]))
+    return Symbol(operator=ArcCosine(), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def arctan(a):
     from paradox.kernel.operator import ArcTangent
-    return Symbol(operator=ArcTangent(), inputs=as_symbols([a]))
+    return Symbol(operator=ArcTangent(), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def sinh(a):
     from paradox.kernel.operator import HyperbolicSine
-    return Symbol(operator=HyperbolicSine(), inputs=as_symbols([a]))
+    return Symbol(operator=HyperbolicSine(), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def cosh(a):
     from paradox.kernel.operator import HyperbolicCosine
-    return Symbol(operator=HyperbolicCosine(), inputs=as_symbols([a]))
+    return Symbol(operator=HyperbolicCosine(), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def tanh(a):
     from paradox.kernel.operator import HyperbolicTangent
-    return Symbol(operator=HyperbolicTangent(), inputs=as_symbols([a]))
+    return Symbol(operator=HyperbolicTangent(), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def arcsinh(a):
     from paradox.kernel.operator import HyperbolicArcSine
-    return Symbol(operator=HyperbolicArcSine(), inputs=as_symbols([a]))
+    return Symbol(operator=HyperbolicArcSine(), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def arccosh(a):
     from paradox.kernel.operator import HyperbolicArcCosine
-    return Symbol(operator=HyperbolicArcCosine(), inputs=as_symbols([a]))
+    return Symbol(operator=HyperbolicArcCosine(), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def arctanh(a):
     from paradox.kernel.operator import HyperbolicArcTangent
-    return Symbol(operator=HyperbolicArcTangent(), inputs=as_symbols([a]))
+    return Symbol(operator=HyperbolicArcTangent(), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def exp(a):
     from paradox.kernel.operator import Exponential
-    return Symbol(operator=Exponential(), inputs=as_symbols([a]))
+    return Symbol(operator=Exponential(), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def slice_assign(a, b, slice_tuple):
     from paradox.kernel.operator import SliceAssign
-    return Symbol(operator=SliceAssign(slice_tuple), inputs=as_symbols([a, b]))
+    return Symbol(operator=SliceAssign(slice_tuple), inputs=as_symbols([a, b]), category=SymbolCategory.operator)
 
 
 def slice_select(a, slice_tuple):
     from paradox.kernel.operator import SliceSelect
-    return Symbol(operator=SliceSelect(slice_tuple), inputs=as_symbols([a]))
+    return Symbol(operator=SliceSelect(slice_tuple), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def concatenate(a, b):
     from paradox.kernel.operator import Concatenate
-    return Symbol(operator=Concatenate(), inputs=as_symbols([a, b]))
+    return Symbol(operator=Concatenate(), inputs=as_symbols([a, b]), category=SymbolCategory.operator)
 
 
 def rotate90(a, count, axes):
     from paradox.kernel.operator import Rotate90
-    return Symbol(operator=Rotate90(count, axes), inputs=as_symbols([a]))
+    return Symbol(operator=Rotate90(count, axes), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def flip(a, axis):
     from paradox.kernel.operator import Flip
-    return Symbol(operator=Flip(axis), inputs=as_symbols([a]))
+    return Symbol(operator=Flip(axis), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def reshape(a, shape):
     from paradox.kernel.operator import Reshape
-    return Symbol(operator=Reshape(shape), inputs=as_symbols([a]))
+    return Symbol(operator=Reshape(shape), inputs=as_symbols([a]), category=SymbolCategory.operator)
 
 
 def spread(a, position):
     from paradox.kernel.operator import Spread
-    return Symbol(operator=Spread(position), inputs=as_symbols([a]))
+    return Symbol(operator=Spread(position), inputs=as_symbols([a]), category=SymbolCategory.operator)

@@ -16,7 +16,7 @@ class Template:
         symbol.value = left_symbol.value
         symbol.name = left_symbol.name
         symbol.clear_operator()
-        symbol.arithmetic_compute(left_symbol.operator, left_symbol.input)
+        symbol.symbolic_compute(left_symbol.operator, left_symbol.input)
         right_symbol.destroy()
 
     @staticmethod
@@ -25,7 +25,7 @@ class Template:
         symbol.value = right_symbol.value
         symbol.name = right_symbol.name
         symbol.clear_operator()
-        symbol.arithmetic_compute(right_symbol.operator, right_symbol.input)
+        symbol.symbolic_compute(right_symbol.operator, right_symbol.input)
         left_symbol.destroy()
 
     @abstractmethod

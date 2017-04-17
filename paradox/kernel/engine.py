@@ -32,21 +32,29 @@ class Engine:
         return self.__variables
 
     def set_variables(self, symbol):
-        if symbol is not None:
-            old_variables = set(self.__variables)
+        if symbol is None:
+            symbol = set()
+            symbol_set = set() if self.__symbol is None else {self.__symbol}
+            while len(symbol_set):
+                any_symbol = symbol_set.pop()
+                if any_symbol.is_variable():
+                    symbol.add(any_symbol)
+                elif any_symbol.is_operator():
+                    symbol_set |= set(any_symbol.input)
+        old_variables = set(self.__variables)
+        if isinstance(symbol, Symbol):
+            symbols = {symbol}
+        else:
+            symbols = set(symbol)
+        for symbol in symbols:
             if isinstance(symbol, Symbol):
-                symbols = {symbol}
+                self.__variables.add(symbol)
             else:
-                symbols = set(symbol)
-            for symbol in symbols:
-                if isinstance(symbol, Symbol):
-                    self.__variables.add(symbol)
-                else:
-                    raise ValueError('Variable must be Symbol.')
-            unused_variables = old_variables - self.__variables
-            for variable in unused_variables:
-                if variable in self.__gradients:
-                    del self.__gradients[variable]
+                raise ValueError('Variable must be Symbol.')
+        unused_variables = old_variables - self.__variables
+        for variable in unused_variables:
+            if variable in self.__gradients:
+                del self.__gradients[variable]
 
     variables = property(get_variables, set_variables)
 
@@ -84,7 +92,7 @@ class Engine:
         self.__value_cache = {}
 
     def __compute_value(self, symbol: Symbol):
-        if symbol.operator is None:
+        if not symbol.is_operator():
             if symbol in self.__bind:
                 return numpy.array(self.__bind[symbol])
             else:
@@ -131,7 +139,7 @@ class Engine:
                     self.__gradients[variable] += current_gradient
 
     def __compute_shape(self, symbol: Symbol):
-        if symbol.operator is None:
+        if not symbol.is_operator():
             if symbol in self.__bind:
                 self.__shape[symbol] = self.__bind[symbol].shape
             else:
