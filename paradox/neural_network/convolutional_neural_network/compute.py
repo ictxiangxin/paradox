@@ -4,7 +4,10 @@ import numpy
 from paradox.kernel.operator import element_wise_shape
 
 
-ConvolutionMode = Enum('ConvolutionMode', ('valid', 'full'))
+class ConvolutionMode(Enum):
+    ConvolutionMode = 0
+    valid = 1
+    full = 2
 
 
 convolution_map = {

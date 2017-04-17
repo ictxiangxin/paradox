@@ -4,7 +4,10 @@ from paradox.kernel import *
 from paradox.utils import generate_label_matrix
 
 
-LossCategory = Enum('LossCategory', ('classification', 'regression'))
+class LossCategory(Enum):
+    LossCategory = 0
+    classification = 1
+    regression = 2
 
 
 class LossLayer:

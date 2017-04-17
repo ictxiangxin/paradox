@@ -2,7 +2,11 @@ from enum import Enum
 import numpy
 
 
-SymbolCategory = Enum('SymbolCategory', ('variable', 'constant', 'placeholder'))
+class SymbolCategory(Enum):
+    variable = 0
+    constant = 1
+    placeholder = 1
+    operator = 3
 
 
 class Symbol:
