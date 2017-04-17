@@ -9,7 +9,7 @@ install_requires = [
 
 if __name__ == '__main__':
     setup(name='paradox',
-          version="0.1",
+          version="0.2",
           author='ictxiangxin',
           author_email='ictxiangxin@hotmail.com',
           maintainer='ictxiangxin',
