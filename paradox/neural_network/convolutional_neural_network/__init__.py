@@ -1,7 +1,6 @@
 from paradox.neural_network.convolutional_neural_network.compute import \
     ConvolutionMode, \
-    compute_convolution_1d, \
-    compute_convolution_2d, \
+    compute_convolution_nd, \
     compute_max_pooling_1d, \
     compute_max_pooling_2d, \
     compute_max_unpooling_1d, \
@@ -11,6 +10,7 @@ from paradox.neural_network.convolutional_neural_network.compute import \
     compute_average_unpooling_1d, \
     compute_average_unpooling_2d
 from paradox.neural_network.convolutional_neural_network.operator import \
+    ConvolutionND, \
     Convolution1D, \
     Convolution2D, \
     MaxPooling1D, \

@@ -13,7 +13,7 @@ from paradox.neural_network.convolutional_neural_network.function import \
     average_unpooling_1d, \
     average_unpooling_2d
 from paradox.neural_network.convolutional_neural_network.operator import \
-    convolution_shape, \
+    convolution_nd_shape, \
     pooling_shape, \
     unpooling_shape
 
@@ -47,7 +47,7 @@ class Convolution1DLayer(ConvolutionLayer):
         return convolution_1d
 
     def get_output_shape(self):
-        return convolution_shape(self.input_shape, self.kernel_shape, self.mode, 1)[0]
+        return convolution_nd_shape(self.input_shape, self.kernel_shape, 1, self.mode)[0]
 
 
 class Convolution2DLayer(ConvolutionLayer):
@@ -58,7 +58,7 @@ class Convolution2DLayer(ConvolutionLayer):
         return convolution_2d
 
     def get_output_shape(self):
-        return convolution_shape(self.input_shape, self.kernel_shape, self.mode, 2)[0]
+        return convolution_nd_shape(self.input_shape, self.kernel_shape, 2, self.mode)[0]
 
 
 convolution_map = {

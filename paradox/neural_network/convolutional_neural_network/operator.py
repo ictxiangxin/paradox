@@ -3,8 +3,7 @@ from paradox.kernel import flip, rotate90, reduce_mean, expand
 from paradox.kernel.operator import Operator, element_wise_shape
 from paradox.neural_network.convolutional_neural_network.compute import \
     ConvolutionMode, \
-    compute_convolution_1d, \
-    compute_convolution_2d, \
+    compute_convolution_nd, \
     compute_max_pooling_1d, \
     compute_max_pooling_2d, \
     compute_max_unpooling_1d, \
@@ -14,8 +13,7 @@ from paradox.neural_network.convolutional_neural_network.compute import \
     compute_average_unpooling_1d, \
     compute_average_unpooling_2d
 from paradox.neural_network.convolutional_neural_network.function import \
-    convolution_1d, \
-    convolution_2d, \
+    convolution_nd, \
     max_pooling_1d, \
     max_pooling_2d, \
     max_unpooling_1d, \
@@ -26,7 +24,7 @@ from paradox.neural_network.convolutional_neural_network.function import \
     average_unpooling_2d
 
 
-def convolution_shape(shape_data, shape_kernel, mode, dimension):
+def convolution_nd_shape(shape_data, shape_kernel, dimension, mode):
     prefix_shape = shape_data[:-dimension] + shape_kernel[:-dimension]
     if mode == 'valid' or mode == ConvolutionMode.valid:
         new_shape = prefix_shape + tuple(shape_data[i] - shape_kernel[i] + 1 for i in range(-dimension, 0))
@@ -37,7 +35,7 @@ def convolution_shape(shape_data, shape_kernel, mode, dimension):
     return new_shape, (), ()
 
 
-def element_wise_convolution_shape(shape_data, shape_kernel, mode, dimension):
+def element_wise_convolution_nd_shape(shape_data, shape_kernel, dimension, mode):
     prefix_shape, prefix_broadcast_data, prefix_broadcast_kernel = element_wise_shape(shape_data[:-dimension], shape_kernel[:-dimension])
     if mode == 'valid' or mode == ConvolutionMode.valid:
         new_shape = prefix_shape + tuple(shape_data[i] - shape_kernel[i] + 1 for i in range(-dimension, 0))
@@ -70,39 +68,53 @@ def unpooling_shape(shape_pooling, size, step, unpooling_size, dimension):
     return new_shape, prefix_broadcast_data + (0,) * dimension, prefix_broadcast_kernel + (0,) * dimension
 
 
-class Convolution1D(Operator):
-    def __init__(self, mode, element_wise: bool=False):
+class ConvolutionND(Operator):
+    def __init__(self, dimension: int, mode, element_wise: bool=False):
         self.inputs_count = 2
-        self.arguments = {'mode': mode, 'element_wise': element_wise}
+        self.arguments = {'dimension': dimension, 'mode': mode, 'element_wise': element_wise}
+        assert dimension > 0
 
     def compute(self, value_data, value_kernel):
-        return compute_convolution_1d(value_data, value_kernel, **self.arguments)
+        return compute_convolution_nd(value_data, value_kernel, **self.arguments)
 
     def gradient(self, engine, symbol_forward, symbol_data, symbol_kernel):
         forward = engine.gradient(symbol_forward)
+        dimension = self.arguments['dimension']
         mode = self.arguments['mode']
         if mode == 'valid' or mode == ConvolutionMode.valid:
-            prefix_shape_kernel = engine.shape(symbol_kernel)[:-1]
-            prefix_shape_data = engine.shape(symbol_data)[:-1]
-            gradient_data = convolution_1d(forward, flip(symbol_kernel, -1), ConvolutionMode.full, True)
+            prefix_shape_kernel = engine.shape(symbol_kernel)[:-dimension]
+            prefix_shape_data = engine.shape(symbol_data)[:-dimension]
+            if dimension == 1:
+                flip_kernel = flip(symbol_kernel, -1)
+            else:
+                flip_kernel = rotate90(symbol_kernel, count=2, axes=(-2, -1))
+            gradient_data = convolution_nd(forward, flip_kernel, dimension, ConvolutionMode.full, True)
             for _ in prefix_shape_kernel:
-                gradient_data = reduce_mean(gradient_data, axis=-2)
-                symbol_data = expand(symbol_data, -2)
-            gradient_kernel = convolution_1d(symbol_data, forward, ConvolutionMode.valid, True)
+                gradient_data = reduce_mean(gradient_data, axis=-dimension - 1)
+                symbol_data = expand(symbol_data, -dimension - 1)
+            gradient_kernel = convolution_nd(symbol_data, forward, dimension, ConvolutionMode.valid, True)
             for _ in prefix_shape_data:
-                gradient_kernel = reduce_mean(gradient_kernel, axis=-2 - len(prefix_shape_kernel))
+                gradient_kernel = reduce_mean(gradient_kernel, axis=-dimension - 1 - len(prefix_shape_kernel))
             return [lambda: gradient_data,
                     lambda: gradient_kernel]
         elif mode == 'full' or mode == ConvolutionMode.full:
-            prefix_shape_kernel = engine.shape(symbol_kernel)[:-1]
-            prefix_shape_data = engine.shape(symbol_data)[:-1]
-            gradient_data = convolution_1d(forward, flip(symbol_kernel, -1), ConvolutionMode.valid, True)
+            prefix_shape_kernel = engine.shape(symbol_kernel)[:-dimension]
+            prefix_shape_data = engine.shape(symbol_data)[:-dimension]
+            if dimension == 1:
+                flip_kernel = flip(symbol_kernel, -1)
+            else:
+                flip_kernel = rotate90(symbol_kernel, count=2, axes=(-2, -1))
+            gradient_data = convolution_nd(forward, flip_kernel, dimension, ConvolutionMode.valid, True)
             for _ in prefix_shape_kernel:
-                gradient_data = reduce_mean(gradient_data, axis=-2)
-                symbol_data = expand(symbol_data, -2)
-            gradient_kernel = flip(convolution_1d(forward, symbol_data, ConvolutionMode.valid, True), -1)
+                gradient_data = reduce_mean(gradient_data, axis=-dimension - 1)
+                symbol_data = expand(symbol_data, -dimension - 1)
+            flip_gradient = convolution_nd(forward, symbol_data, dimension, ConvolutionMode.valid, True)
+            if dimension == 1:
+                gradient_kernel = flip(flip_gradient, -1)
+            else:
+                gradient_kernel = rotate90(flip_gradient, count=2, axes=(-2, -1))
             for _ in prefix_shape_data:
-                gradient_kernel = reduce_mean(gradient_kernel, axis=-2 - len(prefix_shape_kernel))
+                gradient_kernel = reduce_mean(gradient_kernel, axis=-dimension - 1 - len(prefix_shape_kernel))
             return [lambda: gradient_data,
                     lambda: gradient_kernel]
         else:
@@ -110,54 +122,19 @@ class Convolution1D(Operator):
 
     def shape(self, shape_data, shape_kernel):
         if self.arguments['element_wise']:
-            return element_wise_convolution_shape(shape_data, shape_kernel, self.arguments['mode'], 1)
+            return element_wise_convolution_nd_shape(shape_data, shape_kernel, self.arguments['dimension'], self.arguments['mode'])
         else:
-            return convolution_shape(shape_data, shape_kernel, self.arguments['mode'], 1)
+            return convolution_nd_shape(shape_data, shape_kernel, self.arguments['dimension'], self.arguments['mode'])
 
 
-class Convolution2D(Operator):
+class Convolution1D(ConvolutionND):
     def __init__(self, mode, element_wise: bool=False):
-        self.inputs_count = 2
-        self.arguments = {'mode': mode, 'element_wise': element_wise}
+        ConvolutionND.__init__(self, 1, mode, element_wise)
 
-    def compute(self, value_data, value_kernel):
-        return compute_convolution_2d(value_data, value_kernel, **self.arguments)
 
-    def gradient(self, engine, symbol_forward, symbol_data, symbol_kernel):
-        forward = engine.gradient(symbol_forward)
-        mode = self.arguments['mode']
-        if mode == 'valid' or mode == ConvolutionMode.valid:
-            prefix_shape_kernel = engine.shape(symbol_kernel)[:-2]
-            prefix_shape_data = engine.shape(symbol_data)[:-2]
-            gradient_data = convolution_2d(forward, rotate90(symbol_kernel, count=2, axes=(-2, -1)), ConvolutionMode.full, True)
-            for _ in prefix_shape_kernel:
-                gradient_data = reduce_mean(gradient_data, axis=-3)
-                symbol_data = expand(symbol_data, -3)
-            gradient_kernel = convolution_2d(symbol_data, forward, ConvolutionMode.valid, True)
-            for _ in prefix_shape_data:
-                gradient_kernel = reduce_mean(gradient_kernel, axis=-3 - len(prefix_shape_kernel))
-            return [lambda: gradient_data,
-                    lambda: gradient_kernel]
-        elif mode == 'full' or mode == ConvolutionMode.full:
-            prefix_shape_kernel = engine.shape(symbol_kernel)[:-2]
-            prefix_shape_data = engine.shape(symbol_data)[:-2]
-            gradient_data = convolution_2d(forward, rotate90(symbol_kernel, count=2, axes=(-2, -1)), ConvolutionMode.valid, True)
-            for _ in prefix_shape_kernel:
-                gradient_data = reduce_mean(gradient_data, axis=-3)
-                symbol_data = expand(symbol_data, -3)
-            gradient_kernel = rotate90(convolution_2d(forward, symbol_data, ConvolutionMode.valid, True), count=2, axes=(-2, -1))
-            for _ in prefix_shape_data:
-                gradient_kernel = reduce_mean(gradient_kernel, axis=-3 - len(prefix_shape_kernel))
-            return [lambda: gradient_data,
-                    lambda: gradient_kernel]
-        else:
-            raise ValueError('Invalid mode: {}'.format(mode))
-
-    def shape(self, shape_data, shape_kernel):
-        if self.arguments['element_wise']:
-            return element_wise_convolution_shape(shape_data, shape_kernel, self.arguments['mode'], 2)
-        else:
-            return convolution_shape(shape_data, shape_kernel, self.arguments['mode'], 2)
+class Convolution2D(ConvolutionND):
+    def __init__(self, mode, element_wise: bool=False):
+        ConvolutionND.__init__(self, 2, mode, element_wise)
 
 
 class MaxPooling1D(Operator):

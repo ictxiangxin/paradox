@@ -51,80 +51,47 @@ def basic_convolution_shape(shape_data, shape_kernel, dimension: int, mode: str)
         raise ValueError('Invalid convolution mode: {}'.format(mode))
 
 
-def __compute_convolution_1d(data, kernel, mode: str):
-    if data.shape[0] < kernel.shape[0]:
-        raise ValueError('Data shape smaller than kernel shape: {} {}'.format(data.shape, kernel.shape))
-    if len(data.shape) == len(kernel.shape) == 1:
-        return numpy.convolve(data, kernel, mode)
-    else:
-        raise ValueError('These shapes can not execute convolve-1d: {} {}'.format(data.shape, kernel.shape))
+def __compute_valid_convolution_nd(data, kernel, dimension: int):
+    convolution_shape = tuple(data.shape[i] - kernel.shape[i] + 1 for i in range(dimension))
+    list_dimension = reduce(lambda a, b: a * b, convolution_shape)
+    kernel_flat = kernel.ravel()
+    data_flat = numpy.zeros((list_dimension, len(kernel_flat)))
+    for i in range(list_dimension):
+        tensor_slice_start = [0] * len(kernel.shape)
+        tensor_slice = [None] * len(kernel.shape)
+        tensor_slice_start[-1] = i
+        for r in range(len(kernel.shape) - 1, -1, -1):
+            dimension_scale = data.shape[r] - kernel.shape[r] + 1
+            if tensor_slice_start[r] >= dimension_scale:
+                tensor_slice_start[r - 1] = tensor_slice_start[r] // dimension_scale
+                tensor_slice_start[r] %= dimension_scale
+            tensor_slice[r] = slice(tensor_slice_start[r], tensor_slice_start[r] + kernel.shape[r])
+        data_flat[i] = data[tensor_slice].ravel()
+    convolution_flat = numpy.matmul(data_flat, numpy.flip(kernel_flat, axis=0))
+    convolution_nd = convolution_flat.reshape(convolution_shape)
+    return convolution_nd
 
 
-def compute_convolution_1d(data, kernel, mode=ConvolutionMode.valid, element_wise: bool=False):
+def __compute_convolution_nd(data, kernel, dimension: int, mode: str):
     mode_string = __get_convolution_mode_string(mode)
-    result = []
-    data_prefix_shape = data.shape[:-1]
-    kernel_prefix_shape = kernel.shape[:-1]
-    if element_wise:
-        final_shape = element_wise_shape(data_prefix_shape, kernel_prefix_shape)[0]
-        data = numpy.broadcast_to(data, final_shape + data.shape[-1:])
-        kernel = numpy.broadcast_to(kernel, final_shape + kernel.shape[-1:])
-        if final_shape:
-            for key in __array_key_traversal(final_shape):
-                result.append(__compute_convolution_1d(data[key], kernel[key], mode_string))
-            return numpy.array(result).reshape(final_shape + basic_convolution_shape(data.shape[-1:], kernel.shape[-1:], 1, mode_string))
-        else:
-            return __compute_convolution_1d(data, kernel, mode_string)
-    else:
-        if data_prefix_shape:
-            for data_key in __array_key_traversal(data_prefix_shape):
-                if kernel_prefix_shape:
-                    for kernel_key in __array_key_traversal(kernel_prefix_shape):
-                        result.append(__compute_convolution_1d(data[data_key], kernel[kernel_key], mode_string))
-                else:
-                    result.append(__compute_convolution_1d(data[data_key], kernel, mode_string))
-            final_shape = data_prefix_shape + kernel_prefix_shape + basic_convolution_shape(data.shape[-1:], kernel.shape[-1:], 1, mode_string)
-            return numpy.array(result).reshape(final_shape)
-        else:
-            if kernel_prefix_shape:
-                for kernel_key in __array_key_traversal(kernel_prefix_shape):
-                    result.append(__compute_convolution_1d(data, kernel[kernel_key], mode_string))
-                final_shape = data_prefix_shape + kernel_prefix_shape + basic_convolution_shape(data.shape[-1:], kernel.shape[-1:], 1, mode_string)
-                return numpy.array(result).reshape(final_shape)
-            else:
-                return __compute_convolution_1d(data, kernel, mode_string)
-
-
-def __compute_valid_convolution_2d(data, kernel):
-    convolution_result = numpy.zeros((data.shape[0] - kernel.shape[0] + 1, data.shape[1] - kernel.shape[1] + 1))
-    for i in range(kernel.shape[0], data.shape[0] + 1):
-        for j in range(kernel.shape[1], data.shape[1] + 1):
-            sub_data = data[i - kernel.shape[0]: i, j - kernel.shape[1]: j]
-            convolution_value = numpy.convolve(sub_data.ravel(), kernel.ravel(), 'valid')[0]
-            convolution_result[i - kernel.shape[0], j - kernel.shape[1]] = convolution_value
-    return convolution_result
-
-
-def __compute_convolution_2d(data, kernel, mode: str):
-    mode_string = __get_convolution_mode_string(mode)
-    if data.shape[0] < kernel.shape[0] or data.shape[1] < kernel.shape[1]:
-        raise ValueError('Data shape smaller than kernel shape: {} {}'.format(data.shape, kernel.shape))
-    if len(data.shape) == len(kernel.shape) == 2:
+    for i in range(dimension):
+        if data.shape[i] < kernel.shape[i]:
+            raise ValueError('Data shape smaller than kernel shape: {} {}'.format(data.shape, kernel.shape))
+    if len(data.shape) == len(kernel.shape) == dimension:
         if mode_string == 'valid':
-            return __compute_valid_convolution_2d(data, kernel)
+            return __compute_valid_convolution_nd(data, kernel, dimension)
         elif mode_string == 'full':
-            expand_data = numpy.zeros((data.shape[0] + (kernel.shape[0] - 1) * 2, data.shape[1] + (kernel.shape[1] - 1) * 2))
-            x_padding = kernel.shape[0] - 1
-            y_padding = kernel.shape[1] - 1
-            expand_data[x_padding: x_padding + data.shape[0], y_padding: y_padding + data.shape[1]] = data
-            return __compute_valid_convolution_2d(expand_data, kernel)
+            expand_data = numpy.zeros([data.shape[i] + (kernel.shape[i] - 1) * 2 for i in range(dimension)])
+            padding = [kernel.shape[i] - 1 for i in range(dimension)]
+            expand_data[[slice(padding[i], padding[i] + data.shape[i]) for i in range(dimension)]] = data
+            return __compute_valid_convolution_nd(expand_data, kernel, dimension)
         else:
             raise ValueError('Never reached.')
     else:
-        raise ValueError('These shapes can not execute convolve-2d: {} {}'.format(data.shape, kernel.shape))
+        raise ValueError('These shapes can not execute convolution-{}d: {} {}'.format(dimension, data.shape, kernel.shape))
 
 
-def compute_convolution_2d(data, kernel, mode=ConvolutionMode.valid, element_wise: bool=False):
+def compute_convolution_nd(data, kernel, dimension: int, mode=ConvolutionMode.valid, element_wise: bool=False):
     mode_string = __get_convolution_mode_string(mode)
     result = []
     data_prefix_shape = data.shape[:-2]
@@ -135,28 +102,28 @@ def compute_convolution_2d(data, kernel, mode=ConvolutionMode.valid, element_wis
         kernel = numpy.broadcast_to(kernel, final_shape + kernel.shape[-2:])
         if final_shape:
             for key in __array_key_traversal(final_shape):
-                result.append(__compute_convolution_2d(data[key], kernel[key], mode_string))
+                result.append(__compute_convolution_nd(data[key], kernel[key], dimension, mode_string))
             return numpy.array(result).reshape(final_shape + result[0].shape)
         else:
-            return __compute_convolution_2d(data, kernel, mode_string)
+            return __compute_convolution_nd(data, kernel, dimension, mode_string)
     else:
         if data_prefix_shape:
             for data_key in __array_key_traversal(data_prefix_shape):
                 if kernel_prefix_shape:
                     for kernel_key in __array_key_traversal(kernel_prefix_shape):
-                        result.append(__compute_convolution_2d(data[data_key], kernel[kernel_key], mode_string))
+                        result.append(__compute_convolution_nd(data[data_key], kernel[kernel_key], dimension, mode_string))
                 else:
-                    result.append(__compute_convolution_2d(data[data_key], kernel, mode_string))
+                    result.append(__compute_convolution_nd(data[data_key], kernel, dimension, mode_string))
             final_shape = data_prefix_shape + kernel_prefix_shape + basic_convolution_shape(data.shape[-2:], kernel.shape[-2:], 2, mode_string)
             return numpy.array(result).reshape(final_shape)
         else:
             if kernel_prefix_shape:
                 for kernel_key in __array_key_traversal(kernel_prefix_shape):
-                    result.append(__compute_convolution_2d(data, kernel[kernel_key], mode_string))
+                    result.append(__compute_convolution_nd(data, kernel[kernel_key], dimension, mode_string))
                 final_shape = data_prefix_shape + kernel_prefix_shape + basic_convolution_shape(data.shape[-2:], kernel.shape[-2:], 2, mode_string)
                 return numpy.array(result).reshape(final_shape)
             else:
-                return __compute_convolution_2d(data, kernel, mode_string)
+                return __compute_convolution_nd(data, kernel, dimension, mode_string)
 
 
 def __compute_max_pooling_1d(data, size, step, reference=None):

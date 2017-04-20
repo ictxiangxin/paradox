@@ -1,14 +1,17 @@
 from paradox.kernel.symbol import Symbol, SymbolCategory, as_symbols
 
 
+def convolution_nd(data, kernel, dimension: int, mode, element_wise: bool=False):
+    from paradox.neural_network.convolutional_neural_network.operator import ConvolutionND
+    return Symbol(operator=ConvolutionND(dimension, mode, element_wise), inputs=as_symbols([data, kernel]), category=SymbolCategory.operator)
+
+
 def convolution_1d(data, kernel, mode, element_wise: bool=False):
-    from paradox.neural_network.convolutional_neural_network.operator import Convolution1D
-    return Symbol(operator=Convolution1D(mode, element_wise), inputs=as_symbols([data, kernel]), category=SymbolCategory.operator)
+    return convolution_nd(data, kernel, 1, mode, element_wise)
 
 
 def convolution_2d(data, kernel, mode, element_wise: bool=False):
-    from paradox.neural_network.convolutional_neural_network.operator import Convolution2D
-    return Symbol(operator=Convolution2D(mode, element_wise), inputs=as_symbols([data, kernel]), category=SymbolCategory.operator)
+    return convolution_nd(data, kernel, 2, mode, element_wise)
 
 
 def max_pooling_1d(data, size: int, step: int, reference=None):
