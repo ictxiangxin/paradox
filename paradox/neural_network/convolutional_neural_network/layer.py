@@ -15,7 +15,7 @@ from paradox.neural_network.convolutional_neural_network.function import \
 from paradox.neural_network.convolutional_neural_network.operator import \
     convolution_nd_shape, \
     pooling_nd_shape, \
-    unpooling_shape
+    unpooling_nd_shape
 
 
 class ConvolutionLayer:
@@ -186,7 +186,7 @@ class MaxUnpooling1DLayer(UnpoolingLayer):
         return max_unpooling_1d
 
     def get_output_shape(self):
-        return unpooling_shape(self.input_shape, self.size, self.step, None, 1)[0]
+        return unpooling_nd_shape(self.input_shape, self.size, self.step, None, 1)[0]
 
 
 class MaxUnpooling2DLayer(UnpoolingLayer):
@@ -194,7 +194,7 @@ class MaxUnpooling2DLayer(UnpoolingLayer):
         return max_unpooling_2d
 
     def get_output_shape(self):
-        return unpooling_shape(self.input_shape, self.size, self.step, None, 2)[0]
+        return unpooling_nd_shape(self.input_shape, self.size, self.step, None, 2)[0]
 
 
 class AverageUnpooling1DLayer(UnpoolingLayer):
@@ -202,7 +202,7 @@ class AverageUnpooling1DLayer(UnpoolingLayer):
         return average_unpooling_1d
 
     def get_output_shape(self):
-        return unpooling_shape(self.input_shape, self.size, self.step, None, 2)[0]
+        return unpooling_nd_shape(self.input_shape, self.size, self.step, None, 2)[0]
 
 
 class AverageUnpooling2DLayer(UnpoolingLayer):
@@ -210,7 +210,7 @@ class AverageUnpooling2DLayer(UnpoolingLayer):
         return average_unpooling_2d
 
     def get_output_shape(self):
-        return unpooling_shape(self.input_shape, self.size, self.step, None, 2)[0]
+        return unpooling_nd_shape(self.input_shape, self.size, self.step, None, 2)[0]
 
 
 unpooling_map = {
