@@ -79,7 +79,7 @@ class ConvolutionND(Operator):
             if dimension == 1:
                 flip_kernel = flip(symbol_kernel, -1)
             else:
-                flip_kernel = rotate90(symbol_kernel, count=2, axes=(-2, -1))
+                flip_kernel = rotate90(symbol_kernel, count=2, axes=(-2, -1))  # bug
             gradient_data = convolution_nd(forward, flip_kernel, dimension, ConvolutionMode.full, True)
             for _ in prefix_shape_kernel:
                 gradient_data = reduce_mean(gradient_data, axis=-dimension - 1)
@@ -95,7 +95,7 @@ class ConvolutionND(Operator):
             if dimension == 1:
                 flip_kernel = flip(symbol_kernel, -1)
             else:
-                flip_kernel = rotate90(symbol_kernel, count=2, axes=(-2, -1))
+                flip_kernel = rotate90(symbol_kernel, count=2, axes=(-2, -1))  # bug
             gradient_data = convolution_nd(forward, flip_kernel, dimension, ConvolutionMode.valid, True)
             for _ in prefix_shape_kernel:
                 gradient_data = reduce_mean(gradient_data, axis=-dimension - 1)
@@ -104,7 +104,7 @@ class ConvolutionND(Operator):
             if dimension == 1:
                 gradient_kernel = flip(flip_gradient, -1)
             else:
-                gradient_kernel = rotate90(flip_gradient, count=2, axes=(-2, -1))
+                gradient_kernel = rotate90(flip_gradient, count=2, axes=(-2, -1))  # bug
             for _ in prefix_shape_data:
                 gradient_kernel = reduce_mean(gradient_kernel, axis=-dimension - 1 - len(prefix_shape_kernel))
             return [lambda: gradient_data,

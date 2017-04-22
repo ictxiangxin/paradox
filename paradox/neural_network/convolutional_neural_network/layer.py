@@ -2,16 +2,11 @@ from abc import abstractmethod
 import numpy
 from paradox.kernel.symbol import Variable
 from paradox.neural_network.convolutional_neural_network.function import \
-    convolution_1d, \
-    convolution_2d, \
-    max_pooling_1d, \
-    max_pooling_2d, \
-    max_unpooling_1d, \
-    max_unpooling_2d, \
-    average_pooling_1d, \
-    average_pooling_2d, \
-    average_unpooling_1d, \
-    average_unpooling_2d
+    convolution_nd, \
+    max_pooling_nd, \
+    max_unpooling_nd, \
+    average_pooling_nd, \
+    average_unpooling_nd
 from paradox.neural_network.convolutional_neural_network.operator import \
     convolution_nd_shape, \
     pooling_nd_shape, \
@@ -39,31 +34,38 @@ class ConvolutionLayer:
         pass
 
 
-class Convolution1DLayer(ConvolutionLayer):
-    def __init__(self, kernel_shape, mode, input_shape=None):
+class ConvolutionNDLayer(ConvolutionLayer):
+    def __init__(self, kernel_shape: tuple, mode, dimension: int, input_shape: tuple=None):
         ConvolutionLayer.__init__(self, kernel_shape, mode, input_shape)
+        self.__dimension = dimension
 
     def convolution_function(self):
-        return convolution_1d
+        return lambda data, kernel, mode: convolution_nd(data, kernel, self.__dimension, mode)
 
     def get_output_shape(self):
-        return convolution_nd_shape(self.input_shape, self.kernel_shape, 1, self.mode)[0]
+        return convolution_nd_shape(self.input_shape, self.kernel_shape, self.__dimension, self.mode)[0]
 
 
-class Convolution2DLayer(ConvolutionLayer):
+class Convolution1DLayer(ConvolutionNDLayer):
     def __init__(self, kernel_shape, mode, input_shape=None):
-        ConvolutionLayer.__init__(self, kernel_shape, mode, input_shape)
+        ConvolutionNDLayer.__init__(self, kernel_shape, mode, 1, input_shape)
 
-    def convolution_function(self):
-        return convolution_2d
 
-    def get_output_shape(self):
-        return convolution_nd_shape(self.input_shape, self.kernel_shape, 2, self.mode)[0]
+class Convolution2DLayer(ConvolutionNDLayer):
+    def __init__(self, kernel_shape, mode, input_shape=None):
+        ConvolutionNDLayer.__init__(self, kernel_shape, mode, 2, input_shape)
+
+
+class Convolution3DLayer(ConvolutionNDLayer):
+    def __init__(self, kernel_shape, mode, input_shape=None):
+        ConvolutionNDLayer.__init__(self, kernel_shape, mode, 3, input_shape)
 
 
 convolution_map = {
+    'nd': ConvolutionNDLayer,
     '1d': Convolution1DLayer,
     '2d': Convolution2DLayer,
+    '3d': Convolution2DLayer,
 }
 
 
@@ -89,7 +91,7 @@ class PoolingLayer:
     step = None
     input_shape = None
 
-    def __init__(self, size, step, input_shape=None):
+    def __init__(self, size: tuple, step: tuple, input_shape: tuple=None):
         self.size = size
         self.step = step
         self.input_shape = input_shape
@@ -106,43 +108,69 @@ class PoolingLayer:
         pass
 
 
-class MaxPooling1DLayer(PoolingLayer):
+class MaxPoolingNDLayer(PoolingLayer):
+    def __init__(self, size: tuple, step: tuple, dimension: int, input_shape: tuple=None):
+        PoolingLayer.__init__(self, size, step, input_shape)
+        self.__dimension = dimension
+
     def pooling_function(self):
-        return max_pooling_1d
+        return lambda data, size, step: max_pooling_nd(data, size, step, self.__dimension)
 
     def get_output_shape(self):
-        return pooling_nd_shape(self.input_shape, self.size, self.step, 1)[0]
+        return pooling_nd_shape(self.input_shape, self.size, self.step, self.__dimension)[0]
 
 
-class MaxPooling2DLayer(PoolingLayer):
+class MaxPooling1DLayer(MaxPoolingNDLayer):
+    def __init__(self, size: tuple, step: tuple, input_shape: tuple=None):
+        MaxPoolingNDLayer.__init__(self, size, step, 1, input_shape)
+
+
+class MaxPooling2DLayer(MaxPoolingNDLayer):
+    def __init__(self, size: tuple, step: tuple, input_shape: tuple=None):
+        MaxPoolingNDLayer.__init__(self, size, step, 2, input_shape)
+
+
+class MaxPooling3DLayer(MaxPoolingNDLayer):
+    def __init__(self, size: tuple, step: tuple, input_shape: tuple=None):
+        MaxPoolingNDLayer.__init__(self, size, step, 3, input_shape)
+
+
+class AveragePoolingNDLayer(PoolingLayer):
+    def __init__(self, size: tuple, step: tuple, dimension: int, input_shape: tuple=None):
+        PoolingLayer.__init__(self, size, step, input_shape)
+        self.__dimension = dimension
+
     def pooling_function(self):
-        return max_pooling_2d
+        return lambda data, size, step: average_pooling_nd(data, size, step, self.__dimension)
 
     def get_output_shape(self):
-        return pooling_nd_shape(self.input_shape, self.size, self.step, 2)[0]
+        return pooling_nd_shape(self.input_shape, self.size, self.step, self.__dimension)[0]
 
 
-class AveragePooling1DLayer(PoolingLayer):
-    def pooling_function(self):
-        return average_pooling_1d
-
-    def get_output_shape(self):
-        return pooling_nd_shape(self.input_shape, self.size, self.step, 1)[0]
+class AveragePooling1DLayer(AveragePoolingNDLayer):
+    def __init__(self, size: tuple, step: tuple, input_shape: tuple = None):
+        AveragePoolingNDLayer.__init__(self, size, step, 1, input_shape)
 
 
-class AveragePooling2DLayer(PoolingLayer):
-    def pooling_function(self):
-        return average_pooling_2d
+class AveragePooling2DLayer(AveragePoolingNDLayer):
+    def __init__(self, size: tuple, step: tuple, input_shape: tuple = None):
+        AveragePoolingNDLayer.__init__(self, size, step, 2, input_shape)
 
-    def get_output_shape(self):
-        return pooling_nd_shape(self.input_shape, self.size, self.step, 2)[0]
+
+class AveragePooling3DLayer(AveragePoolingNDLayer):
+    def __init__(self, size: tuple, step: tuple, input_shape: tuple = None):
+        AveragePoolingNDLayer.__init__(self, size, step, 3, input_shape)
 
 
 pooling_map = {
-    'max1d': MaxPooling1DLayer,
-    'max2d': MaxPooling2DLayer,
-    'average1d': AveragePooling1DLayer,
-    'average2d': AveragePooling2DLayer,
+    'max_nd': MaxPoolingNDLayer,
+    'max_1d': MaxPooling1DLayer,
+    'max_2d': MaxPooling2DLayer,
+    'max_3d': MaxPooling3DLayer,
+    'average_nd': AveragePoolingNDLayer,
+    'average_1d': AveragePooling1DLayer,
+    'average_2d': AveragePooling2DLayer,
+    'average_3d': AveragePooling3DLayer,
 }
 
 
@@ -164,7 +192,7 @@ class Pooling:
 
 
 class UnpoolingLayer:
-    def __init__(self, size, step, input_shape=None):
+    def __init__(self, size: tuple, step: tuple, input_shape: tuple=None):
         self.size = size
         self.step = step
         self.input_shape = input_shape
@@ -181,43 +209,69 @@ class UnpoolingLayer:
         pass
 
 
-class MaxUnpooling1DLayer(UnpoolingLayer):
+class MaxUnpoolingNDLayer(UnpoolingLayer):
+    def __init__(self, size: tuple, step: tuple, dimension: int, input_shape: tuple=None):
+        UnpoolingLayer.__init__(self, size, step, input_shape)
+        self.__dimension = dimension
+
     def unpooling_function(self):
-        return max_unpooling_1d
+        return lambda data, pooling, size, step: max_unpooling_nd(data, pooling, size, step, self.__dimension)
 
     def get_output_shape(self):
-        return unpooling_nd_shape(self.input_shape, self.size, self.step, None, 1)[0]
+        return unpooling_nd_shape(self.input_shape, self.size, self.step, None, self.__dimension)[0]
 
 
-class MaxUnpooling2DLayer(UnpoolingLayer):
+class MaxUnpooling1DLayer(MaxUnpoolingNDLayer):
+    def __init__(self, size: tuple, step: tuple, input_shape: tuple=None):
+        MaxUnpoolingNDLayer.__init__(self, size, step, 1, input_shape)
+
+
+class MaxUnpooling2DLayer(MaxUnpoolingNDLayer):
+    def __init__(self, size: tuple, step: tuple, input_shape: tuple=None):
+        MaxUnpoolingNDLayer.__init__(self, size, step, 2, input_shape)
+
+
+class MaxUnpooling3DLayer(MaxUnpoolingNDLayer):
+    def __init__(self, size: tuple, step: tuple, input_shape: tuple=None):
+        MaxUnpoolingNDLayer.__init__(self, size, step, 3, input_shape)
+
+
+class AverageUnpoolingNDLayer(UnpoolingLayer):
+    def __init__(self, size: tuple, step: tuple, dimension: int, input_shape: tuple=None):
+        UnpoolingLayer.__init__(self, size, step, input_shape)
+        self.__dimension = dimension
+
     def unpooling_function(self):
-        return max_unpooling_2d
+        return lambda data, pooling, size, step: average_unpooling_nd(pooling, size, step, self.__dimension)
 
     def get_output_shape(self):
-        return unpooling_nd_shape(self.input_shape, self.size, self.step, None, 2)[0]
+        return unpooling_nd_shape(self.input_shape, self.size, self.step, None, self.__dimension)[0]
 
 
-class AverageUnpooling1DLayer(UnpoolingLayer):
-    def unpooling_function(self):
-        return average_unpooling_1d
-
-    def get_output_shape(self):
-        return unpooling_nd_shape(self.input_shape, self.size, self.step, None, 2)[0]
+class AverageUnpooling1DLayer(AverageUnpoolingNDLayer):
+    def __init__(self, size: tuple, step: tuple, input_shape: tuple=None):
+        AverageUnpoolingNDLayer.__init__(self, size, step, 1, input_shape)
 
 
-class AverageUnpooling2DLayer(UnpoolingLayer):
-    def unpooling_function(self):
-        return average_unpooling_2d
+class AverageUnpooling2DLayer(AverageUnpoolingNDLayer):
+    def __init__(self, size: tuple, step: tuple, input_shape: tuple=None):
+        AverageUnpoolingNDLayer.__init__(self, size, step, 2, input_shape)
 
-    def get_output_shape(self):
-        return unpooling_nd_shape(self.input_shape, self.size, self.step, None, 2)[0]
+
+class AverageUnpooling3DLayer(AverageUnpoolingNDLayer):
+    def __init__(self, size: tuple, step: tuple, input_shape: tuple=None):
+        AverageUnpoolingNDLayer.__init__(self, size, step, 3, input_shape)
 
 
 unpooling_map = {
-    'max1d': MaxUnpooling1DLayer,
-    'max2d': MaxUnpooling2DLayer,
-    'average1d': AverageUnpooling1DLayer,
-    'average2d': AverageUnpooling2DLayer,
+    'max_nd': MaxUnpoolingNDLayer,
+    'max_1d': MaxUnpooling1DLayer,
+    'max_2d': MaxUnpooling2DLayer,
+    'max_3d': MaxUnpooling3DLayer,
+    'average_nd': AverageUnpoolingNDLayer,
+    'average_1d': AverageUnpooling1DLayer,
+    'average_2d': AverageUnpooling2DLayer,
+    'average_3d': AverageUnpooling3DLayer,
 }
 
 

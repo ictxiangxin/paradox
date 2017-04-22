@@ -6,9 +6,8 @@ from paradox.utils import array_index_traversal, multi_range
 
 
 class ConvolutionMode(Enum):
-    ConvolutionMode = 0
-    valid = 1
-    full = 2
+    valid = 0
+    full = 1
 
 
 convolution_map = {
