@@ -209,33 +209,6 @@ class UnpoolingLayer:
         pass
 
 
-class MaxUnpoolingNDLayer(UnpoolingLayer):
-    def __init__(self, size: tuple, step: tuple, dimension: int, input_shape: tuple=None):
-        UnpoolingLayer.__init__(self, size, step, input_shape)
-        self.__dimension = dimension
-
-    def unpooling_function(self):
-        return lambda data, pooling, size, step: max_unpooling_nd(data, pooling, size, step, self.__dimension)
-
-    def get_output_shape(self):
-        return unpooling_nd_shape(self.input_shape, self.size, self.step, None, self.__dimension)[0]
-
-
-class MaxUnpooling1DLayer(MaxUnpoolingNDLayer):
-    def __init__(self, size: tuple, step: tuple, input_shape: tuple=None):
-        MaxUnpoolingNDLayer.__init__(self, size, step, 1, input_shape)
-
-
-class MaxUnpooling2DLayer(MaxUnpoolingNDLayer):
-    def __init__(self, size: tuple, step: tuple, input_shape: tuple=None):
-        MaxUnpoolingNDLayer.__init__(self, size, step, 2, input_shape)
-
-
-class MaxUnpooling3DLayer(MaxUnpoolingNDLayer):
-    def __init__(self, size: tuple, step: tuple, input_shape: tuple=None):
-        MaxUnpoolingNDLayer.__init__(self, size, step, 3, input_shape)
-
-
 class AverageUnpoolingNDLayer(UnpoolingLayer):
     def __init__(self, size: tuple, step: tuple, dimension: int, input_shape: tuple=None):
         UnpoolingLayer.__init__(self, size, step, input_shape)
@@ -264,10 +237,6 @@ class AverageUnpooling3DLayer(AverageUnpoolingNDLayer):
 
 
 unpooling_map = {
-    'max_nd': MaxUnpoolingNDLayer,
-    'max_1d': MaxUnpooling1DLayer,
-    'max_2d': MaxUnpooling2DLayer,
-    'max_3d': MaxUnpooling3DLayer,
     'average_nd': AverageUnpoolingNDLayer,
     'average_1d': AverageUnpooling1DLayer,
     'average_2d': AverageUnpooling2DLayer,

@@ -64,10 +64,6 @@ from paradox.neural_network.convolutional_neural_network.layer import \
     AveragePooling2DLayer, \
     AveragePooling3DLayer, \
     Pooling, \
-    MaxUnpoolingNDLayer, \
-    MaxUnpooling1DLayer, \
-    MaxUnpooling2DLayer, \
-    MaxUnpooling3DLayer, \
     AverageUnpoolingNDLayer, \
     AverageUnpooling1DLayer, \
     AverageUnpooling2DLayer, \
