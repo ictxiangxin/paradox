@@ -8,7 +8,7 @@ def helical_data(number: int,
                  max_theta: float=3*numpy.pi,
                  init_radius: float=0,
                  init_theta: float=0,
-                 center: list=[0, 0]):
+                 center: tuple=(0, 0)):
     radius_step = max_radius / number
     theta_step = max_theta / number
     phase = 2 * numpy.pi / category
@@ -48,7 +48,7 @@ def grid_data(number: int,
 
 def circle_data(number: int,
                 category: int=2,
-                center: list=[0, 0],
+                center: tuple=(0, 0),
                 delta_radius: float=1.,
                 noise: float=0.
                 ):
@@ -74,13 +74,13 @@ def gaussian_data(number: int,
     mean = mean or [[i + 1, i + 1] for i in range(category)]
     cov = cov or [numpy.eye(2) for _ in range(category)]
     for i in range(category):
-        data.append(numpy.random.multivariate_normal(mean[i], cov[i], number).T)
+        data.append(numpy.random.multivariate_normal(mean[i], cov[i], number).T.tolist())
     return data
 
 
 def cross_data(number: int,
                category: int=2,
-               center: list=[0, 0],
+               center: tuple=(0, 0),
                radius: float=2,
                init_angle: float=0.,
                noise: float=0.):
