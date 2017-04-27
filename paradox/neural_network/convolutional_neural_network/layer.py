@@ -17,13 +17,17 @@ class ConvolutionLayer:
     kernel_shape = None
     mode = None
     input_shape = None
-    kernel = None
 
     def __init__(self, kernel_shape, mode, input_shape=None):
         self.kernel_shape = kernel_shape
         self.mode = mode
         self.input_shape = input_shape
-        self.kernel = Variable(numpy.random.normal(0, 1, self.kernel_shape))
+        self._kernel = None
+
+    def kernel(self):
+        if self._kernel is None:
+            self._kernel = Variable(numpy.random.normal(0, 1, self.kernel_shape))
+        return self._kernel
 
     @abstractmethod
     def get_output_shape(self):

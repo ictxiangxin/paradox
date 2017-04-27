@@ -2,7 +2,7 @@ import collections
 from functools import reduce
 import numpy
 from paradox.kernel.operator import Operator
-from paradox.kernel.symbol import Variable, spread
+from paradox.kernel.symbol import SymbolCategory, Symbol, Placeholder, spread
 from paradox.kernel.engine import Engine
 from paradox.kernel.optimizer import Optimizer, GradientDescentOptimizer
 from paradox.neural_network.loss import LossLayer, Loss
@@ -30,15 +30,14 @@ class Network:
         self.batch_size = None
         self.engine = Engine()
         self.__layer = []
-        self.__layer_name_map = {}
+        self.__layer_name_map = collections.OrderedDict()
         self.__layer_number = 0
-        self.__input_symbol = Variable(name='InputSymbol')
+        self.__input_symbol = Placeholder(name='InputSymbol')
         self.__current_symbol = self.__input_symbol
         self.__current_output = None
         self.__current_weight = None
         self.__current_bias = None
         self.__variables = []
-        self.__variables_name_map = {}
         self.__data = None
         self.__optimizer = None
         self.__loss = None
@@ -52,17 +51,31 @@ class Network:
         else:
             return self.__current_output
 
-    def add(self, layers, names=None):
-        if isinstance(layers, collections.Iterable):
-            for i, layer in enumerate(layers):
-                if names is not None and i < len(names):
-                    self.__add(layer, names[i])
-                else:
-                    self.__add(layer)
+    def layer(self, name: str):
+        if name in self.__layer_name_map:
+            return self.__layer_name_map[name]
         else:
-            self.__add(layers)
+            raise ValueError('No such layer in Network: {}'.format(name))
+
+    def add(self, layer, name=None):
+        if isinstance(layer, collections.Iterable):
+            for i, l in enumerate(layer):
+                if name is not None and i < len(name):
+                    self.__add(l, name[i])
+                else:
+                    self.__add(l)
+        else:
+            self.__add(layer, name)
 
     def __add(self, layer, name: str=None):
+        self.__layer.append(layer)
+        if name is None:
+            name = 'layer_{}'.format(self.__layer_number)
+        if name in self.__layer_name_map:
+            raise ValueError('Layer name has contained in Network: {}'.format(name))
+        else:
+            self.__layer_name_map[name] = layer
+        self.__layer_number += 1
         if isinstance(layer, Operator):
             self.__add_operator(layer)
         elif isinstance(layer, ConnectionLayer):
@@ -87,17 +100,9 @@ class Network:
             self.__add_unpooling(layer.unpooling_layer())
         else:
             raise ValueError('Invalid layer type: {}'. format(type(layer)))
-        self.__layer.append(layer)
-        if name is None:
-            name = 'layer_{}'.format(self.__layer_number)
-        if name in self.__layer_name_map:
-            raise ValueError('Layer name has contained in Network: {}'.format(name))
-        else:
-            self.__layer_name_map[name] = layer
-        self.__layer_number += 1
 
     def __add_operator(self, layer: Operator):
-        self.__current_symbol = Variable(operator=layer, inputs=[self.__current_symbol])
+        self.__current_symbol = Symbol(operator=layer, inputs=[self.__current_symbol], category=SymbolCategory.operator)
 
     def __add_connection(self, layer: ConnectionLayer):
         if layer.input_dimension is None:
@@ -120,8 +125,9 @@ class Network:
         self.__current_bias.value = layer.bias_initialization(self.__current_bias.value.shape)
 
     def __add_convolution(self, layer: ConvolutionLayer):
-        self.__variables.append(layer.kernel)
-        self.__current_symbol = layer.convolution_function()(self.__current_symbol, layer.kernel, layer.mode)
+        kernel = layer.kernel()
+        self.__variables.append(kernel)
+        self.__current_symbol = layer.convolution_function()(self.__current_symbol, kernel, layer.mode)
         if layer.input_shape is None:
             layer.input_shape = self.__valid_current_output()
         self.__current_output = layer.get_output_shape()
@@ -216,7 +222,8 @@ class Network:
 
     def run_plugin(self, stage: str):
         for _, plugin in self.__plugin.items():
-            getattr(plugin, stage)()
+            if plugin.enable:
+                getattr(plugin, stage)()
 
     def plugin(self, name: str):
         if name in self.__plugin:

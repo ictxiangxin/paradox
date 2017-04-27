@@ -1,8 +1,11 @@
 import time
+from paradox.neural_network.connection import ConnectionLayer, Connection
+from paradox.neural_network.convolutional_neural_network.layer import ConvolutionLayer, Convolution
 
 
 class Plugin:
     network = None
+    enable = True
 
     def bind_network(self, network):
         self.network = network
@@ -49,3 +52,31 @@ class TrainingStatePlugin(Plugin):
                 self.network.epochs,
                 loss_value,
                 speed))
+
+
+class VariableMonitorPlugin(Plugin):
+    def __init__(self, layer_name: str, for_iteration: bool=True):
+        self.__layer_name = layer_name
+        self.__for_iteration = for_iteration
+
+    def output_variables(self):
+        layer = self.network.layer(self.__layer_name)
+        if isinstance(layer, Connection):
+            layer = layer.connection_layer()
+        if isinstance(layer, Convolution):
+            layer = layer.convolution_layer()
+        if isinstance(layer, ConnectionLayer):
+            weight, bias = layer.weight_bias()
+            print('[{}]: Weight = \n{}'.format(self.__layer_name, weight.value))
+            print('[{}]: Bias = \n{}'.format(self.__layer_name, bias.value))
+        elif isinstance(layer, ConvolutionLayer):
+            kernel = layer.kernel()
+            print('[{}]: Kernel = \n{}'.format(self.__layer_name, kernel.value))
+
+    def end_iteration(self):
+        if self.__for_iteration:
+            self.output_variables()
+
+    def end_epoch(self):
+        if not self.__for_iteration:
+            self.output_variables()
