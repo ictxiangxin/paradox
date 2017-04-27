@@ -10,9 +10,8 @@ class ConnectionLayer:
     def __init__(self, output_dimension: int, input_dimension: int=None):
         self.input_dimension = input_dimension
         self.output_dimension = output_dimension
-
-    def set_input_dimension(self, input_dimension: int=None):
-        self.input_dimension = input_dimension
+        self.weight = None
+        self.bias = None
 
     @abstractmethod
     def weight_bias(self):
@@ -21,9 +20,11 @@ class ConnectionLayer:
 
 class Dense(ConnectionLayer):
     def weight_bias(self):
-        weight = Variable(numpy.zeros((self.input_dimension, self.output_dimension)))
-        bias = Variable(numpy.zeros((1, self.output_dimension)))
-        return weight, bias
+        if self.weight is None:
+            self.weight = Variable(numpy.zeros((self.input_dimension, self.output_dimension)))
+        if self.bias is None:
+            self.bias = Variable(numpy.zeros((1, self.output_dimension)))
+        return self.weight, self.bias
 
 
 connection_map = {

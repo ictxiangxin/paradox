@@ -30,12 +30,15 @@ class Network:
         self.batch_size = None
         self.engine = Engine()
         self.__layer = []
+        self.__layer_name_map = {}
+        self.__layer_number = 0
         self.__input_symbol = Variable(name='InputSymbol')
         self.__current_symbol = self.__input_symbol
         self.__current_output = None
         self.__current_weight = None
         self.__current_bias = None
         self.__variables = []
+        self.__variables_name_map = {}
         self.__data = None
         self.__optimizer = None
         self.__loss = None
@@ -49,14 +52,17 @@ class Network:
         else:
             return self.__current_output
 
-    def add(self, layers):
+    def add(self, layers, names=None):
         if isinstance(layers, collections.Iterable):
-            for layer in layers:
-                self.__add(layer)
+            for i, layer in enumerate(layers):
+                if names is not None and i < len(names):
+                    self.__add(layer, names[i])
+                else:
+                    self.__add(layer)
         else:
             self.__add(layers)
 
-    def __add(self, layer):
+    def __add(self, layer, name: str=None):
         if isinstance(layer, Operator):
             self.__add_operator(layer)
         elif isinstance(layer, ConnectionLayer):
@@ -81,6 +87,14 @@ class Network:
             self.__add_unpooling(layer.unpooling_layer())
         else:
             raise ValueError('Invalid layer type: {}'. format(type(layer)))
+        self.__layer.append(layer)
+        if name is None:
+            name = 'layer_{}'.format(self.__layer_number)
+        if name in self.__layer_name_map:
+            raise ValueError('Layer name has contained in Network: {}'.format(name))
+        else:
+            self.__layer_name_map[name] = layer
+        self.__layer_number += 1
 
     def __add_operator(self, layer: Operator):
         self.__current_symbol = Variable(operator=layer, inputs=[self.__current_symbol])
@@ -91,7 +105,7 @@ class Network:
             if not isinstance(current_output, int):
                 self.__current_symbol = spread(self.__current_symbol, 1 - len(current_output))
                 current_output = reduce(lambda a, b: a * b, current_output[1:])
-            layer.set_input_dimension(current_output)
+            layer.input_dimension = current_output
         weight, bias = layer.weight_bias()
         self.__variables.append(weight)
         self.__variables.append(bias)
