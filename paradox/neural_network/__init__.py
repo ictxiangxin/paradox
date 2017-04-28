@@ -27,4 +27,5 @@ from paradox.neural_network.network import \
     Network
 from paradox.neural_network.plugin import \
     Plugin, \
-    TrainingStatePlugin
+    TrainingStatePlugin, \
+    VariableMonitorPlugin
