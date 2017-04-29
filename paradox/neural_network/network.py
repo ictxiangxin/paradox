@@ -10,7 +10,7 @@ from paradox.neural_network.connection import ConnectionLayer, Connection
 from paradox.neural_network.activation import ActivationLayer, Activation
 from paradox.neural_network.convolutional_neural_network.layer import ConvolutionLayer, PoolingLayer, UnpoolingLayer
 from paradox.neural_network.convolutional_neural_network.layer import Convolution, Pooling, Unpooling
-from paradox.neural_network.plugin import Plugin, TrainingStatePlugin
+from paradox.neural_network.plugin import Plugin, default_plugin
 
 
 optimizer_map = {
@@ -31,7 +31,7 @@ class Network:
         self.engine = Engine()
         self.__layer = []
         self.__layer_name_map = collections.OrderedDict()
-        self.__layer_number_map = {}
+        self.__layer_number_map = collections.OrderedDict()
         self.__layer_number = 0
         self.__input_symbol = Placeholder(name='InputSymbol')
         self.__current_symbol = self.__input_symbol
@@ -50,11 +50,17 @@ class Network:
         else:
             return self.__current_output
 
-    def layer(self, name: str):
+    def get_layer(self, name: str):
         if name in self.__layer_name_map:
             return self.__layer_name_map[name]
         else:
-            raise ValueError('No such layer in Network: {}'.format(name))
+            raise ValueError('No such get_layer in Network: {}'.format(name))
+
+    def layer_name_map(self):
+        return self.__layer_name_map
+
+    def layer_number_map(self):
+        return self.__layer_number_map
 
     def add(self, layer, name=None):
         if isinstance(layer, collections.Iterable):
@@ -99,7 +105,7 @@ class Network:
         elif isinstance(layer, Unpooling):
             self.__add_unpooling(layer.unpooling_layer())
         else:
-            raise ValueError('Invalid layer type: {}'. format(type(layer)))
+            raise ValueError('Invalid get_layer type: {}'. format(type(layer)))
 
     def __add_operator(self, layer: Operator):
         self.__current_symbol = Symbol(operator=layer, inputs=[self.__current_symbol], category=SymbolCategory.operator)
@@ -212,14 +218,12 @@ class Network:
         return predict_data
 
     def load_default_plugin(self):
-        default_plugin = [
-            ('Training State', TrainingStatePlugin()),
-        ]
-        for name, plugin in default_plugin:
+        for name, plugin, enable in default_plugin:
+            plugin.enable = enable
             self.add_plugin(name, plugin)
 
     def add_plugin(self, name: str, plugin: Plugin):
-        self.__plugin[name] = plugin
+        self.__plugin[name.lower()] = plugin
         plugin.bind_network(self)
 
     def run_plugin(self, stage: str):
@@ -228,7 +232,7 @@ class Network:
                 getattr(plugin, stage)()
 
     def plugin(self, name: str):
-        if name in self.__plugin:
-            return self.__plugin[name]
+        if name.lower() in self.__plugin:
+            return self.__plugin[name.lower()]
         else:
             raise ValueError('No such plugin: {}'.format(name))

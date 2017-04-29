@@ -55,20 +55,36 @@ class TrainingStatePlugin(Plugin):
 
 
 class VariableMonitorPlugin(Plugin):
-    def __init__(self, layer_name: str, for_iteration: bool=True):
-        self.__layer_name = layer_name
+    def __init__(self, layer_name=None, for_iteration: bool=True):
+        self.__layer_name = None
         self.__for_iteration = for_iteration
+        self.set_layer_name(layer_name)
+
+    def get_layer_name(self):
+        return self.__layer_name
+
+    def set_layer_name(self, layer_name):
+        if isinstance(layer_name, str):
+            self.__layer_name = [layer_name]
+        else:
+            self.__layer_name = layer_name
+
+    layer_name = property(get_layer_name, set_layer_name)
 
     def output_variables(self):
-        layer = self.network.layer(self.__layer_name)
-        layer = layer.connection_layer()
-        if isinstance(layer, ConnectionLayer):
-            weight, bias = layer.weight_bias()
-            print('[{}]: Weight = \n{}'.format(self.__layer_name, weight.value))
-            print('[{}]: Bias = \n{}'.format(self.__layer_name, bias.value))
-        elif isinstance(layer, ConvolutionLayer):
-            kernel = layer.kernel()
-            print('[{}]: Kernel = \n{}'.format(self.__layer_name, kernel.value))
+        if self.__layer_name is None:
+            self.__layer_name = list(self.network.layer_name_map())
+        for layer_name in self.__layer_name:
+            layer = self.network.get_layer(layer_name)
+            if isinstance(layer, ConnectionLayer) or isinstance(layer, Connection):
+                layer = layer.connection_layer()
+                weight, bias = layer.weight_bias()
+                print('[{}]: Weight = \n{}'.format(layer_name, weight.value))
+                print('[{}]: Bias = \n{}'.format(layer_name, bias.value))
+            elif isinstance(layer, ConvolutionLayer) or isinstance(layer, Convolution):
+                layer = layer.convolution_layer()
+                kernel = layer.kernel()
+                print('[{}]: Kernel = \n{}'.format(layer_name, kernel.value))
 
     def end_iteration(self):
         if self.__for_iteration:
@@ -77,3 +93,9 @@ class VariableMonitorPlugin(Plugin):
     def end_epoch(self):
         if not self.__for_iteration:
             self.output_variables()
+
+
+default_plugin = [
+    ('Training State', TrainingStatePlugin(), True),
+    ('Variable Monitor', VariableMonitorPlugin(), False),
+]
