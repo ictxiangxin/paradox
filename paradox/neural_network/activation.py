@@ -4,6 +4,9 @@ from paradox.utils import xavier_initialization, he_initialization, normal_initi
 
 
 class ActivationLayer:
+    def activation_layer(self):
+        return self
+
     @abstractmethod
     def activation_function(self, *args, **kwargs):
         pass

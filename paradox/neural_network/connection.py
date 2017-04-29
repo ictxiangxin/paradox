@@ -13,6 +13,9 @@ class ConnectionLayer:
         self.weight = None
         self.bias = None
 
+    def connection_layer(self):
+        return self
+
     @abstractmethod
     def weight_bias(self):
         pass

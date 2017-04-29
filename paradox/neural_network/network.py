@@ -31,12 +31,11 @@ class Network:
         self.engine = Engine()
         self.__layer = []
         self.__layer_name_map = collections.OrderedDict()
+        self.__layer_number_map = {}
         self.__layer_number = 0
         self.__input_symbol = Placeholder(name='InputSymbol')
         self.__current_symbol = self.__input_symbol
         self.__current_output = None
-        self.__current_weight = None
-        self.__current_bias = None
         self.__variables = []
         self.__data = None
         self.__optimizer = None
@@ -75,6 +74,7 @@ class Network:
             raise ValueError('Layer name has contained in Network: {}'.format(name))
         else:
             self.__layer_name_map[name] = layer
+        self.__layer_number_map[self.__layer_number] = layer
         self.__layer_number += 1
         if isinstance(layer, Operator):
             self.__add_operator(layer)
@@ -114,15 +114,17 @@ class Network:
         weight, bias = layer.weight_bias()
         self.__variables.append(weight)
         self.__variables.append(bias)
-        self.__current_weight = weight
-        self.__current_bias = bias
         self.__current_symbol = self.__current_symbol @ weight + bias
         self.__current_output = layer.output_dimension
 
     def __add_activation(self, layer: ActivationLayer):
         self.__current_symbol = layer.activation_function(self.__current_symbol)
-        self.__current_weight.value = layer.weight_initialization(self.__current_weight.value.shape)
-        self.__current_bias.value = layer.bias_initialization(self.__current_bias.value.shape)
+        previous_layer = self.__layer_number_map[self.__layer_number - 2]
+        if isinstance(previous_layer, Connection) or isinstance(previous_layer, ConnectionLayer):
+            previous_layer = previous_layer.connection_layer()
+            weight, bias = previous_layer.weight_bias()
+            weight.value = layer.weight_initialization(weight.value.shape)
+            bias.value = layer.bias_initialization(bias.value.shape)
 
     def __add_convolution(self, layer: ConvolutionLayer):
         kernel = layer.kernel()

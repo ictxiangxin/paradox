@@ -61,10 +61,7 @@ class VariableMonitorPlugin(Plugin):
 
     def output_variables(self):
         layer = self.network.layer(self.__layer_name)
-        if isinstance(layer, Connection):
-            layer = layer.connection_layer()
-        if isinstance(layer, Convolution):
-            layer = layer.convolution_layer()
+        layer = layer.connection_layer()
         if isinstance(layer, ConnectionLayer):
             weight, bias = layer.weight_bias()
             print('[{}]: Weight = \n{}'.format(self.__layer_name, weight.value))

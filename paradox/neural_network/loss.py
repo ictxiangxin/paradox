@@ -13,6 +13,9 @@ class LossCategory(Enum):
 class LossLayer:
     loss_type = None
 
+    def loss_layer(self):
+        self
+
     @abstractmethod
     def loss_function(self, *args, **kwargs):
         pass

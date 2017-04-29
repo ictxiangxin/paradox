@@ -24,6 +24,9 @@ class ConvolutionLayer:
         self.input_shape = input_shape
         self._kernel = None
 
+    def convolution_layer(self):
+        return self
+
     def kernel(self):
         if self._kernel is None:
             self._kernel = Variable(numpy.random.normal(0, 1, self.kernel_shape))
@@ -99,6 +102,9 @@ class PoolingLayer:
         self.size = size
         self.step = step
         self.input_shape = input_shape
+
+    def pooling_layer(self):
+        return self
 
     def set_input_shape(self, input_shape):
         self.input_shape = input_shape
@@ -200,6 +206,9 @@ class UnpoolingLayer:
         self.size = size
         self.step = step
         self.input_shape = input_shape
+
+    def unpooling_layer(self):
+        return self
 
     def set_input_shape(self, input_shape):
         self.input_shape = input_shape
