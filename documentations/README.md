@@ -5,7 +5,7 @@
 ## Paradox使用文档
 
 * 基本原理
-    * 符号计算
+    * [符号计算](symbolic_computing.md)
     * 自动求导
     * Symbol
     * Operator
