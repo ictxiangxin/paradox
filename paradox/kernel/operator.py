@@ -310,9 +310,9 @@ class ReduceSum(Operator):
         shape_a = engine.shape(symbol_a)
         axis = self.arguments['axis']
         if axis:
-            return [lambda: broadcast(expand(forward, axis), shape_a) / shape_a[axis]]
+            return [lambda: broadcast(expand(forward, axis), shape_a)]
         else:
-            return [lambda: broadcast(forward, shape_a) / sum(shape_a)]
+            return [lambda: broadcast(forward, shape_a)]
 
     def shape(self, shape_a):
         return reduce_shape(shape_a, **self.arguments)
@@ -331,9 +331,9 @@ class ReduceMean(Operator):
         shape_a = engine.shape(symbol_a)
         axis = self.arguments['axis']
         if axis:
-            return [lambda: broadcast(expand(forward, axis), shape_a)]
+            return [lambda: broadcast(expand(forward, axis), shape_a) / shape_a[axis]]
         else:
-            return [lambda: broadcast(forward, shape_a)]
+            return [lambda: broadcast(forward, shape_a) / reduce(lambda x, y: x * y, shape_a, 1)]
 
     def shape(self, shape_a):
         return reduce_shape(shape_a, **self.arguments)
