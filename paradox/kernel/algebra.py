@@ -11,22 +11,15 @@ class Template:
             self.active_sign = self.active_operator.__name__
 
     @staticmethod
-    def reduce_left(symbol: Symbol):
-        left_symbol, right_symbol = symbol.input
-        symbol.value = left_symbol.value
-        symbol.name = left_symbol.name
+    def reduce_symbol(symbol: Symbol, index: int):
+        input_list = symbol.input
+        symbol.value = input_list[index].value
+        symbol.name = input_list[index].name
         symbol.clear_operator()
-        symbol.symbolic_compute(left_symbol.operator, left_symbol.input)
-        right_symbol.destroy()
-
-    @staticmethod
-    def reduce_right(symbol: Symbol):
-        left_symbol, right_symbol = symbol.input
-        symbol.value = right_symbol.value
-        symbol.name = right_symbol.name
-        symbol.clear_operator()
-        symbol.symbolic_compute(right_symbol.operator, right_symbol.input)
-        left_symbol.destroy()
+        symbol.symbolic_compute(input_list[index].operator, input_list[index].input)
+        for i in range(len(input_list)):
+            if i != index:
+                input_list[i].destroy()
 
     @abstractmethod
     def simplify(self, symbol: Symbol):
@@ -56,10 +49,10 @@ class TemplatePlus(Template):
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
         if left_symbol.value == 0 and left_symbol.is_constant():
-            self.reduce_right(symbol)
+            self.reduce_symbol(symbol, 1)
             return True
         elif right_symbol.value == 0 and right_symbol.is_constant():
-            self.reduce_left(symbol)
+            self.reduce_symbol(symbol, 0)
             return True
         else:
             return False
@@ -71,10 +64,10 @@ class TemplateMultiply(Template):
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
         if left_symbol.value == 1 and left_symbol.is_constant():
-            self.reduce_right(symbol)
+            self.reduce_symbol(symbol, 1)
             return True
         elif right_symbol.value == 1 and right_symbol.is_constant():
-            self.reduce_left(symbol)
+            self.reduce_symbol(symbol, 0)
             return True
         else:
             return False
