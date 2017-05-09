@@ -3,7 +3,7 @@ from paradox.kernel.symbol import Symbol, SymbolCategory, as_symbols
 
 def convolution_nd(data, kernel, dimension: int, mode, element_wise: bool=False):
     from paradox.neural_network.convolutional_neural_network.operator import ConvolutionND
-    return Symbol(operator=ConvolutionND(dimension, mode, element_wise), inputs=as_symbols([data, kernel]), category=SymbolCategory.operator)
+    return Symbol(operator=ConvolutionND(dimension, mode, element_wise), inputs=as_symbols([data, kernel]))
 
 
 def convolution_1d(data, kernel, mode, element_wise: bool=False):
@@ -21,10 +21,10 @@ def convolution_3d(data, kernel, mode, element_wise: bool=False):
 def max_pooling_nd(data, size: tuple, step: tuple, dimension: int, reference=None):
     if reference is None:
         from paradox.neural_network.convolutional_neural_network.operator import MaxPoolingND
-        return Symbol(operator=MaxPoolingND(dimension, size, step), inputs=as_symbols([data]), category=SymbolCategory.operator)
+        return Symbol(operator=MaxPoolingND(dimension, size, step), inputs=as_symbols([data]))
     else:
         from paradox.neural_network.convolutional_neural_network.operator import MaxReferencePoolingND
-        return Symbol(operator=MaxReferencePoolingND(dimension, size, step), inputs=as_symbols([data, reference]), category=SymbolCategory.operator)
+        return Symbol(operator=MaxReferencePoolingND(dimension, size, step), inputs=as_symbols([data, reference]))
 
 
 def max_pooling_1d(data, size: tuple, step: tuple, reference=None):
@@ -41,7 +41,7 @@ def max_pooling_3d(data, size: tuple, step: tuple, reference=None):
 
 def max_unpooling_nd(data, pooling, size: tuple, step: tuple, dimension: int):
     from paradox.neural_network.convolutional_neural_network.operator import MaxUnpoolingND
-    return Symbol(operator=MaxUnpoolingND(dimension, size, step), inputs=as_symbols([data, pooling]), category=SymbolCategory.operator)
+    return Symbol(operator=MaxUnpoolingND(dimension, size, step), inputs=as_symbols([data, pooling]))
 
 
 def max_unpooling_1d(data, pooling, size: tuple, step: tuple):
@@ -58,7 +58,7 @@ def max_unpooling_3d(data, pooling, size: tuple, step: tuple):
 
 def average_pooling_nd(data, size: tuple, step: tuple, dimension: int):
     from paradox.neural_network.convolutional_neural_network.operator import AveragePoolingND
-    return Symbol(operator=AveragePoolingND(dimension, size, step), inputs=as_symbols([data]), category=SymbolCategory.operator)
+    return Symbol(operator=AveragePoolingND(dimension, size, step), inputs=as_symbols([data]))
 
 
 def average_pooling_1d(data, size: tuple, step: tuple):
@@ -75,7 +75,7 @@ def average_pooling_3d(data, size: tuple, step: tuple):
 
 def average_unpooling_nd(pooling, size: tuple, step: tuple, dimension: int, unpooling_size: int=None):
     from paradox.neural_network.convolutional_neural_network.operator import AverageUnpoolingND
-    return Symbol(operator=AverageUnpoolingND(dimension, size, step, unpooling_size), inputs=as_symbols([pooling]), category=SymbolCategory.operator)
+    return Symbol(operator=AverageUnpoolingND(dimension, size, step, unpooling_size), inputs=as_symbols([pooling]))
 
 
 def average_unpooling_1d(pooling, size: tuple, step: tuple, unpooling_size: tuple=None):

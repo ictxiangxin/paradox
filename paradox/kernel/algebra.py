@@ -1,6 +1,14 @@
 from paradox.kernel.operator import *
 
 
+def equal(a, b):
+    result = a == b
+    if isinstance(result, bool):
+        return result
+    else:
+        return result.all()
+
+
 class Template:
     active_operator = None
 
@@ -30,17 +38,19 @@ class TemplateConstant(Template):
     active_operator = None
 
     def simplify(self, symbol: Symbol):
-        if symbol.operator is None:
+        if symbol.is_operator():
+            for s in symbol.input:
+                if not s.is_constant():
+                    return False
+            compute_inputs = [_s.value for _s in symbol.input]
+            value = symbol.operator.compute(*compute_inputs)
+            symbol.clear_operator()
+            symbol.value = value
+            symbol.category = SymbolCategory.constant
+            symbol.rebuild_name()
+            return True
+        else:
             return False
-        for s in symbol.input:
-            if not s.is_constant():
-                return False
-        compute_inputs = [_s.value for _s in symbol.input]
-        symbol.value = symbol.operator.compute(*compute_inputs)
-        symbol.clear_operator()
-        symbol.category = SymbolCategory.constant
-        symbol.rebuild_name()
-        return True
 
 
 class TemplatePlus(Template):
@@ -48,10 +58,27 @@ class TemplatePlus(Template):
 
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
-        if left_symbol.value == 0 and left_symbol.is_constant():
+        if equal(left_symbol.value, 0) and left_symbol.is_constant():
             self.reduce_symbol(symbol, 1)
             return True
-        elif right_symbol.value == 0 and right_symbol.is_constant():
+        elif equal(right_symbol.value, 0) and right_symbol.is_constant():
+            self.reduce_symbol(symbol, 0)
+            return True
+        else:
+            return False
+
+
+class TemplateSubtract(Template):
+    active_operator = Plus
+
+    def simplify(self, symbol: Symbol):
+        left_symbol, right_symbol = symbol.input
+        if equal(left_symbol.value, 0) and left_symbol.is_constant():
+            symbol.clear_operator()
+            symbol.clear_input()
+            symbol.symbolic_compute(Negative(), [right_symbol])
+            return True
+        elif equal(right_symbol.value, 0) and right_symbol.is_constant():
             self.reduce_symbol(symbol, 0)
             return True
         else:
@@ -63,23 +90,26 @@ class TemplateMultiply(Template):
 
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
-        if left_symbol.value == 1 and left_symbol.is_constant():
+        if equal(left_symbol.value, 1) and left_symbol.is_constant():
             self.reduce_symbol(symbol, 1)
             return True
-        elif right_symbol.value == 1 and right_symbol.is_constant():
+        elif equal(right_symbol.value, 1) and right_symbol.is_constant():
             self.reduce_symbol(symbol, 0)
             return True
         else:
             return False
 
 
+default_templates = [
+    TemplateConstant,
+    TemplatePlus,
+    TemplateSubtract,
+    TemplateMultiply,
+]
+
+
 class Simplification:
     def __init__(self):
-        default_templates = [
-            TemplateConstant,
-            TemplatePlus,
-            TemplateMultiply,
-        ]
         self.__templates = {}
         for template in default_templates:
             self.register(template())
@@ -89,7 +119,7 @@ class Simplification:
         if operator_sign in self.__templates:
             return self.__templates[operator_sign]
         else:
-            set()
+            return set()
 
     def register(self, template: Template):
         active_operator = template.active_sign
@@ -102,20 +132,12 @@ class Simplification:
 
     def simplify_cycle(self, symbol: Symbol):
         effective = False
-        for template in self.__templates[None]:
-            effective |= template.simplify(symbol)
-        while True:
-            templates = self.operator_trigger(symbol.operator)
-            simplified = True
-            if templates:
-                for template in templates:
-                    simplified &= template.simplify(symbol)
-                if not simplified:
-                    break
-                else:
+        templates = self.operator_trigger(symbol.operator) | self.__templates[None]
+        if templates:
+            for template in templates:
+                if template.simplify(symbol):
                     effective |= True
-            else:
-                break
+                    break
         for next_symbol in symbol.input:
             if next_symbol.operator is not None:
                 effective |= self.simplify_cycle(next_symbol)

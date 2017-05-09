@@ -14,3 +14,7 @@ x_gradient = e.gradient(x)
 print('x gradient formula =\n{}\n'.format(x_gradient))
 print('x gradient =\n{}\n'.format(pd.Engine(x_gradient).value()))
 
+s = pd.Simplification()
+s.simplify(x_gradient)
+print('x gradient formula =\n{}\n'.format(x_gradient))
+print('x gradient =\n{}\n'.format(pd.Engine(x_gradient).value()))
