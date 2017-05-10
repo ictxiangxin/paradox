@@ -1,14 +1,6 @@
 from paradox.kernel.operator import *
 
 
-def equal(a, b):
-    result = a == b
-    if isinstance(result, bool):
-        return result
-    else:
-        return result.all()
-
-
 class Template:
     active_operator = None
 
@@ -28,6 +20,16 @@ class Template:
         for i in range(len(input_list)):
             if i != index:
                 input_list[i].destroy()
+
+    @staticmethod
+    def equal(a, b):
+        result = a == b
+        if isinstance(result, bool) or isinstance(result, numpy.bool_):
+            return result
+        elif isinstance(result, numpy.ndarray):
+            return result.all()
+        else:
+            raise Exception('Never reached.')
 
     @abstractmethod
     def simplify(self, symbol: Symbol):
@@ -58,10 +60,10 @@ class TemplatePlus(Template):
 
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
-        if equal(left_symbol.value, 0) and left_symbol.is_constant():
+        if self.equal(left_symbol.value, 0) and left_symbol.is_constant():
             self.reduce_symbol(symbol, 1)
             return True
-        elif equal(right_symbol.value, 0) and right_symbol.is_constant():
+        elif self.equal(right_symbol.value, 0) and right_symbol.is_constant():
             self.reduce_symbol(symbol, 0)
             return True
         else:
@@ -69,16 +71,34 @@ class TemplatePlus(Template):
 
 
 class TemplateSubtract(Template):
-    active_operator = Plus
+    active_operator = Subtract
 
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
-        if equal(left_symbol.value, 0) and left_symbol.is_constant():
+        if self.equal(left_symbol.value, 0) and left_symbol.is_constant():
             symbol.clear_operator()
             symbol.clear_input()
             symbol.symbolic_compute(Negative(), [right_symbol])
             return True
-        elif equal(right_symbol.value, 0) and right_symbol.is_constant():
+        elif self.equal(right_symbol.value, 0) and right_symbol.is_constant():
+            self.reduce_symbol(symbol, 0)
+            return True
+        else:
+            return False
+
+
+class TemplateDivide(Template):
+    active_operator = Divide
+
+    def simplify(self, symbol: Symbol):
+        left_symbol, right_symbol = symbol.input
+        if hash(left_symbol) == hash(right_symbol):
+            symbol.clear_operator()
+            symbol.clear_input()
+            symbol.value = 1
+            symbol.category = SymbolCategory.constant
+            return True
+        elif self.equal(right_symbol.value, 1) and right_symbol.is_constant():
             self.reduce_symbol(symbol, 0)
             return True
         else:
@@ -90,10 +110,25 @@ class TemplateMultiply(Template):
 
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
-        if equal(left_symbol.value, 1) and left_symbol.is_constant():
+        if self.equal(left_symbol.value, 1) and left_symbol.is_constant():
             self.reduce_symbol(symbol, 1)
             return True
-        elif equal(right_symbol.value, 1) and right_symbol.is_constant():
+        elif self.equal(right_symbol.value, 1) and right_symbol.is_constant():
+            self.reduce_symbol(symbol, 0)
+            return True
+        else:
+            return False
+
+
+class TemplatePower(Template):
+    active_operator = Power
+
+    def simplify(self, symbol: Symbol):
+        left_symbol, right_symbol = symbol.input
+        if self.equal(left_symbol.value, 1) and left_symbol.is_constant():
+            self.reduce_symbol(symbol, 0)
+            return True
+        elif self.equal(right_symbol.value, 1) and right_symbol.is_constant():
             self.reduce_symbol(symbol, 0)
             return True
         else:
@@ -105,6 +140,8 @@ default_templates = [
     TemplatePlus,
     TemplateSubtract,
     TemplateMultiply,
+    TemplateDivide,
+    TemplatePower,
 ]
 
 
