@@ -13,9 +13,9 @@ class Template:
     @staticmethod
     def reduce_symbol(symbol: Symbol, index: int):
         input_list = symbol.input
+        symbol.clear_operator()
         symbol.value = input_list[index].value
         symbol.name = input_list[index].name
-        symbol.clear_operator()
         symbol.symbolic_compute(input_list[index].operator, input_list[index].input)
         for i in range(len(input_list)):
             if i != index:
@@ -60,10 +60,10 @@ class TemplatePlus(Template):
 
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
-        if self.equal(left_symbol.value, 0) and left_symbol.is_constant():
+        if right_symbol.is_constant() and self.equal(left_symbol.value, 0):
             self.reduce_symbol(symbol, 1)
             return True
-        elif self.equal(right_symbol.value, 0) and right_symbol.is_constant():
+        elif right_symbol.is_constant() and self.equal(right_symbol.value, 0):
             self.reduce_symbol(symbol, 0)
             return True
         else:
@@ -75,12 +75,12 @@ class TemplateSubtract(Template):
 
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
-        if self.equal(left_symbol.value, 0) and left_symbol.is_constant():
+        if right_symbol.is_constant() and self.equal(left_symbol.value, 0):
             symbol.clear_operator()
             symbol.clear_input()
             symbol.symbolic_compute(Negative(), [right_symbol])
             return True
-        elif self.equal(right_symbol.value, 0) and right_symbol.is_constant():
+        elif right_symbol.is_constant() and self.equal(right_symbol.value, 0):
             self.reduce_symbol(symbol, 0)
             return True
         else:
@@ -98,7 +98,7 @@ class TemplateDivide(Template):
             symbol.value = 1
             symbol.category = SymbolCategory.constant
             return True
-        elif self.equal(right_symbol.value, 1) and right_symbol.is_constant():
+        elif right_symbol.is_constant() and self.equal(right_symbol.value, 1):
             self.reduce_symbol(symbol, 0)
             return True
         else:
@@ -110,10 +110,10 @@ class TemplateMultiply(Template):
 
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
-        if self.equal(left_symbol.value, 1) and left_symbol.is_constant():
+        if left_symbol.is_constant() and self.equal(left_symbol.value, 1):
             self.reduce_symbol(symbol, 1)
             return True
-        elif self.equal(right_symbol.value, 1) and right_symbol.is_constant():
+        elif right_symbol.is_constant() and self.equal(right_symbol.value, 1):
             self.reduce_symbol(symbol, 0)
             return True
         else:

@@ -1,4 +1,5 @@
 from paradox.kernel.operator import *
+from paradox.kernel.algebra import Simplification
 
 
 class Engine:
@@ -10,6 +11,7 @@ class Engine:
         self.__broadcast = {}
         self.__bind = {}
         self.__value_cache = {}
+        self.__algebra_simplification = Simplification()
         self.symbol = symbol
         self.set_variables(variable)
 
@@ -137,6 +139,8 @@ class Engine:
                     self.__gradients[variable] = current_gradient
                 else:
                     self.__gradients[variable] += current_gradient
+        if variable in self.__gradients:
+            self.__algebra_simplification.simplify(self.__gradients[variable])
 
     def __compute_shape(self, symbol: Symbol):
         if not symbol.is_operator():

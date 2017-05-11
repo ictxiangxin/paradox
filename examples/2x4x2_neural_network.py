@@ -36,7 +36,7 @@ loss = pd.reduce_mean(pd.maximum(pd.reduce_sum(K * model, axis=0) + 1, 0))
 loss_engine = pd.Engine(loss, [W1, W2, B1, B2])
 
 # 创建梯度下降optimizer。
-optimizer = pd.GradientDescentOptimizer(0.0003)
+optimizer = pd.GradientDescentOptimizer(0.03)
 
 # 迭代至多10000次最小化loss。
 for epoch in range(10000):

@@ -44,7 +44,7 @@ loss = pd.nn.softmax_loss(model, classification)
 loss_engine = pd.Engine(loss, [W1, W2, W3, B1, B2, B3])
 
 # 创建梯度下降optimizer。
-optimizer = pd.GradientDescentOptimizer(0.001)
+optimizer = pd.GradientDescentOptimizer(0.1)
 
 # 迭代至多10000次最小化loss。
 for epoch in range(10000):
