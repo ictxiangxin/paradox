@@ -48,10 +48,13 @@ b_data = pd.Engine(B).value()
 k = (w_data[1, 0] - w_data[0, 0]) / (w_data[0, 1] - w_data[1, 1])
 b = (b_data[1, 0] - b_data[0, 0]) / (w_data[0, 1] - w_data[1, 1])
 
+# 分类面的端点。
+x_range = np.array([np.min(c1_x), np.max(c2_x)])
+
 # 绘制图像。
 plt.title('Paradox implement Linear SVM')
 plt.plot(c1_x, c1_y, 'ro', label='Category 1')
 plt.plot(c2_x, c2_y, 'bo', label='Category 2')
-plt.plot([-5, 15], k * np.array([-5, 15]) + b, 'y', label='SVM')
+plt.plot(x_range, k * x_range + b, 'y', label='SVM')
 plt.legend()
 plt.show()

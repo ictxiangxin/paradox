@@ -30,7 +30,7 @@ loss = pd.reduce_mean((w * X + b - Y) ** 2)
 loss_engine = pd.Engine(loss, [w, b])
 
 # 梯度下降optimizer。
-optimizer = pd.GradientDescentOptimizer(0.00005)
+optimizer = pd.GradientDescentOptimizer(0.1)
 
 # 迭代100次最小化loss。
 for epoch in range(1000):

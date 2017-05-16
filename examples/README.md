@@ -164,11 +164,14 @@ b_data = pd.Engine(B).value()
 k = (w_data[1, 0] - w_data[0, 0]) / (w_data[0, 1] - w_data[1, 1])
 b = (b_data[1, 0] - b_data[0, 0]) / (w_data[0, 1] - w_data[1, 1])
 
+# 分类面的端点。
+x_range = np.array([np.min(c1_x), np.max(c2_x)])
+
 # 绘制图像。
 plt.title('Paradox implement Linear SVM')
 plt.plot(c1_x, c1_y, 'ro', label='Category 1')
 plt.plot(c2_x, c2_y, 'bo', label='Category 2')
-plt.plot([-5, 15], k * np.array([-5, 15]) + b, 'y', label='SVM')
+plt.plot(x_range, k * x_range + b, 'y', label='SVM')
 plt.legend()
 plt.show()
 ```
@@ -220,7 +223,7 @@ loss = pd.reduce_mean(pd.maximum(pd.reduce_sum(K * model, axis=0) + 1, 0))
 loss_engine = pd.Engine(loss, [W1, W2, B1, B2])
 
 # 创建梯度下降optimizer。
-optimizer = pd.GradientDescentOptimizer(0.0003)
+optimizer = pd.GradientDescentOptimizer(0.03)
 
 # 迭代至多10000次最小化loss。
 for epoch in range(10000):
@@ -313,7 +316,7 @@ loss = pd.nn.softmax_loss(model, classification)
 loss_engine = pd.Engine(loss, [W1, W2, W3, B1, B2, B3])
 
 # 创建梯度下降optimizer。
-optimizer = pd.GradientDescentOptimizer(0.001)
+optimizer = pd.GradientDescentOptimizer(0.1)
 
 # 迭代至多10000次最小化loss。
 for epoch in range(10000):
@@ -390,7 +393,7 @@ model.add(pd.nn.Activation('tanh'))
 model.loss('softmax')  # 使用softmax loss。
 
 # 使用梯度下降优化器，使用一致性update大幅提升性能。
-model.optimizer('gd', rate=0.003, consistent=True)
+model.optimizer('gd', rate=0.3, consistent=True)
 
 # 执行训练。
 model.train(np.array([c_x, c_y]).transpose(), classification, epochs=10000)
@@ -454,7 +457,7 @@ model.add(pd.nn.Activation('tanh'))
 model.loss('softmax')  # 使用softmax loss。
 
 # 使用梯度下降优化器。
-model.optimizer('gd', rate=0.0003)
+model.optimizer('gd', rate=0.03)
 
 # 执行训练。
 model.train(np.array([c_x, c_y]).transpose(), classification, epochs=30000)
