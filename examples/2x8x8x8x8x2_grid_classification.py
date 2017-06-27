@@ -30,7 +30,7 @@ model.add(pd.nn.Activation('tanh'))
 model.loss('softmax')  # 使用softmax loss。
 
 # 使用梯度下降优化器。
-model.optimizer('gd', rate=0.03)
+model.optimizer('gradient descent', rate=0.03)
 
 # 执行训练。
 model.train(np.array([c_x, c_y]).transpose(), classification, epochs=30000)

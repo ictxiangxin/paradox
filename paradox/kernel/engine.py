@@ -3,7 +3,7 @@ from paradox.kernel.algebra import Simplification
 
 
 class Engine:
-    def __init__(self, symbol: Symbol=None, variable=None):
+    def __init__(self, symbol: Symbol=None, variables=None):
         self.__symbol = None
         self.__variables = set()
         self.__gradients = {}
@@ -13,7 +13,7 @@ class Engine:
         self.__value_cache = {}
         self.__algebra_simplification = Simplification()
         self.symbol = symbol
-        self.set_variables(variable)
+        self.set_variables(variables)
 
     def clear(self):
         self.__gradients = {}

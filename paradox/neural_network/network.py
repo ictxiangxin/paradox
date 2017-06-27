@@ -4,7 +4,7 @@ import numpy
 from paradox.kernel.operator import Operator
 from paradox.kernel.symbol import SymbolCategory, Symbol, Placeholder, spread
 from paradox.kernel.engine import Engine
-from paradox.kernel.optimizer import Optimizer, GradientDescentOptimizer
+from paradox.kernel.optimizer import Optimizer, GradientDescentOptimizer, MomentumOptimizer
 from paradox.neural_network.loss import LossLayer, Loss
 from paradox.neural_network.connection import ConnectionLayer, Connection
 from paradox.neural_network.activation import ActivationLayer, Activation
@@ -14,7 +14,8 @@ from paradox.neural_network.plugin import Plugin, default_plugin
 
 
 optimizer_map = {
-    'gd': GradientDescentOptimizer,
+    'gradient descent': GradientDescentOptimizer,
+    'momentum': MomentumOptimizer,
 }
 
 

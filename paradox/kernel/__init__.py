@@ -48,5 +48,7 @@ from paradox.kernel.symbol import\
     reshape, \
     spread
 from paradox.kernel.engine import Engine
-from paradox.kernel.optimizer import GradientDescentOptimizer
+from paradox.kernel.optimizer import \
+    GradientDescentOptimizer, \
+    MomentumOptimizer
 from paradox.kernel.algebra import Simplification

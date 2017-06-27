@@ -28,7 +28,7 @@ model.add(pd.nn.Activation('tanh'))
 model.loss('softmax')  # 使用softmax loss。
 
 # 使用梯度下降优化器，使用一致性update大幅提升性能。
-model.optimizer('gd', rate=0.3, consistent=True)
+model.optimizer('gradient descent', rate=0.3, consistent=True)
 
 # 执行训练。
 model.train(np.array([c_x, c_y]).transpose(), classification, epochs=10000)

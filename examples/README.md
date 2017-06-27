@@ -393,7 +393,7 @@ model.add(pd.nn.Activation('tanh'))
 model.loss('softmax')  # 使用softmax loss。
 
 # 使用梯度下降优化器，使用一致性update大幅提升性能。
-model.optimizer('gd', rate=0.3, consistent=True)
+model.optimizer('gradient descent', rate=0.3, consistent=True)
 
 # 执行训练。
 model.train(np.array([c_x, c_y]).transpose(), classification, epochs=10000)
@@ -457,7 +457,7 @@ model.add(pd.nn.Activation('tanh'))
 model.loss('softmax')  # 使用softmax loss。
 
 # 使用梯度下降优化器。
-model.optimizer('gd', rate=0.03)
+model.optimizer('gradient descent', rate=0.03)
 
 # 执行训练。
 model.train(np.array([c_x, c_y]).transpose(), classification, epochs=30000)
@@ -536,7 +536,7 @@ else:
     model.loss('softmax')
 
 # 使用梯度下降
-model.optimizer('gd', rate=0.00001, consistent=True)
+model.optimizer('gradient descent', rate=0.00001, consistent=True)
 
 # 创建测试集分类数据。
 lm, _, irm = pd.utils.generate_label_matrix(mnist_data['train_label'])
