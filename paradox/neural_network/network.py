@@ -15,7 +15,10 @@ from paradox.neural_network.plugin import Plugin, default_plugin
 optimizer_map = {
     'gradient descent': GradientDescentOptimizer,
     'momentum': MomentumOptimizer,
-    'ada gradient': AdaGradientOptimizer,
+    'adaptive gradient': AdaptiveGradientOptimizer,
+    'adaptive delta': AdaptiveDeltaOptimizer,
+    'root mean square prop': RootMeanSquarePropOptimizer,
+    'adaptive moment estimation': AdaptiveMomentEstimationOptimizer,
 }
 
 

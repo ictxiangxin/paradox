@@ -51,5 +51,8 @@ from paradox.kernel.engine import Engine
 from paradox.kernel.optimizer import \
     GradientDescentOptimizer, \
     MomentumOptimizer, \
-    AdaGradientOptimizer
+    AdaptiveGradientOptimizer, \
+    AdaptiveDeltaOptimizer, \
+    RootMeanSquarePropOptimizer, \
+    AdaptiveMomentEstimationOptimizer
 from paradox.kernel.algebra import Simplification
