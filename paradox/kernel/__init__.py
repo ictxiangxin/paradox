@@ -50,5 +50,6 @@ from paradox.kernel.symbol import\
 from paradox.kernel.engine import Engine
 from paradox.kernel.optimizer import \
     GradientDescentOptimizer, \
-    MomentumOptimizer
+    MomentumOptimizer, \
+    AdaGradientOptimizer
 from paradox.kernel.algebra import Simplification
