@@ -42,10 +42,13 @@ class TrainingStatePlugin(Plugin):
     def end_training(self):
         print('Training Complete [{}]'.format(time.strftime('%H:%M:%S', time.gmtime(time.time() - self.start_time))))
 
+    def begin_iteration(self):
+        if self.network.iteration % self.state_cycle == 0:
+            self.cycle_start_time = time.time()
+
     def end_iteration(self):
         if self.network.iteration % self.state_cycle == 0:
             speed = self.state_cycle / (time.time() - self.cycle_start_time)
-            self.cycle_start_time = time.time()
             loss_value = self.network.engine.value()
             print('Training State [epoch = {}/{}, loss = {:.8f}, speed = {:.2f}(iterations/s)]'.format(
                 self.network.epoch,
