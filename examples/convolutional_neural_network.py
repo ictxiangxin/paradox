@@ -46,7 +46,7 @@ else:
     model.loss('softmax')
 
 # 使用梯度下降
-model.optimizer('gradient descent', rate=0.00001, consistent=True)
+model.optimizer('adaptive moment estimation', rate=0.00001, decay=0.9, square_decay=0.999, consistent=True)
 
 # 创建测试集分类数据。
 lm, _, irm = pd.utils.generate_label_matrix(mnist_data['train_label'])
