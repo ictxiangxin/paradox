@@ -76,10 +76,12 @@ class ConvolutionND(Operator):
         if mode == 'valid' or mode == ConvolutionMode.valid:
             prefix_shape_kernel = engine.shape(symbol_kernel)[:-dimension]
             prefix_shape_data = engine.shape(symbol_data)[:-dimension]
-            if dimension == 1:
-                flip_kernel = flip(symbol_kernel, -1)
+            if dimension == 2:
+                flip_kernel = rotate90(symbol_kernel, count=2, axes=(-2, -1))
             else:
-                flip_kernel = rotate90(symbol_kernel, count=2, axes=(-2, -1))  # bug
+                flip_kernel = symbol_kernel
+                for i in range(dimension):
+                    flip_kernel = flip(flip_kernel, -1 - i)
             gradient_data = convolution_nd(forward, flip_kernel, dimension, ConvolutionMode.full, True)
             for _ in prefix_shape_kernel:
                 gradient_data = reduce_mean(gradient_data, axis=-dimension - 1)
@@ -92,19 +94,23 @@ class ConvolutionND(Operator):
         elif mode == 'full' or mode == ConvolutionMode.full:
             prefix_shape_kernel = engine.shape(symbol_kernel)[:-dimension]
             prefix_shape_data = engine.shape(symbol_data)[:-dimension]
-            if dimension == 1:
-                flip_kernel = flip(symbol_kernel, -1)
+            if dimension == 2:
+                flip_kernel = rotate90(symbol_kernel, count=2, axes=(-2, -1))
             else:
-                flip_kernel = rotate90(symbol_kernel, count=2, axes=(-2, -1))  # bug
+                flip_kernel = symbol_kernel
+                for i in range(dimension):
+                    flip_kernel = flip(flip_kernel, -1 - i)
             gradient_data = convolution_nd(forward, flip_kernel, dimension, ConvolutionMode.valid, True)
             for _ in prefix_shape_kernel:
                 gradient_data = reduce_mean(gradient_data, axis=-dimension - 1)
                 symbol_data = expand(symbol_data, -dimension - 1)
             flip_gradient = convolution_nd(forward, symbol_data, dimension, ConvolutionMode.valid, True)
-            if dimension == 1:
-                gradient_kernel = flip(flip_gradient, -1)
+            if dimension == 2:
+                gradient_kernel = rotate90(flip_gradient, count=2, axes=(-2, -1))
             else:
-                gradient_kernel = rotate90(flip_gradient, count=2, axes=(-2, -1))  # bug
+                gradient_kernel = flip_gradient
+                for i in range(dimension):
+                    gradient_kernel = flip(gradient_kernel, -1 - i)
             for _ in prefix_shape_data:
                 gradient_kernel = reduce_mean(gradient_kernel, axis=-dimension - 1 - len(prefix_shape_kernel))
             return [lambda: gradient_data,
