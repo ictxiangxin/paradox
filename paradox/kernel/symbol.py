@@ -49,7 +49,7 @@ class Symbol:
                 return '{}({})'.format(self.__operator.__class__.__name__, ', '.join(arguments))
             else:
                 if len(self.input) < 2:
-                    return '({}{})'.format(self.__operator.operator_sign, self.input[0])
+                    return '{}{}'.format(self.__operator.operator_sign, self.input[0])
                 else:
                     return '({} {} {})'.format(self.input[0], self.__operator.operator_sign, self.input[1])
 
@@ -250,7 +250,6 @@ class Symbol:
         self.__operator = None
 
     def rebuild_name(self):
-        self.__name = None
         self.__set_name(None)
 
     def is_scalar(self):

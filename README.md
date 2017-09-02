@@ -21,15 +21,19 @@
 ```python
 import paradox as pd
 
-a = pd.Constant(1)
-b = pd.Constant(2)
+k = pd.Constant([[2, 3], [1, 1]], name='k')
+b = pd.Constant([[7], [3]], name='b')
+x = pd.Variable([[0], [0]], name='x')
 
-print(pd.Engine(a + b).value())
+y = k @ x + b
+
+print(pd.Engine(y).gradient(x).value)
 ```
 
 运行结果
 ```
-3.0
+[[ 3.]
+ [ 4.]]
 ```
 
 ## 联系

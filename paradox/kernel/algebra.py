@@ -80,6 +80,7 @@ class TemplateSubtract(Template):
             symbol.clear_operator()
             symbol.clear_input()
             symbol.symbolic_compute(Negative(), [right_symbol])
+            symbol.rebuild_name()
             return True
         elif right_symbol.is_constant() and self.equal(right_symbol.value, 0):
             self.reduce_symbol(symbol, 0)
@@ -98,6 +99,7 @@ class TemplateDivide(Template):
             symbol.clear_input()
             symbol.value = 1
             symbol.category = SymbolCategory.constant
+            symbol.rebuild_name()
             return True
         elif right_symbol.is_constant() and self.equal(right_symbol.value, 1):
             self.reduce_symbol(symbol, 0)
