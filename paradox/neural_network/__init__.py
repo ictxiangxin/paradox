@@ -7,6 +7,14 @@ from paradox.neural_network.loss import \
     Loss, \
     LossLayer, \
     LossCategory
+from paradox.neural_network.regularization import \
+    register_regularization, \
+    regularization_l1, \
+    regularization_l2, \
+    RegularizationL1, \
+    RegularizationL2, \
+    Regularization, \
+    RegularizationLayer
 from paradox.neural_network.activation import \
     register_activation, \
     relu, \

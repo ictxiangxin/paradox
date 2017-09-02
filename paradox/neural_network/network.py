@@ -5,6 +5,7 @@ from paradox.kernel.operator import Operator
 from paradox.kernel.symbol import SymbolCategory, Symbol, Placeholder, spread
 from paradox.kernel.optimizer import *
 from paradox.neural_network.loss import LossLayer, Loss
+from paradox.neural_network.regularization import RegularizationLayer, Regularization
 from paradox.neural_network.connection import ConnectionLayer, Connection
 from paradox.neural_network.activation import ActivationLayer, Activation
 from paradox.neural_network.convolutional_neural_network.layer import ConvolutionLayer, PoolingLayer, UnpoolingLayer
@@ -41,9 +42,11 @@ class Network:
         self.__current_symbol = self.__input_symbol
         self.__current_output = None
         self.__variables = []
+        self.__layer_weights = {}
         self.__data = None
         self.__optimizer = None
         self.__loss = None
+        self.__regularization_term = None
         self.__predict_engine = Engine()
         self.__plugin = collections.OrderedDict()
         self.load_default_plugin()
@@ -58,7 +61,7 @@ class Network:
         if name in self.__layer_name_map:
             return self.__layer_name_map[name]
         else:
-            raise ValueError('No such get_layer in Network: {}'.format(name))
+            raise ValueError('No such layer in Network named: {}'.format(name))
 
     def layer_name_map(self):
         return self.__layer_name_map
@@ -87,34 +90,34 @@ class Network:
         self.__layer_number_map[self.__layer_number] = layer
         self.__layer_number += 1
         if isinstance(layer, Operator):
-            self.__add_operator(layer)
+            self.__add_operator(layer, name)
         elif isinstance(layer, ConnectionLayer):
-            self.__add_connection(layer)
+            self.__add_connection(layer, name)
         elif isinstance(layer, Connection):
-            self.__add_connection(layer.connection_layer())
+            self.__add_connection(layer.connection_layer(), name)
         elif isinstance(layer, ActivationLayer):
-            self.__add_activation(layer)
+            self.__add_activation(layer, name)
         elif isinstance(layer, Activation):
-            self.__add_activation(layer.activation_layer())
+            self.__add_activation(layer.activation_layer(), name)
         elif isinstance(layer, ConvolutionLayer):
-            self.__add_convolution(layer)
+            self.__add_convolution(layer, name)
         elif isinstance(layer, Convolution):
-            self.__add_convolution(layer.convolution_layer())
+            self.__add_convolution(layer.convolution_layer(), name)
         elif isinstance(layer, PoolingLayer):
-            self.__add_pooling(layer)
+            self.__add_pooling(layer, name)
         elif isinstance(layer, Pooling):
-            self.__add_pooling(layer.pooling_layer())
+            self.__add_pooling(layer.pooling_layer(), name)
         elif isinstance(layer, UnpoolingLayer):
-            self.__add_unpooling(layer)
+            self.__add_unpooling(layer, name)
         elif isinstance(layer, Unpooling):
-            self.__add_unpooling(layer.unpooling_layer())
+            self.__add_unpooling(layer.unpooling_layer(), name)
         else:
             raise ValueError('Invalid get_layer type: {}'. format(type(layer)))
 
-    def __add_operator(self, layer: Operator):
+    def __add_operator(self, layer: Operator, name: str=None):
         self.__current_symbol = Symbol(operator=layer, inputs=[self.__current_symbol], category=SymbolCategory.operator)
 
-    def __add_connection(self, layer: ConnectionLayer):
+    def __add_connection(self, layer: ConnectionLayer, name: str=None):
         if layer.input_dimension is None:
             current_output = self.__valid_current_output()
             if not isinstance(current_output, int):
@@ -126,8 +129,9 @@ class Network:
         self.__variables.append(bias)
         self.__current_symbol = self.__current_symbol @ weight + bias
         self.__current_output = layer.output_dimension
+        self.__layer_weights[name] = [weight]
 
-    def __add_activation(self, layer: ActivationLayer):
+    def __add_activation(self, layer: ActivationLayer, name: str=None):
         self.__current_symbol = layer.activation_function(self.__current_symbol)
         previous_layer = self.__layer_number_map[self.__layer_number - 2]
         if isinstance(previous_layer, Connection) or isinstance(previous_layer, ConnectionLayer):
@@ -136,21 +140,22 @@ class Network:
             weight.value = layer.weight_initialization(weight.value.shape)
             bias.value = layer.bias_initialization(bias.value.shape)
 
-    def __add_convolution(self, layer: ConvolutionLayer):
+    def __add_convolution(self, layer: ConvolutionLayer, name: str=None):
         kernel = layer.kernel()
         self.__variables.append(kernel)
         self.__current_symbol = layer.convolution_function()(self.__current_symbol, kernel, layer.mode)
         if layer.input_shape is None:
             layer.input_shape = self.__valid_current_output()
         self.__current_output = layer.get_output_shape()
+        self.__layer_weights[name] = [kernel]
 
-    def __add_pooling(self, layer: PoolingLayer):
+    def __add_pooling(self, layer: PoolingLayer, name: str=None):
         self.__current_symbol = layer.pooling_function()(self.__current_symbol, layer.size, layer.step)
         if layer.input_shape is None:
             layer.input_shape = self.__valid_current_output()
         self.__current_output = layer.get_output_shape()
 
-    def __add_unpooling(self, layer: UnpoolingLayer):
+    def __add_unpooling(self, layer: UnpoolingLayer, name: str=None):
         self.__current_symbol = layer.unpooling_function()(self.__current_symbol, layer.size, layer.step)
         if layer.input_shape is None:
             layer.input_shape = self.__valid_current_output()
@@ -171,15 +176,48 @@ class Network:
         else:
             raise ValueError('Invalid optimizer type: {}'.format(type(optimizer_object)))
 
-    def loss(self, loss_object):
+    def loss(self, loss_object, *args, **kwargs):
         if isinstance(loss_object, str):
-            self.__loss = Loss(loss_object).loss_layer()
+            self.__loss = Loss(loss_object, *args, **kwargs).loss_layer()
         elif isinstance(loss_object, LossLayer):
             self.__loss = loss_object
         elif isinstance(loss_object, Loss):
             self.__loss = loss_object.loss_layer()
         else:
             raise ValueError('Invalid loss type: {}'.format(type(loss_object)))
+
+    def regularization(self, regularization_object, decay: float, name=None, *args, **kwargs):
+        regularization_weights = set()
+        if name is None:
+            for _, weights in self.__layer_weights.items():
+                regularization_weights |= set(weights)
+        else:
+            if isinstance(name, str):
+                name = [name]
+            if isinstance(name, collections.Iterable):
+                for each_name in name:
+                    if each_name in self.__layer_weights:
+                        regularization_weights |= set(self.__layer_weights[each_name])
+                    else:
+                        raise ValueError('No such layer in Network named: {}'.format(each_name))
+            else:
+                ValueError('Invalid name type: {}'.format(type(name)))
+        if isinstance(regularization_object, str):
+            regularization_function = Regularization(regularization_object, *args, **kwargs).regularization_layer().regularization_term
+        elif isinstance(regularization_object, RegularizationLayer):
+            regularization_function = regularization_object.regularization_term
+        elif isinstance(regularization_object, Regularization):
+            regularization_function = regularization_object.regularization_layer().regularization_term
+        else:
+            raise ValueError('Invalid regularization type: {}'.format(type(regularization_object)))
+        for weight in regularization_weights:
+            self.__add_regularization_term(regularization_function(weight, decay))
+
+    def __add_regularization_term(self, regularization_term):
+        if self.__regularization_term is None:
+            self.__regularization_term = regularization_term
+        else:
+            self.__regularization_term += regularization_term
 
     def train(self, data, target, epochs: int=10000, batch_size: int=0):
         data = numpy.array(data)
@@ -194,6 +232,8 @@ class Network:
         else:
             loss = self.__loss.loss_function(self.__current_symbol, target)
             self.engine.bind = {self.__input_symbol: data}
+        if self.__regularization_term is not None:
+            loss += self.__regularization_term
         self.engine.symbol = loss
         self.engine.variables = self.__variables
         try:

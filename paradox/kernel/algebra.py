@@ -13,13 +13,14 @@ class Template:
     @staticmethod
     def reduce_symbol(symbol: Symbol, index: int):
         input_list = symbol.input
+        reduce_to_symbol = input_list[index]
         symbol.clear_operator()
-        symbol.value = input_list[index].value
-        symbol.name = input_list[index].name
-        symbol.symbolic_compute(input_list[index].operator, input_list[index].input)
-        for i in range(len(input_list)):
-            if i != index:
-                input_list[i].destroy()
+        symbol.value = reduce_to_symbol.value
+        symbol.name = reduce_to_symbol.name
+        if reduce_to_symbol.is_operator():
+            symbol.symbolic_compute(reduce_to_symbol.operator, reduce_to_symbol.input)
+        else:
+            symbol.category = reduce_to_symbol.category
 
     @staticmethod
     def equal(a, b):

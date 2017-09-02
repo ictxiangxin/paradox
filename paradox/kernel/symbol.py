@@ -163,13 +163,6 @@ class Symbol:
         else:
             raise ValueError('Input must be Symbol.')
 
-    def __remove_input(self, symbol):
-        new_input = []
-        for o in self.__input:
-            if hash(o) != hash(symbol):
-                new_input.append(o)
-        self.__input = new_input
-
     def __get_output(self):
         return self.__output
 
@@ -180,13 +173,6 @@ class Symbol:
             self.__output.append(symbol)
         else:
             raise ValueError('Output must be Symbol.')
-
-    def __remove_output(self, symbol):
-        new_output = []
-        for o in self.__output:
-            if hash(o) != hash(symbol):
-                new_output.append(o)
-        self.__output = new_output
 
     def symbolic_compute(self, operator, inputs):
         if operator is not None and inputs:
@@ -218,14 +204,38 @@ class Symbol:
         clone_symbol.__set_category(self.__category)
         return clone_symbol
 
+    def remove_input(self, symbol):
+        new_input = []
+        find_input = None
+        for each_input in self.__input:
+            if hash(each_input) != hash(symbol):
+                new_input.append(each_input)
+            else:
+                find_input = each_input
+        self.__input = new_input
+        if find_input is not None:
+            find_input.remove_output(self)
+
+    def remove_output(self, symbol):
+        new_output = []
+        find_output = None
+        for each_output in self.__output:
+            if hash(each_output) != hash(symbol):
+                new_output.append(each_output)
+            else:
+                find_output = each_output
+        self.__output = new_output
+        if find_output is not None:
+            find_output.remove_input(self)
+
     def clear_input(self):
         for symbol in set(self.__input):
-            symbol.__remove_output(self)
+            symbol.remove_output(self)
         self.__input = []
 
     def clear_output(self):
         for symbol in set(self.__output):
-            symbol.__remove_input(self)
+            symbol.remove_input(self)
         self.__output = []
 
     def clear_operator(self):

@@ -5,16 +5,12 @@ from paradox.utils import generate_label_matrix
 
 
 class LossCategory(Enum):
-    LossCategory = 0
-    classification = 1
-    regression = 2
+    classification = 0
+    regression = 1
 
 
 class LossLayer:
     loss_type = None
-
-    def loss_layer(self):
-        self
 
     @abstractmethod
     def loss_function(self, *args, **kwargs):
