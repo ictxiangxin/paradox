@@ -1,12 +1,14 @@
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
+
 ## 代码示例
 
 ### 递归下降解线性方程组
 
-x_1 + 2 * x_2 = 3
+$$x_1 + 2x_2 = 3$$
 
-x_1 + 3 * x_2 = 4
+$$x_1 + 3x_2 = 4$$
 
-x_1, x_2 初始化为 0, 0
+\\(x_1, x_2\\) 初始化为 0, 0
 
 ```python
 import paradox as pd
