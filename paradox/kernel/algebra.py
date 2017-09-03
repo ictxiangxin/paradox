@@ -23,7 +23,7 @@ class Template:
             symbol.category = reduce_to_symbol.category
 
     @staticmethod
-    def equal(a, b):
+    def value_equal(a, b):
         result = a == b
         if isinstance(result, bool) or isinstance(result, numpy.bool_):
             return result
@@ -31,6 +31,10 @@ class Template:
             return result.all()
         else:
             raise Exception('Never reached.')
+
+    @staticmethod
+    def symbol_equal(a: Symbol, b: Symbol):
+        return a.symbolic_hash() == b.symbolic_hash()
 
     @abstractmethod
     def simplify(self, symbol: Symbol):
@@ -61,10 +65,10 @@ class TemplatePlus(Template):
 
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
-        if right_symbol.is_constant() and self.equal(left_symbol.value, 0):
+        if right_symbol.is_constant() and self.value_equal(left_symbol.value, 0):
             self.reduce_symbol(symbol, 1)
             return True
-        elif right_symbol.is_constant() and self.equal(right_symbol.value, 0):
+        elif right_symbol.is_constant() and self.value_equal(right_symbol.value, 0):
             self.reduce_symbol(symbol, 0)
             return True
         else:
@@ -76,13 +80,13 @@ class TemplateSubtract(Template):
 
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
-        if right_symbol.is_constant() and self.equal(left_symbol.value, 0):
+        if right_symbol.is_constant() and self.value_equal(left_symbol.value, 0):
             symbol.clear_operator()
             symbol.clear_input()
             symbol.symbolic_compute(Negative(), [right_symbol])
             symbol.rebuild_name()
             return True
-        elif right_symbol.is_constant() and self.equal(right_symbol.value, 0):
+        elif right_symbol.is_constant() and self.value_equal(right_symbol.value, 0):
             self.reduce_symbol(symbol, 0)
             return True
         else:
@@ -101,7 +105,7 @@ class TemplateDivide(Template):
             symbol.category = SymbolCategory.constant
             symbol.rebuild_name()
             return True
-        elif right_symbol.is_constant() and self.equal(right_symbol.value, 1):
+        elif right_symbol.is_constant() and self.value_equal(right_symbol.value, 1):
             self.reduce_symbol(symbol, 0)
             return True
         else:
@@ -113,10 +117,10 @@ class TemplateMultiply(Template):
 
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
-        if left_symbol.is_constant() and self.equal(left_symbol.value, 1):
+        if left_symbol.is_constant() and self.value_equal(left_symbol.value, 1):
             self.reduce_symbol(symbol, 1)
             return True
-        elif right_symbol.is_constant() and self.equal(right_symbol.value, 1):
+        elif right_symbol.is_constant() and self.value_equal(right_symbol.value, 1):
             self.reduce_symbol(symbol, 0)
             return True
         else:
@@ -128,10 +132,10 @@ class TemplatePower(Template):
 
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
-        if self.equal(left_symbol.value, 1) and left_symbol.is_constant():
+        if self.value_equal(left_symbol.value, 1) and left_symbol.is_constant():
             self.reduce_symbol(symbol, 0)
             return True
-        elif self.equal(right_symbol.value, 1) and right_symbol.is_constant():
+        elif self.value_equal(right_symbol.value, 1) and right_symbol.is_constant():
             self.reduce_symbol(symbol, 0)
             return True
         else:
@@ -172,7 +176,7 @@ class Simplification:
 
     def simplify_cycle(self, symbol: Symbol):
         effective = False
-        templates = self.operator_trigger(symbol.operator) | self.__templates[None]
+        templates = list(self.operator_trigger(symbol.operator)) + list(self.__templates[None])
         if templates:
             for template in templates:
                 if template.simplify(symbol):

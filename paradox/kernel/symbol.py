@@ -267,6 +267,13 @@ class Symbol:
     def is_operator(self):
         return self.__category == SymbolCategory.operator
 
+    def symbolic_hash(self):
+        if self.is_operator():
+            inputs_symbolic_hash = [each_input.symbolic_hash() for each_input in self.input]
+            return '{}({})'.format(self.operator.__class__.__name__, ','.join(inputs_symbolic_hash))
+        else:
+            return str(hash(self))
+
     def __hash__(self):
         return id(self)
 
