@@ -334,6 +334,9 @@ class Symbol:
     def __getitem__(self, item):
         return slice_select(self, item)
 
+    def __setitem__(self, key, value):
+        return slice_assign(self, value, key)
+
 
 class Constant(Symbol):
     def __init__(self, value=None, shape: tuple=None, name: str=None, operator=None, inputs=None):

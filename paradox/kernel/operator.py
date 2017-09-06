@@ -110,13 +110,15 @@ def concatenate_shape(axis, *shape_list):
                     new_shape[i] += shape[i]
                 else:
                     if new_shape[i] != shape[i]:
-                        raise ValueError('Concatenate shape not match: {}'.format(shapes))
+                        raise ValueError('Concatenate shape not match: {}'.format(shape_list))
         else:
             raise ValueError('All shapes must have same dimensions')
     return (tuple(new_shape),) + () * len(shape_list)
 
 
 def slice_shape(shape_a, slice_list):
+    if not isinstance(slice_list, list):
+        slice_list = [slice_list]
     new_shape = list(shape_a)
     delete_dimension = 0
     for i, s in enumerate(slice_list):
@@ -762,7 +764,7 @@ class SliceAssign(Operator):
         self.arguments = {'slice_tuple': slice_tuple}
 
     def compute(self, value_a, value_b):
-        numpy.array(value_a)[self.arguments['slice_tuple']] = value_b
+        value_a[self.arguments['slice_tuple']] = value_b
         return value_a
 
     def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
@@ -774,7 +776,7 @@ class SliceAssign(Operator):
     def shape(self, shape_a, shape_b):
         shape_select = slice_shape(shape_a, self.arguments['slice_tuple'])[0]
         shape_package = element_wise_shape(shape_select, shape_b)
-        if shape_package[0] != shape_select or shape_package[1] != ():
+        if shape_package[0] != shape_select:
             raise ValueError('Can not assign: {} to {} with {}'.format(shape_b, shape_a, self.arguments['slice_tuple']))
         return shape_a, (), shape_package[2]
 

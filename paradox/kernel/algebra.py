@@ -65,11 +65,16 @@ class TemplatePlus(Template):
 
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
-        if right_symbol.is_constant() and self.value_equal(left_symbol.value, 0):
+        if left_symbol.is_constant() and self.value_equal(left_symbol.value, 0):
             self.reduce_symbol(symbol, 1)
             return True
         elif right_symbol.is_constant() and self.value_equal(right_symbol.value, 0):
             self.reduce_symbol(symbol, 0)
+            return True
+        elif self.symbol_equal(left_symbol, right_symbol):
+            symbol.clear_operator()
+            symbol.symbolic_compute(Multiply(), [left_symbol, Constant(2)])
+            symbol.rebuild_name()
             return True
         else:
             return False
@@ -89,6 +94,11 @@ class TemplateSubtract(Template):
         elif right_symbol.is_constant() and self.value_equal(right_symbol.value, 0):
             self.reduce_symbol(symbol, 0)
             return True
+        elif self.symbol_equal(left_symbol, right_symbol):
+            symbol.clear_operator()
+            symbol.symbolic_compute(SliceAssign(slice(None)), [left_symbol, Constant(0)])
+            symbol.rebuild_name()
+            return True
         else:
             return False
 
@@ -98,15 +108,13 @@ class TemplateDivide(Template):
 
     def simplify(self, symbol: Symbol):
         left_symbol, right_symbol = symbol.input
-        if hash(left_symbol) == hash(right_symbol):
-            symbol.clear_operator()
-            symbol.clear_input()
-            symbol.value = 1
-            symbol.category = SymbolCategory.constant
-            symbol.rebuild_name()
-            return True
-        elif right_symbol.is_constant() and self.value_equal(right_symbol.value, 1):
+        if right_symbol.is_constant() and self.value_equal(right_symbol.value, 1):
             self.reduce_symbol(symbol, 0)
+            return True
+        elif self.symbol_equal(left_symbol, right_symbol):
+            symbol.clear_operator()
+            symbol.symbolic_compute(SliceAssign(slice(None)), [left_symbol, Constant(1)])
+            symbol.rebuild_name()
             return True
         else:
             return False
@@ -122,6 +130,11 @@ class TemplateMultiply(Template):
             return True
         elif right_symbol.is_constant() and self.value_equal(right_symbol.value, 1):
             self.reduce_symbol(symbol, 0)
+            return True
+        elif self.symbol_equal(left_symbol, right_symbol):
+            symbol.clear_operator()
+            symbol.symbolic_compute(Power(), [left_symbol, Constant(2)])
+            symbol.rebuild_name()
             return True
         else:
             return False
