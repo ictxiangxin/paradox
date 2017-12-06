@@ -276,8 +276,14 @@ class MatrixMultiply(Operator):
 
     def gradient(self, engine, symbol_forward, symbol_a, symbol_b):
         forward = engine.gradient(symbol_forward)
-        return [lambda: forward @ transpose(symbol_b),
-                lambda: transpose(symbol_a) @ forward]
+        shape_a = engine.shape(symbol_a)
+        shape_b = engine.shape(symbol_b)
+        if len(shape_a) >= 2:
+            axes_a = tuple(range(len(shape_a) - 2)) + (-1, -2)
+        if len(shape_b) >= 2:
+            axes_b = tuple(range(len(shape_b) - 2)) + (-1, -2)
+        return [lambda: forward @ transpose(symbol_b, axes=axes_a),
+                lambda: transpose(symbol_a, axes=axes_b) @ forward]
 
     def shape(self, shape_a, shape_b):
         return matrix_multiply_shape(shape_a, shape_b)

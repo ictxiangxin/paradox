@@ -412,7 +412,7 @@ def log(a):
     return Symbol(operator=Log(), inputs=as_symbols([a]))
 
 
-def transpose(a, axes: int=None):
+def transpose(a, axes: tuple=None):
     from paradox.kernel.operator import Transpose
     return Symbol(operator=Transpose(axes), inputs=as_symbols([a]))
 
@@ -550,6 +550,10 @@ def exp(a):
 def slice_assign(a, b, slice_tuple):
     from paradox.kernel.operator import SliceAssign
     return Symbol(operator=SliceAssign(slice_tuple), inputs=as_symbols([a, b]))
+
+
+def assign(a, b):
+    return slice_assign(a, b, slice(None))
 
 
 def slice_select(a, slice_tuple):

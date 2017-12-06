@@ -49,7 +49,7 @@ class Engine:
         else:
             symbols = set(symbol)
         for symbol in symbols:
-            if isinstance(symbol, Symbol):
+            if isinstance(symbol, Symbol) and not symbol.is_operator():
                 self.__variables.add(symbol)
             else:
                 raise ValueError('Variable must be Symbol.')

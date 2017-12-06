@@ -41,6 +41,7 @@ from paradox.kernel.symbol import\
     arctanh, \
     exp, \
     slice_assign, \
+    assign, \
     slice_select, \
     concatenate, \
     rotate90, \
