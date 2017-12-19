@@ -4,12 +4,16 @@ from paradox.kernel.engine import Engine
 
 class Optimizer:
     @abstractmethod
-    def minimize(self, engine: Engine):
+    def optimize(self, engine: Engine, calculate_function):
         pass
 
-    @abstractmethod
-    def maximize(self, engine: Engine):
-        pass
+    def minimize(self, engine: Engine, steps: int=1):
+        for _ in range(steps):
+            self.optimize(engine, lambda v, g: v - g)
+
+    def maximize(self, engine: Engine, steps: int=1):
+        for _ in range(steps):
+            self.optimize(engine, lambda v, g: v + g)
 
 
 class GradientDescentOptimizer(Optimizer):
@@ -29,12 +33,6 @@ class GradientDescentOptimizer(Optimizer):
             variable.value = calculate_function(variable.value, self.__rate * self.__gradient_engine.value())
         engine.modified()
         self.__gradient_engine.modified()
-
-    def minimize(self, engine: Engine):
-        self.optimize(engine, lambda v, g: v - g)
-
-    def maximize(self, engine: Engine):
-        self.optimize(engine, lambda v, g: v + g)
 
 
 class MomentumOptimizer(Optimizer):
@@ -59,12 +57,6 @@ class MomentumOptimizer(Optimizer):
         engine.modified()
         self.__gradient_engine.modified()
 
-    def minimize(self, engine: Engine):
-        self.optimize(engine, lambda v, g: v - g)
-
-    def maximize(self, engine: Engine):
-        self.optimize(engine, lambda v, g: v + g)
-
 
 class AdaptiveGradientOptimizer(Optimizer):
     def __init__(self, rate: float, consistent: bool=False):
@@ -88,12 +80,6 @@ class AdaptiveGradientOptimizer(Optimizer):
             variable.value = calculate_function(variable.value, self.__rate * regularization_value)
         engine.modified()
         self.__gradient_engine.modified()
-
-    def minimize(self, engine: Engine):
-        self.optimize(engine, lambda v, g: v - g)
-
-    def maximize(self, engine: Engine):
-        self.optimize(engine, lambda v, g: v + g)
 
 
 class AdaptiveDeltaOptimizer(Optimizer):
@@ -122,12 +108,6 @@ class AdaptiveDeltaOptimizer(Optimizer):
         engine.modified()
         self.__gradient_engine.modified()
 
-    def minimize(self, engine: Engine):
-        self.optimize(engine, lambda v, g: v - g)
-
-    def maximize(self, engine: Engine):
-        self.optimize(engine, lambda v, g: v + g)
-
 
 class RootMeanSquarePropOptimizer(Optimizer):
     def __init__(self, rate: float, consistent: bool=False):
@@ -154,12 +134,6 @@ class RootMeanSquarePropOptimizer(Optimizer):
             variable.value = calculate_function(variable.value, self.__rate * regularization_value)
         engine.modified()
         self.__gradient_engine.modified()
-
-    def minimize(self, engine: Engine):
-        self.optimize(engine, lambda v, g: v - g)
-
-    def maximize(self, engine: Engine):
-        self.optimize(engine, lambda v, g: v + g)
 
 
 class AdaptiveMomentEstimationOptimizer(Optimizer):
@@ -193,9 +167,3 @@ class AdaptiveMomentEstimationOptimizer(Optimizer):
             variable.value = calculate_function(variable.value, self.__rate * regularization_value)
         engine.modified()
         self.__gradient_engine.modified()
-
-    def minimize(self, engine: Engine):
-        self.optimize(engine, lambda v, g: v - g)
-
-    def maximize(self, engine: Engine):
-        self.optimize(engine, lambda v, g: v + g)
