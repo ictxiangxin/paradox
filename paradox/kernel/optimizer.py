@@ -163,7 +163,7 @@ class RootMeanSquarePropOptimizer(Optimizer):
 
 
 class AdaptiveMomentEstimationOptimizer(Optimizer):
-    def __init__(self, rate: float, decay: float, square_decay:float, consistent: bool=False):
+    def __init__(self, rate: float, decay: float=0.9, square_decay: float=0.999, consistent: bool=False):
         self.__rate = rate
         self.__decay = decay
         self.__square_decay = square_decay

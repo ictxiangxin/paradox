@@ -280,8 +280,12 @@ class MatrixMultiply(Operator):
         shape_b = engine.shape(symbol_b)
         if len(shape_a) >= 2:
             axes_a = tuple(range(len(shape_a) - 2)) + (-1, -2)
+        else:
+            axes_a = None
         if len(shape_b) >= 2:
             axes_b = tuple(range(len(shape_b) - 2)) + (-1, -2)
+        else:
+            axes_b = None
         return [lambda: forward @ transpose(symbol_b, axes=axes_a),
                 lambda: transpose(symbol_a, axes=axes_b) @ forward]
 
