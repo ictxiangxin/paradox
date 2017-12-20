@@ -22,7 +22,7 @@ class SoftMaxLoss(LossLayer):
 
     @staticmethod
     def loss_function(input_symbol: Symbol, label_matrix, get_label_symbol: bool=False):
-        label_symbol = Symbol(label_matrix)
+        label_symbol = Constant(label_matrix)
         exp_symbol = exp(input_symbol)
         softmax_value = reduce_sum(label_symbol * exp_symbol, axis=1) / reduce_sum(exp_symbol, axis=1)
         loss = reduce_mean(-log(softmax_value))

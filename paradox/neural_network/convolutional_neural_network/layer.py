@@ -4,7 +4,6 @@ from paradox.kernel.symbol import Variable
 from paradox.neural_network.convolutional_neural_network.function import \
     convolution_nd, \
     max_pooling_nd, \
-    max_unpooling_nd, \
     average_pooling_nd, \
     average_unpooling_nd
 from paradox.neural_network.convolutional_neural_network.operator import \

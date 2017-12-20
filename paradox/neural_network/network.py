@@ -116,6 +116,7 @@ class Network:
 
     def __add_operator(self, layer: Operator, name: str=None):
         self.__current_symbol = Symbol(operator=layer, inputs=[self.__current_symbol], category=SymbolCategory.operator)
+        self.__layer_weights[name] = []
 
     def __add_connection(self, layer: ConnectionLayer, name: str=None):
         if layer.input_dimension is None:
@@ -139,6 +140,7 @@ class Network:
             weight, bias = previous_layer.weight_bias()
             weight.value = layer.weight_initialization(weight.value.shape)
             bias.value = layer.bias_initialization(bias.value.shape)
+        self.__layer_weights[name] = []
 
     def __add_convolution(self, layer: ConvolutionLayer, name: str=None):
         kernel = layer.kernel()
@@ -154,12 +156,14 @@ class Network:
         if layer.input_shape is None:
             layer.input_shape = self.__valid_current_output()
         self.__current_output = layer.get_output_shape()
+        self.__layer_weights[name] = []
 
     def __add_unpooling(self, layer: UnpoolingLayer, name: str=None):
         self.__current_symbol = layer.unpooling_function()(self.__current_symbol, layer.size, layer.step)
         if layer.input_shape is None:
             layer.input_shape = self.__valid_current_output()
         self.__current_output = layer.get_output_shape()
+        self.__layer_weights[name] = []
 
     def get_symbol(self):
         return self.__current_symbol
