@@ -22,6 +22,9 @@ class GradientDescentOptimizer(Optimizer):
         self.__consistent = consistent
         self.__gradient_engine = Engine()
 
+    def __repr__(self):
+        return '{}(rate={}, consistent={})'.format(self.__class__.__name__, self.__rate, self.__consistent)
+
     def optimize(self, engine: Engine, calculate_function):
         variables = engine.variables
         for variable in variables:
@@ -36,12 +39,15 @@ class GradientDescentOptimizer(Optimizer):
 
 
 class MomentumOptimizer(Optimizer):
-    def __init__(self, rate: float, factor: float,  consistent: bool=False):
+    def __init__(self, rate: float, factor: float, consistent: bool=False):
         self.__rate = rate
         self.__factor = factor
         self.__consistent = consistent
         self.__old_gradient_map = {}
         self.__gradient_engine = Engine()
+
+    def __repr__(self):
+        return '{}(rate={}, consistent={})'.format(self.__class__.__name__, self.__rate, self.__consistent)
 
     def optimize(self, engine: Engine, calculate_function):
         variables = engine.variables
@@ -64,6 +70,9 @@ class AdaptiveGradientOptimizer(Optimizer):
         self.__consistent = consistent
         self.__gradient_engine = Engine()
         self.__accumulate_gradient_map = {}
+
+    def __repr__(self):
+        return '{}(rate={}, consistent={})'.format(self.__class__.__name__, self.__rate, self.__consistent)
 
     def optimize(self, engine: Engine, calculate_function):
         variables = engine.variables
@@ -89,6 +98,9 @@ class AdaptiveDeltaOptimizer(Optimizer):
         self.__gradient_engine = Engine()
         self.__accumulate_gradient_map = {}
         self.__expectation_map = {}
+
+    def __repr__(self):
+        return '{}(decay={}, consistent={})'.format(self.__class__.__name__, self.__decay, self.__consistent)
 
     def optimize(self, engine: Engine, calculate_function):
         variables = engine.variables
@@ -116,6 +128,9 @@ class RootMeanSquarePropOptimizer(Optimizer):
         self.__gradient_engine = Engine()
         self.__mean_map = {}
         self.__step = 1
+
+    def __repr__(self):
+        return '{}(rate={}, consistent={})'.format(self.__class__.__name__, self.__rate, self.__consistent)
 
     def optimize(self, engine: Engine, calculate_function):
         variables = engine.variables
@@ -146,6 +161,9 @@ class AdaptiveMomentEstimationOptimizer(Optimizer):
         self.__estimation_map = {}
         self.__square_estimation_map = {}
         self.__step = 1
+
+    def __repr__(self):
+        return '{}(rate={}, decay={}, square_decay={}, consistent={})'.format(self.__class__.__name__, self.__rate, self.__decay, self.__square_decay, self.__consistent)
 
     def optimize(self, engine: Engine, calculate_function):
         variables = engine.variables

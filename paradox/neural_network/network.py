@@ -2,7 +2,7 @@ import collections
 from functools import reduce
 import numpy
 from paradox.kernel.operator import Operator
-from paradox.kernel.symbol import SymbolCategory, Symbol, Placeholder, spread
+from paradox.kernel.symbol import SymbolCategory, Symbol, Constant, Placeholder, spread
 from paradox.kernel.optimizer import *
 from paradox.neural_network.loss import LossLayer, Loss
 from paradox.neural_network.regularization import RegularizationLayer, Regularization
@@ -232,9 +232,10 @@ class Network:
         data_scale = data.shape[0]
         target_symbol = None
         if batch_size != 0:
-            loss, target_symbol = self.__loss.loss_function(self.__current_symbol, target[:batch_size], True)
+            target_symbol = Placeholder()
+            loss = self.__loss.loss_function(self.__current_symbol, target_symbol)
         else:
-            loss = self.__loss.loss_function(self.__current_symbol, target)
+            loss = self.__loss.loss_function(self.__current_symbol, Constant(target))
             self.engine.bind = {self.__input_symbol: data}
         if self.__regularization_term is not None:
             loss += self.__regularization_term

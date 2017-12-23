@@ -151,6 +151,9 @@ class Operator:
     auto_reduce = True
     arguments = {}
 
+    def __repr__(self):
+        return '{}({})'.format(self.__class__.__name__, ', '.join(['{}={}'.format(key, value) for key, value in self.arguments.items()]))
+
     @abstractmethod
     def compute(self, *args, **kwargs):
         pass

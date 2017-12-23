@@ -21,45 +21,37 @@ class SoftMaxLoss(LossLayer):
     loss_type = LossCategory.classification
 
     @staticmethod
-    def loss_function(input_symbol: Symbol, label_matrix, get_label_symbol: bool=False):
-        label_symbol = Constant(label_matrix)
+    def loss_function(input_symbol: Symbol, label_symbol: Symbol):
         exp_symbol = exp(input_symbol)
         softmax_value = reduce_sum(label_symbol * exp_symbol, axis=1) / reduce_sum(exp_symbol, axis=1)
         loss = reduce_mean(-log(softmax_value))
-        if get_label_symbol:
-            return loss, label_symbol
-        else:
-            return loss
+        return loss
 
 
 class SVMLoss(LossLayer):
     loss_type = LossCategory.classification
 
     @staticmethod
-    def loss_function(input_symbol: Symbol, label_matrix, get_label_symbol: bool=False):
-        dimension = label_matrix.shape[0]
-        label_matrix *= -(dimension - 1)
-        label_matrix[label_matrix == 0] = 1
-        label_symbol = Symbol(label_matrix)
-        loss = reduce_mean(maximum(reduce_sum(label_symbol * input_symbol, axis=1) + (dimension - 1), 1))
-        if get_label_symbol:
-            return loss, label_symbol
-        else:
-            return loss
+    def loss_function(input_symbol: Symbol, label_symbol: Symbol):
+        dimension = label_symbol.shape[1]
+        label_symbol = label_symbol * -(dimension - 1)
+        label_symbol = where(label_symbol == 0, 1, label_symbol)
+        loss = reduce_mean(maximum(reduce_sum(label_symbol * input_symbol, axis=1) + (dimension - 1), 0))
+        return loss
 
 
 softmax_loss = SoftMaxLoss.loss_function
 svm_loss = SVMLoss.loss_function
 
 
-def softmax_loss_with_label(input_symbol: Symbol, classification, get_label_symbol: bool=False):
-    class_matrix = generate_label_matrix(classification)[0]
-    return softmax_loss(input_symbol, class_matrix, get_label_symbol)
+def softmax_loss_with_label(input_symbol: Symbol, classification):
+    label_symbol = Constant(generate_label_matrix(classification)[0])
+    return softmax_loss(input_symbol, label_symbol)
 
 
-def svm_loss_with_label(input_symbol: Symbol, classification, get_label_symbol: bool=False):
-    class_matrix = generate_label_matrix(classification)[0]
-    return svm_loss(input_symbol, class_matrix, get_label_symbol)
+def svm_loss_with_label(input_symbol: Symbol, classification):
+    label_symbol = Constant(generate_label_matrix(classification)[0])
+    return svm_loss(input_symbol, label_symbol)
 
 
 loss_map = {
