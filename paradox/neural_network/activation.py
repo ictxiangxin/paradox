@@ -11,13 +11,15 @@ class ActivationLayer:
     def activation_function(self, *args, **kwargs):
         pass
 
-    @abstractmethod
-    def weight_initialization(self, *args, **kwargs):
-        pass
+    @staticmethod
+    def weight_initialization(shape):
+        weight = xavier_initialization(shape)
+        return weight
 
-    @abstractmethod
-    def bias_initialization(self, *args, **kwargs):
-        pass
+    @staticmethod
+    def bias_initialization(shape):
+        bias = normal_initialization(shape)
+        return bias
 
 
 class RectifiedLinearUnits(ActivationLayer):
@@ -31,11 +33,6 @@ class RectifiedLinearUnits(ActivationLayer):
         weight = he_initialization(shape)
         return weight
 
-    @staticmethod
-    def bias_initialization(shape):
-        bias = normal_initialization(shape)
-        return bias
-
 
 class SoftMax(ActivationLayer):
     @staticmethod
@@ -44,32 +41,12 @@ class SoftMax(ActivationLayer):
         output_symbol = exp_symbol / reduce_sum(exp_symbol, axis=1)
         return output_symbol
 
-    @staticmethod
-    def weight_initialization(shape):
-        weight = xavier_initialization(shape)
-        return weight
-
-    @staticmethod
-    def bias_initialization(shape):
-        bias = normal_initialization(shape)
-        return bias
-
 
 class HyperbolicTangent(ActivationLayer):
     @staticmethod
     def activation_function(input_symbol: Symbol):
         output_symbol = tanh(input_symbol)
         return output_symbol
-
-    @staticmethod
-    def weight_initialization(shape):
-        weight = xavier_initialization(shape)
-        return weight
-
-    @staticmethod
-    def bias_initialization(shape):
-        bias = normal_initialization(shape)
-        return bias
 
 
 class Sigmoid(ActivationLayer):
@@ -78,20 +55,26 @@ class Sigmoid(ActivationLayer):
         output_symbol = 1 / (1 + exp(-input_symbol))
         return output_symbol
 
-    @staticmethod
-    def weight_initialization(shape):
-        weight = xavier_initialization(shape)
-        return weight
 
+class SoftPlus(ActivationLayer):
     @staticmethod
-    def bias_initialization(shape):
-        bias = normal_initialization(shape)
-        return bias
+    def activation_function(input_symbol: Symbol):
+        output_symbol = log(1 + exp(input_symbol))
+        return output_symbol
+
+
+class SoftSign(ActivationLayer):
+    @staticmethod
+    def activation_function(input_symbol: Symbol):
+        output_symbol = input_symbol / (absolute(input_symbol) + 1)
+        return output_symbol
 
 
 relu = RectifiedLinearUnits.activation_function
 softmax = SoftMax.activation_function
 sigmoid = Sigmoid.activation_function
+softplus = SoftPlus.activation_function
+softsign = SoftSign.activation_function
 
 
 activation_map = {
@@ -99,6 +82,8 @@ activation_map = {
     'softmax': SoftMax,
     'tanh': HyperbolicTangent,
     'sigmoid': Sigmoid,
+    'softplus': SoftPlus,
+    'softsign': SoftSign,
 }
 
 

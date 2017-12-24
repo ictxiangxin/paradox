@@ -309,7 +309,7 @@ B3 = pd.Variable(np.random.random((1, 2)), name='B3')  # 输出层的偏置。
 model = pd.nn.relu(pd.nn.relu(pd.nn.relu(A @ W1 + B1) @ W2 + B2) @ W3 + B3)
 
 # 使用Softmax loss。
-loss = pd.nn.softmax_loss(model, classification)
+loss = pd.nn.softmax_loss(model, pd.Constant(classification))
 
 
 # 创建loss计算引擎，申明变量为W1，W2，B1和B2。
