@@ -1,6 +1,7 @@
 from abc import abstractmethod
 import numpy
 from paradox.kernel.symbol import Variable
+from paradox.utils.initialization import xavier_initialization, bias_initialization
 
 
 class ConnectionLayer:
@@ -24,9 +25,9 @@ class ConnectionLayer:
 class Dense(ConnectionLayer):
     def weight_bias(self):
         if self.weight is None:
-            self.weight = Variable(numpy.zeros((self.input_dimension, self.output_dimension)))
+            self.weight = Variable(xavier_initialization((self.input_dimension, self.output_dimension)))
         if self.bias is None:
-            self.bias = Variable(numpy.zeros((1, self.output_dimension)))
+            self.bias = Variable(bias_initialization((1, self.output_dimension)))
         return self.weight, self.bias
 
 

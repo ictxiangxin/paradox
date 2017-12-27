@@ -6,6 +6,7 @@ from paradox.utils.storage import \
 from paradox.utils.initialization import \
     xavier_initialization, \
     he_initialization, \
+    bias_initialization, \
     normal_initialization, \
     uniform_initialization
 from paradox.utils.traversal import \

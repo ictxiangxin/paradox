@@ -549,7 +549,7 @@ test_label = mnist_data['test_label'][:100]
 model.add_plugin('Accuracy', AccuracyPlugin(test_image, test_label, irm))
 model.add_plugin('Auto Save', AutoSavePlugin(model_save_path))
 model.plugin('Training State').state_cycle = 1  # 修改Training State插件的参数为一次迭代输出一次结果。
-
+model.regularization('l2', 0.01)  # 使用L2正则化。
 # 执行训练。
 model.train(mnist_data['train_image'], lm, epochs=10, batch_size=batch_size)
 ```

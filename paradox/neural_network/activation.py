@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from paradox.kernel import *
-from paradox.utils import xavier_initialization, he_initialization, normal_initialization
+from paradox.utils import xavier_initialization, he_initialization, bias_initialization
 
 
 class ActivationLayer:
@@ -18,7 +18,7 @@ class ActivationLayer:
 
     @staticmethod
     def bias_initialization(shape):
-        bias = normal_initialization(shape)
+        bias = bias_initialization(shape)
         return bias
 
 

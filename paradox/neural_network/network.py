@@ -36,8 +36,7 @@ class Network:
         self.engine = Engine()
         self.__layer = []
         self.__layer_name_map = collections.OrderedDict()
-        self.__layer_number_map = collections.OrderedDict()
-        self.__layer_number = 0
+        self.__layer_stack = []
         self.__input_symbol = Placeholder(name='InputSymbol')
         self.__current_symbol = self.__input_symbol
         self.__current_output = None
@@ -67,7 +66,7 @@ class Network:
         return self.__layer_name_map
 
     def layer_number_map(self):
-        return self.__layer_number_map
+        return self.__layer_stack
 
     def add(self, layer, name=None):
         if isinstance(layer, collections.Iterable):
@@ -82,13 +81,12 @@ class Network:
     def __add(self, layer, name: str=None):
         self.__layer.append(layer)
         if name is None:
-            name = 'layer_{}'.format(self.__layer_number)
+            name = 'layer_{}'.format(len(self.__layer_stack))
         if name in self.__layer_name_map:
             raise ValueError('Layer name has contained in Network: {}'.format(name))
         else:
             self.__layer_name_map[name] = layer
-        self.__layer_number_map[self.__layer_number] = layer
-        self.__layer_number += 1
+        self.__layer_stack.append(layer)
         if isinstance(layer, Operator):
             self.__add_operator(layer, name)
         elif isinstance(layer, ConnectionLayer):
@@ -134,7 +132,7 @@ class Network:
 
     def __add_activation(self, layer: ActivationLayer, name: str=None):
         self.__current_symbol = layer.activation_function(self.__current_symbol)
-        previous_layer = self.__layer_number_map[self.__layer_number - 2]
+        previous_layer = self.__layer_stack[-2]
         if isinstance(previous_layer, Connection) or isinstance(previous_layer, ConnectionLayer):
             previous_layer = previous_layer.connection_layer()
             weight, bias = previous_layer.weight_bias()
