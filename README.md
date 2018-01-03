@@ -18,6 +18,9 @@
 
 ## 开始
 
+使用Paradox对![](http://latex.codecogs.com/gif.latex?y=kx+b)进行梯度计算，并输出`x`的梯度。
+整个过程由图计算和自动求导完成。
+
 ```python
 import paradox as pd
 
@@ -35,6 +38,15 @@ print(pd.Engine(y).gradient(x).value)
 [[ 3.]
  [ 4.]]
 ```
+
+## 功能实现
+
+* 图计算（Graph Computing）。
+* 自动求导（Auto Gradient）。
+* 代数系统。
+* 梯度下降。
+* 神经网络API。
+* 卷积神经网络（Convolutional Neural Network）。
 
 ## 联系
 

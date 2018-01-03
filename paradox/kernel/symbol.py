@@ -67,7 +67,7 @@ class Symbol:
                 if self.is_scalar():
                     self.__name = str(self.__value)
                 else:
-                    self.__name = self.__class__.__name__
+                    self.__name = '{}{}'.format(self.__class__.__name__, self.__value.shape)
         else:
             self.__name = name
 
