@@ -48,6 +48,49 @@ from paradox.kernel.symbol import\
     flip, \
     reshape, \
     spread
+from paradox.kernel.operator import \
+    Negative, \
+    Absolute, \
+    Plus, \
+    Subtract, \
+    Multiply, \
+    MatrixMultiply, \
+    Transpose, \
+    ReduceSum, \
+    ReduceMean, \
+    Expand, \
+    Broadcast, \
+    Power, \
+    Log, \
+    Where, \
+    Equal, \
+    NotEqual, \
+    Less, \
+    LessEqual, \
+    Greater, \
+    GreaterEqual, \
+    Maximum, \
+    Minimum, \
+    Sine, \
+    Cosine, \
+    Tangent, \
+    ArcSine, \
+    ArcCosine, \
+    ArcTangent, \
+    HyperbolicSine, \
+    HyperbolicCosine, \
+    HyperbolicTangent, \
+    HyperbolicArcSine, \
+    HyperbolicArcCosine, \
+    HyperbolicArcTangent, \
+    Exponential, \
+    SliceAssign, \
+    SliceSelect, \
+    Concatenate, \
+    Rotate90, \
+    Flip, \
+    Reshape, \
+    Spread
 from paradox.kernel.engine import Engine
 from paradox.kernel.optimizer import \
     GradientDescentOptimizer, \

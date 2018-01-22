@@ -1,14 +1,12 @@
 import collections
-from functools import reduce
 import numpy
 from paradox.kernel.operator import Operator
-from paradox.kernel.symbol import SymbolCategory, Symbol, Constant, Placeholder, spread
+from paradox.kernel.symbol import SymbolCategory, Symbol, Constant, Placeholder
 from paradox.kernel.optimizer import *
 from paradox.neural_network.loss import LossLayer, Loss
 from paradox.neural_network.regularization import RegularizationLayer, Regularization
 from paradox.neural_network.connection import ConnectionLayer, Connection
 from paradox.neural_network.activation import ActivationLayer, Activation
-from paradox.neural_network.convolutional_neural_network.layer import ConvolutionLayer, PoolingLayer, UnpoolingLayer
 from paradox.neural_network.convolutional_neural_network.layer import Convolution, Pooling, Unpooling
 from paradox.neural_network.plugin import Plugin, default_plugin
 
@@ -93,74 +91,42 @@ class Network:
             self.__add_connection(layer, name)
         elif isinstance(layer, Connection):
             self.__add_connection(layer.connection_layer(), name)
+        elif isinstance(layer, Convolution):
+            self.__add_connection(layer.convolution_layer(), name)
+        elif isinstance(layer, Pooling):
+            self.__add_connection(layer.pooling_layer(), name)
+        elif isinstance(layer, Unpooling):
+            self.__add_connection(layer.unpooling_layer(), name)
         elif isinstance(layer, ActivationLayer):
             self.__add_activation(layer, name)
         elif isinstance(layer, Activation):
             self.__add_activation(layer.activation_layer(), name)
-        elif isinstance(layer, ConvolutionLayer):
-            self.__add_convolution(layer, name)
-        elif isinstance(layer, Convolution):
-            self.__add_convolution(layer.convolution_layer(), name)
-        elif isinstance(layer, PoolingLayer):
-            self.__add_pooling(layer, name)
-        elif isinstance(layer, Pooling):
-            self.__add_pooling(layer.pooling_layer(), name)
-        elif isinstance(layer, UnpoolingLayer):
-            self.__add_unpooling(layer, name)
-        elif isinstance(layer, Unpooling):
-            self.__add_unpooling(layer.unpooling_layer(), name)
         else:
             raise ValueError('Invalid get_layer type: {}'. format(type(layer)))
 
     def __add_operator(self, layer: Operator, name: str=None):
         self.__current_symbol = Symbol(operator=layer, inputs=[self.__current_symbol], category=SymbolCategory.operator)
+        self.__current_output = layer.shape(self.__current_output)
         self.__layer_weights[name] = []
 
     def __add_connection(self, layer: ConnectionLayer, name: str=None):
-        if layer.input_dimension is None:
-            current_output = self.__valid_current_output()
-            if not isinstance(current_output, int):
-                self.__current_symbol = spread(self.__current_symbol, 1 - len(current_output))
-                current_output = reduce(lambda a, b: a * b, current_output[1:])
-            layer.input_dimension = current_output
-        weight, bias = layer.weight_bias()
-        self.__variables.append(weight)
-        self.__variables.append(bias)
-        self.__current_symbol = self.__current_symbol @ weight + bias
-        self.__current_output = layer.output_dimension
-        self.__layer_weights[name] = [weight]
+        if layer.input_shape is None:
+            layer.input_shape = self.__valid_current_output()
+        self.__current_symbol = layer.connection(self.__current_symbol)
+        self.__current_output = layer.output_shape
+        for v in layer.variables():
+            self.__variables.append(v)
+        self.__layer_weights[name] = layer.weights()
 
     def __add_activation(self, layer: ActivationLayer, name: str=None):
         self.__current_symbol = layer.activation_function(self.__current_symbol)
         previous_layer = self.__layer_stack[-2]
         if isinstance(previous_layer, Connection) or isinstance(previous_layer, ConnectionLayer):
             previous_layer = previous_layer.connection_layer()
-            weight, bias = previous_layer.weight_bias()
-            weight.value = layer.weight_initialization(weight.value.shape)
-            bias.value = layer.bias_initialization(bias.value.shape)
-        self.__layer_weights[name] = []
-
-    def __add_convolution(self, layer: ConvolutionLayer, name: str=None):
-        kernel = layer.kernel()
-        self.__variables.append(kernel)
-        self.__current_symbol = layer.convolution_function()(self.__current_symbol, kernel, layer.mode)
-        if layer.input_shape is None:
-            layer.input_shape = self.__valid_current_output()
-        self.__current_output = layer.get_output_shape()
-        self.__layer_weights[name] = [kernel]
-
-    def __add_pooling(self, layer: PoolingLayer, name: str=None):
-        self.__current_symbol = layer.pooling_function()(self.__current_symbol, layer.size, layer.step)
-        if layer.input_shape is None:
-            layer.input_shape = self.__valid_current_output()
-        self.__current_output = layer.get_output_shape()
-        self.__layer_weights[name] = []
-
-    def __add_unpooling(self, layer: UnpoolingLayer, name: str=None):
-        self.__current_symbol = layer.unpooling_function()(self.__current_symbol, layer.size, layer.step)
-        if layer.input_shape is None:
-            layer.input_shape = self.__valid_current_output()
-        self.__current_output = layer.get_output_shape()
+            for weight in previous_layer.weights():
+                weight.value = layer.weight_initialization(weight.value.shape)
+            for bias in previous_layer.biases():
+                bias.value = layer.bias_initialization(bias.value.shape)
         self.__layer_weights[name] = []
 
     def get_symbol(self):
