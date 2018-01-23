@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from paradox.kernel.symbol import Symbol, Variable, spread
+from paradox.kernel.symbol import Symbol, Variable, spread, reduce_mean
 from paradox.utils.initialization import xavier_initialization, bias_initialization
 
 
@@ -72,8 +72,28 @@ class Dense(ConnectionLayer):
         return [self.__bias]
 
 
+class BatchNormalization(ConnectionLayer):
+    def __init__(self):
+        ConnectionLayer.__init__(self)
+        self.__scale = Variable(1)
+        self.__shift = Variable(0)
+        self.__output_symbol = None
+
+    def connection(self, input_symbol: Symbol):
+        if self.__output_symbol is None:
+            input_mean = reduce_mean(input_symbol, 0)
+            input_variance = reduce_mean((input_symbol - input_mean) ** 2)
+            input_normalize = (input_symbol - input_mean) / (input_variance + 1e-8) ** 0.5
+            self.__output_symbol = self.__scale * input_normalize + self.__shift
+        return self.__output_symbol
+
+    def variables(self):
+        return [self.__scale, self.__shift]
+
+
 connection_map = {
     'dense': Dense,
+    'batch normalization': BatchNormalization,
 }
 
 

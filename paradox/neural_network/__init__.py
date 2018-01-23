@@ -28,6 +28,7 @@ from paradox.neural_network.activation import \
 from paradox.neural_network.connection import \
     register_connection, \
     Dense, \
+    BatchNormalization, \
     Connection, \
     ConnectionLayer
 from paradox.neural_network.network import \
