@@ -524,7 +524,7 @@ if os.path.exists(model_save_path):  # 如果存在保存的模型则载入，�
     model = pd.utils.load(model_save_path)
 else:
     model = pd.nn.Network()
-    model.add(pd.cnn.Convolution2DLayer((4, 5, 5), 'valid', input_shape=(None, 28, 28)))  # 使用4个5x5的卷积核。
+    model.add(pd.cnn.Convolution2DLayer((4, 5, 5), 'valid', input_shape=(28, 28)))  # 使用4个5x5的卷积核。
     model.add(pd.cnn.AveragePooling2DLayer((2, 2), (2, 2)))  # 2x2的均值池化。
     model.add(pd.cnn.Convolution2DLayer((2, 3, 3), 'valid'))  # 使用2个3x3的卷积核。
     model.add(pd.cnn.MaxPooling2DLayer((2, 2), (2, 2)))  # 2x2的max池化。

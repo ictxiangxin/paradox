@@ -1,4 +1,5 @@
 from abc import abstractmethod
+import numpy
 from paradox.kernel.symbol import Symbol, Variable, spread, reduce_mean
 from paradox.utils.initialization import xavier_initialization, bias_initialization
 
@@ -53,7 +54,7 @@ class Dense(ConnectionLayer):
         if self.__output_symbol is None:
             if not isinstance(self._input_shape, int):
                 input_symbol = spread(input_symbol, 1)
-                self._input_shape = input_symbol.operator.shape(self._input_shape)[0][1]
+                self._input_shape = input_symbol.operator.shape((None,) + self._input_shape)[0][1]
             weight, bias = self.variables()
             self.__output_symbol = input_symbol @ weight + bias
         return self.__output_symbol
@@ -73,22 +74,33 @@ class Dense(ConnectionLayer):
 
 
 class BatchNormalization(ConnectionLayer):
-    def __init__(self):
-        ConnectionLayer.__init__(self)
-        self.__scale = Variable(1)
-        self.__shift = Variable(0)
+    def __init__(self, input_shape=None):
+        ConnectionLayer.__init__(self, input_shape, input_shape)
+        self.__scale = None
+        self.__shift = None
         self.__output_symbol = None
+        self.__input_mean = None
+        self.__input_variance = None
 
     def connection(self, input_symbol: Symbol):
         if self.__output_symbol is None:
-            input_mean = reduce_mean(input_symbol, 0)
-            input_variance = reduce_mean((input_symbol - input_mean) ** 2)
-            input_normalize = (input_symbol - input_mean) / (input_variance + 1e-8) ** 0.5
-            self.__output_symbol = self.__scale * input_normalize + self.__shift
+            self.__input_mean = reduce_mean(input_symbol, axis=0)
+            self.__input_variance = reduce_mean((input_symbol - self.__input_mean) ** 2, axis=0)
+            input_normalize = (input_symbol - self.__input_mean) / (self.__input_variance + 1e-8) ** 0.5
+            scale, shift = self.variables()
+            self.__output_symbol = scale * input_normalize + shift
+            self._output_shape = self._input_shape
         return self.__output_symbol
 
     def variables(self):
+        if self.__scale is None:
+            self.__scale = Variable(numpy.ones(self._input_shape))
+        if self.__shift is None:
+            self.__shift = Variable(numpy.zeros(self._input_shape))
         return [self.__scale, self.__shift]
+
+    def normalization_symbol(self):
+        return [self.__input_mean, self.__input_variance]
 
 
 connection_map = {

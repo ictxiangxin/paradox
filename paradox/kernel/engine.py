@@ -85,8 +85,8 @@ class Engine:
     def get_value_cache(self):
         return self.__value_cache
 
-    def set_value_cache(self, value_buffer: dict):
-        self.__value_cache = value_buffer
+    def set_value_cache(self, value_cache: dict):
+        self.__value_cache = value_cache
 
     value_cache = property(get_value_cache, set_value_cache)
 

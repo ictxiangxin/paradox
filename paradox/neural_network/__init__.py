@@ -37,4 +37,5 @@ from paradox.neural_network.network import \
 from paradox.neural_network.plugin import \
     Plugin, \
     TrainingStatePlugin, \
-    VariableMonitorPlugin
+    VariableMonitorPlugin, \
+    BatchNormalizationPlugin

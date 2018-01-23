@@ -32,6 +32,7 @@ class Network:
         self.epochs = None
         self.batch_size = None
         self.engine = Engine()
+        self.predict_engine = Engine()
         self.__layer = []
         self.__layer_name_map = collections.OrderedDict()
         self.__layer_stack = []
@@ -44,7 +45,6 @@ class Network:
         self.__optimizer = None
         self.__loss = None
         self.__regularization_term = None
-        self.__predict_engine = Engine()
         self.__plugin = collections.OrderedDict()
         self.load_default_plugin()
 
@@ -63,7 +63,7 @@ class Network:
     def layer_name_map(self):
         return self.__layer_name_map
 
-    def layer_number_map(self):
+    def layer_stack(self):
         return self.__layer_stack
 
     def add(self, layer, name=None):
@@ -225,9 +225,11 @@ class Network:
         self.run_plugin('end_training')
 
     def predict(self, data):
-        self.__predict_engine.symbol = self.__current_symbol
-        self.__predict_engine.bind = {self.__input_symbol: data}
-        predict_data = self.__predict_engine.value()
+        self.predict_engine.symbol = self.__current_symbol
+        self.predict_engine.bind = {self.__input_symbol: data}
+        self.run_plugin('begin_predict')
+        predict_data = self.predict_engine.value()
+        self.run_plugin('end_predict')
         return predict_data
 
     def load_default_plugin(self):

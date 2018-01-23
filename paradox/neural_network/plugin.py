@@ -1,5 +1,7 @@
 import time
-from paradox.neural_network.connection import ConnectionLayer, Connection
+import numpy
+from paradox.kernel.engine import Engine
+from paradox.neural_network.connection import ConnectionLayer, BatchNormalization, Connection
 from paradox.neural_network.convolutional_neural_network.layer import ConvolutionLayer, Convolution
 
 
@@ -26,6 +28,12 @@ class Plugin:
         pass
 
     def end_iteration(self):
+        pass
+
+    def begin_predict(self):
+        pass
+
+    def end_predict(self):
         pass
 
 
@@ -98,7 +106,39 @@ class VariableMonitorPlugin(Plugin):
             self.output_variables()
 
 
+class BatchNormalizationPlugin(Plugin):
+    def __init__(self):
+        self.__batch_normalization_layer = []
+
+    def begin_training(self):
+        for layer in self.network.layer_stack():
+            if isinstance(layer, BatchNormalization):
+                self.__batch_normalization_layer.append([layer, [], []])
+
+    def end_epoch(self):
+        for layer_tuple in self.__batch_normalization_layer:
+            layer_tuple[1] = [numpy.mean(numpy.array(layer_tuple[1]), axis=0)]
+            layer_tuple[2] = [numpy.mean(numpy.array(layer_tuple[2]), axis=0)]
+
+    def end_iteration(self):
+        for layer_tuple in self.__batch_normalization_layer:
+            layer_mean_symbol, layer_variance_symbol = layer_tuple[0].normalization_symbol()
+            normalization_engine = Engine(layer_variance_symbol)
+            normalization_engine.bind = self.network.engine.bind
+            layer_tuple[2].append(normalization_engine.value())
+            layer_tuple[1].append(normalization_engine.value_cache[layer_mean_symbol])
+
+    def begin_predict(self):
+        value_cache = {}
+        for layer_tuple in self.__batch_normalization_layer:
+            layer_mean_symbol, layer_variance_symbol = layer_tuple[0].normalization_symbol()
+            value_cache[layer_mean_symbol] = numpy.mean(numpy.array(layer_tuple[1]), axis=0)
+            value_cache[layer_variance_symbol] = numpy.mean(numpy.array(layer_tuple[2]), axis=0)
+        self.network.predict_engine.value_cache = value_cache
+
+
 default_plugin = [
     ('Training State', TrainingStatePlugin(), True),
     ('Variable Monitor', VariableMonitorPlugin(), False),
+    ('Batch Normalization', BatchNormalizationPlugin(), True),
 ]
