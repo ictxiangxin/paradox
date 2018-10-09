@@ -40,8 +40,18 @@ class SVMLoss(LossLayer):
         return loss
 
 
+class MSELoss(LossLayer):
+    loss_type = LossCategory.regression
+
+    @staticmethod
+    def loss_function(input_symbol: Symbol, target_symbol: Symbol):
+        loss = reduce_mean((input_symbol - target_symbol) ** 2)
+        return loss
+
+
 softmax_loss = SoftMaxLoss.loss_function
 svm_loss = SVMLoss.loss_function
+mse_loss = MSELoss.loss_function
 
 
 def softmax_loss_with_label(input_symbol: Symbol, classification):
@@ -57,6 +67,7 @@ def svm_loss_with_label(input_symbol: Symbol, classification):
 loss_map = {
     'softmax': SoftMaxLoss,
     'svm': SVMLoss,
+    'mse': MSELoss,
 }
 
 

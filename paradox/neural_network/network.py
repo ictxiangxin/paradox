@@ -213,8 +213,10 @@ class Network:
                 self.run_plugin('begin_epoch')
                 for i in ([0] if batch_size == 0 else range(0, data_scale, batch_size)):
                     if batch_size != 0:
-                        self.engine.bind = {self.__input_symbol: data[i: min([i + batch_size, data_scale])],
-                                            target_symbol: target[i: min([i + batch_size, data_scale])]}
+                        self.engine.bind = {
+                            self.__input_symbol: data[i: min([i + batch_size, data_scale])],
+                            target_symbol: target[i: min([i + batch_size, data_scale])]
+                        }
                     self.run_plugin('begin_iteration')
                     self.__optimizer.minimize(self.engine)
                     self.iteration += 1
