@@ -1,5 +1,15 @@
 ## 代码示例
 
+* [递归下降解线性方程组](#递归下降解线性方程组)
+* [线性回归](#线性回归)
+* [线性SVM](#线性SVM)
+* [2x4x2神经网络环状数据分类](#2x4x2神经网络环状数据分类)
+* [2x8x8x2神经网络螺旋型数据分类](#2x8x8x2神经网络螺旋型数据分类)
+* [2x16x16x16x3网络实现多分类](#2x16x16x16x3网络实现多分类)
+* [2x8x8x8x8x2网络分类网格状数据](#2x8x8x8x8x2网络分类网格状数据)
+* [回归神经网络](#回归神经网络)
+* [卷积神经网络进行MNIST手写数字识别](#卷积神经网络进行MNIST手写数字识别)
+
 ### 递归下降解线性方程组
 
 ![](http://latex.codecogs.com/gif.latex?x_1+2x_2=3)
@@ -486,6 +496,50 @@ plt.show()
 
 [回到顶部](#readme)
 
+### 回归神经网络
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+import paradox as pd
+
+# sin函数采样点数。
+points_number = 30
+
+# 生成训练数据。
+c_x = np.arange(points_number).reshape([points_number, 1])
+c_y = np.sin(c_x / 5) # 生成sin函数数据。
+
+# 构造1x32x1回归神经网络（最后一层不激活）。
+model = pd.nn.Network()
+model.add(pd.nn.Dense(32, input_dimension=1))  # 1维输入32维输出的全连接层。
+model.add(pd.nn.Activation('tanh'))  # 使用tanh激活函数。
+model.add(pd.nn.Dense(1))
+model.loss('mse')
+
+# 使用梯度下降优化器。
+model.optimizer('gradient descent', rate=0.01)
+
+# 执行训练。
+model.train(c_x, c_y, epochs=20000)
+
+# 生成预测数据。
+x = np.arange(-5, 35, 0.1)
+y = model.predict(x.reshape([x.shape[0], 1]))
+
+# 绘制图像。
+plt.title('1x32x1 Regression Neural Network')
+plt.plot(c_x, c_y, 'ro', label='Sin(x)')
+plt.plot(x, y, 'b', label='Regression')
+plt.legend()
+plt.show()
+```
+
+运行结果：
+
+![RegressionNeuralNetwork](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/1x32x1_regression_neural_network.png)
+
+[回到顶部](#readme)
+
 ### 卷积神经网络进行MNIST手写数字识别
 ```python
 import os
@@ -556,6 +610,6 @@ model.train(mnist_data['train_image'], lm, epochs=10, batch_size=batch_size)
 
 运行结果：
 
-![ConvolutionalNerualNetwork](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/convolutional_nerual_network.png)
+![ConvolutionalNeuralNetwork](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/convolutional_neural_network.png)
 
 [回到顶部](#readme)

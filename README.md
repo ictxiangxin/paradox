@@ -4,10 +4,10 @@
 
 > 用python3和numpy实现一个简单的深度学习框架。
 
-![LinearRegression](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/graph_example.png)
+![GraphExample](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/graph_example.png)
 
-* [代码示例](examples)
-* [使用文档](documentations)
+* [代码示例](examples) - Paradox完整的代码示例。
+* [技术文档](documentations) - Paradox开发文档和使用文档。
 
 ## 依赖
 

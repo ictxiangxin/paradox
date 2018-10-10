@@ -42,13 +42,20 @@ class TrainingStatePlugin(Plugin):
         self.state_cycle = state_cycle
         self.start_time = None
         self.cycle_start_time = None
+        self.count = 0
+        self.average_speed = 0
 
     def begin_training(self):
         self.start_time = time.time()
         self.cycle_start_time = self.start_time
+        self.count = 0
+        self.average_speed = 0
 
     def end_training(self):
-        print('Training Complete [{}]'.format(time.strftime('%H:%M:%S', time.gmtime(time.time() - self.start_time))))
+        print('\n[Training Complete]\nDuration: {}\nAverage Speed: {:.2f}(iterations/s)'.format(
+            time.strftime('%H:%M:%S', time.gmtime(time.time() - self.start_time)),
+            self.average_speed
+        ))
 
     def begin_iteration(self):
         if self.network.iteration % self.state_cycle == 0:
@@ -57,12 +64,15 @@ class TrainingStatePlugin(Plugin):
     def end_iteration(self):
         if self.network.iteration % self.state_cycle == 0:
             speed = self.state_cycle / (time.time() - self.cycle_start_time)
+            self.average_speed = self.average_speed * (self.count / (self.count + 1)) + speed / (self.count + 1)
+            self.count += 1
             loss_value = self.network.engine.value()
             print('Training State [epoch = {}/{}, loss = {:.8f}, speed = {:.2f}(iterations/s)]'.format(
                 self.network.epoch,
                 self.network.epochs,
                 loss_value,
-                speed))
+                speed
+            ))
 
 
 class VariableMonitorPlugin(Plugin):
@@ -89,7 +99,7 @@ class VariableMonitorPlugin(Plugin):
             layer = self.network.get_layer(layer_name)
             if isinstance(layer, ConnectionLayer) or isinstance(layer, Connection):
                 layer = layer.connection_layer()
-                weight, bias = layer.weight_bias()
+                weight, bias = layer.variables()
                 print('[{}]: Weight = \n{}'.format(layer_name, weight.value))
                 print('[{}]: Bias = \n{}'.format(layer_name, bias.value))
             elif isinstance(layer, ConvolutionLayer) or isinstance(layer, Convolution):
