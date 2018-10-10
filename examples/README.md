@@ -8,7 +8,7 @@
 * [2x16x16x16x3网络实现多分类](#2x16x16x16x3网络实现多分类)
 * [2x8x8x8x8x2网络分类网格状数据](#2x8x8x8x8x2网络分类网格状数据)
 * [回归神经网络](#回归神经网络)
-* [卷积神经网络进行MNIST手写数字识别](#卷积神经网络进行MNIST手写数字识别)
+* [卷积神经网络](#卷积神经网络)
 
 ### 递归下降解线性方程组
 
@@ -507,17 +507,17 @@ points_number = 30
 
 # 生成训练数据。
 c_x = np.arange(points_number).reshape([points_number, 1])
-c_y = np.sin(c_x / 5) # 生成sin函数数据。
+c_y = np.sin(c_x / 5)
 
 # 构造1x32x1回归神经网络（最后一层不激活）。
 model = pd.nn.Network()
-model.add(pd.nn.Dense(32, input_dimension=1))  # 1维输入32维输出的全连接层。
+model.add(pd.nn.Dense(64, input_dimension=1))  # 1维输入32维输出的全连接层。
 model.add(pd.nn.Activation('tanh'))  # 使用tanh激活函数。
 model.add(pd.nn.Dense(1))
 model.loss('mse')
 
-# 使用梯度下降优化器。
-model.optimizer('gradient descent', rate=0.01)
+# 使用Adam下降优化器。
+model.optimizer('adaptive moment estimation', rate=0.001, decay=0.9, square_decay=0.999, consistent=True)
 
 # 执行训练。
 model.train(c_x, c_y, epochs=20000)
@@ -527,7 +527,7 @@ x = np.arange(-5, 35, 0.1)
 y = model.predict(x.reshape([x.shape[0], 1]))
 
 # 绘制图像。
-plt.title('1x32x1 Regression Neural Network')
+plt.title('1x64x1 Regression Neural Network')
 plt.plot(c_x, c_y, 'ro', label='Sin(x)')
 plt.plot(x, y, 'b', label='Regression')
 plt.legend()
@@ -536,11 +536,14 @@ plt.show()
 
 运行结果：
 
-![RegressionNeuralNetwork](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/1x32x1_regression_neural_network.png)
+![RegressionNeuralNetwork](https://raw.githubusercontent.com/ictxiangxin/paradox/master/documentations/images/1x64x1_regression_neural_network.png)
 
 [回到顶部](#readme)
 
-### 卷积神经网络进行MNIST手写数字识别
+### 卷积神经网络
+
+使用卷积神经网络进行MNIST手写数字识别。
+
 ```python
 import os
 import numpy as np
