@@ -2,8 +2,10 @@ from paradox.neural_network.loss import \
     register_loss, \
     softmax_loss, \
     svm_loss, \
+    mse_loss, \
     SoftMaxLoss, \
     SVMLoss, \
+    MSELoss, \
     Loss, \
     LossLayer, \
     LossCategory
@@ -20,9 +22,13 @@ from paradox.neural_network.activation import \
     relu, \
     softmax, \
     sigmoid, \
+    softplus, \
+    softsign, \
     RectifiedLinearUnits, \
     SoftMax, \
     Sigmoid, \
+    SoftPlus, \
+    SoftSign, \
     Activation, \
     ActivationLayer
 from paradox.neural_network.connection import \

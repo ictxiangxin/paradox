@@ -42,6 +42,7 @@ class TrainingStatePlugin(Plugin):
         self.state_cycle = state_cycle
         self.start_time = None
         self.cycle_start_time = None
+        self.iteration_start = 0
         self.count = 0
         self.average_speed = 0
         self.auto_cycle = auto_cycle
@@ -63,10 +64,11 @@ class TrainingStatePlugin(Plugin):
     def begin_iteration(self):
         if self.network.iteration % self.state_cycle == 0:
             self.cycle_start_time = time.time()
+            self.iteration_start = self.network.iteration
 
     def end_iteration(self):
-        if self.network.iteration % self.state_cycle == 0 and self.network.iteration // self.state_cycle == self.cycle:
-            speed = self.state_cycle / (time.time() - self.cycle_start_time)
+        if (self.network.iteration % self.state_cycle == 0 and self.network.iteration // self.state_cycle == self.cycle) or self.network.iterations == self.network.iteration:
+            speed = (self.network.iteration - self.iteration_start + 1) / (time.time() - self.cycle_start_time)
             self.average_speed = self.average_speed * (self.count / (self.count + 1)) + speed / (self.count + 1)
             if self.auto_cycle:
                 cycle = int(self.average_speed)

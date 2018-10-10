@@ -28,8 +28,9 @@ def register_optimizer(name: str, optimizer: Optimizer):
 class Network:
     def __init__(self):
         self.epoch = None
-        self.iteration = None
         self.epochs = None
+        self.iteration = None
+        self.iterations = None
         self.batch_size = None
         self.engine = Engine()
         self.predict_engine = Engine()
@@ -207,11 +208,13 @@ class Network:
         self.engine.variables = self.__variables
         try:
             self.iteration = 0
+            iterations = [0] if batch_size == 0 else range(0, data_scale, batch_size)
+            self.iterations = self.epochs * len(iterations)
             self.run_plugin('begin_training')
             for epoch in range(self.epochs):
                 self.epoch = epoch + 1
                 self.run_plugin('begin_epoch')
-                for i in ([0] if batch_size == 0 else range(0, data_scale, batch_size)):
+                for i in iterations:
                     if batch_size != 0:
                         self.engine.bind = {
                             self.__input_symbol: data[i: min([i + batch_size, data_scale])],
