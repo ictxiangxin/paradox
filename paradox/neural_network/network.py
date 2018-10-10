@@ -223,7 +223,7 @@ class Network:
                     self.run_plugin('end_iteration')
                 self.run_plugin('end_epoch')
         except KeyboardInterrupt:
-            print('Keyboard Interrupt')
+            print('<Keyboard Interrupt>')
         self.run_plugin('end_training')
 
     def predict(self, data):

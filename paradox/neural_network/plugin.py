@@ -38,18 +38,21 @@ class Plugin:
 
 
 class TrainingStatePlugin(Plugin):
-    def __init__(self, state_cycle: int=100):
+    def __init__(self, state_cycle: int=100, auto_cycle: bool=True):
         self.state_cycle = state_cycle
         self.start_time = None
         self.cycle_start_time = None
         self.count = 0
         self.average_speed = 0
+        self.auto_cycle = auto_cycle
+        self.cycle = 1
 
     def begin_training(self):
         self.start_time = time.time()
         self.cycle_start_time = self.start_time
         self.count = 0
         self.average_speed = 0
+        self.cycle = 1
 
     def end_training(self):
         print('\n[Training Complete]\nDuration: {}\nAverage Speed: {:.2f}(iterations/s)'.format(
@@ -62,10 +65,14 @@ class TrainingStatePlugin(Plugin):
             self.cycle_start_time = time.time()
 
     def end_iteration(self):
-        if self.network.iteration % self.state_cycle == 0:
+        if self.network.iteration % self.state_cycle == 0 and self.network.iteration // self.state_cycle == self.cycle:
             speed = self.state_cycle / (time.time() - self.cycle_start_time)
             self.average_speed = self.average_speed * (self.count / (self.count + 1)) + speed / (self.count + 1)
+            if self.auto_cycle:
+                cycle = int(self.average_speed)
+                self.state_cycle = cycle if cycle else 1
             self.count += 1
+            self.cycle = int(self.network.iteration / self.state_cycle + 1.5)
             loss_value = self.network.engine.value()
             print('Training State [epoch = {}/{}, loss = {:.8f}, speed = {:.2f}(iterations/s)]'.format(
                 self.network.epoch,
