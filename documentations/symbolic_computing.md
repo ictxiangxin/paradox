@@ -27,5 +27,75 @@ Paradox主要功能就在于构建一个具有梯度计算功能的的符号计�
 
 > Symbol共有3个衍生类，分别是Variable、Constant和Placeholder。
 
-* Variable，字面意义是变量，它的作用是告诉计算引擎该符号的值是可变的，其值不能用于计算优化。
+* Variable，变量符号，它的作用是告诉计算引擎该符号的值是可变的，其值不能用于计算优化。
+且在极值化时，被训练的参数Symbol只能是Variable类型。
 
+* Constant，常量符号，用于表达式或模型在计算过程中常量的Symbol，这类符号在计算时可能会被优化器优化掉。
+因此一旦创建，就无法改变其实际值，也无法在计算引擎中绑定新值。
+
+* Placeholder，占位符号，它的作用是为实际数据在表达式或模型中占位。因为在表达式或模型构建时，承载数据的符号尚不知数据的具体值，
+就需要靠占位符号来占位。占位符号只需要提供数据的维度大小（shape），而无需输入任何实际数据。Variable和Constant在创建时必须有明确的初始值。
+
+### 符号计算代码实例
+
+创建简单的1+1计算：
+
+```python
+import paradox as pd
+
+a = pd.Constant(1)
+b = pd.Constant(1)
+
+c = a + b
+
+print(pd.Engine(c).value())
+```
+
+运行结果：
+```
+2.0
+```
+
+1+1计算结果为2.0而非2的原因是Paradox使用float为默认数据类型，任何类型的数据都会尝试转化为float。
+
+需要注意的是，如果不使用计算引擎计算而直接`print(c)`的话，会得到`c`的代数表达式。
+
+运行结果:
+```
+(1.0 + 1.0)
+```
+
+每一个Symbol在创建时还可以为其指定一个name，这个参数将用于直接打印表达式时有更直观的显示。
+
+```python
+import paradox as pd
+
+x = pd.Placeholder(name='x')
+k = pd.Constant(1, name='k')
+b = pd.Constant(1, name='b')
+
+f = k * x + b
+
+print(f)
+
+```
+
+运行结果：
+```
+((k * x) + b)
+```
+
+该例可以看出，`x`作为Placeholder是不需要有初始值的，'k'和'b'在创建时就必须有初始值。
+
+如果需要带入`x`算出`f`的具体值，就需要在创建引擎后绑定（bind）`x`的值再进行计算。
+
+```python
+e = pd.Engine(f)
+e.bind = {x: 3}
+print(e.value())
+```
+
+运行结果：
+```
+4.0
+```
