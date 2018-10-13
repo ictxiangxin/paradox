@@ -23,9 +23,9 @@ class Symbol:
 
     def init(self, value=None, shape: tuple=None, name: str=None, operator=None, inputs=None, category: SymbolCategory=None):
         if isinstance(value, Symbol):
-            self.name = value.name
-            self.value = value.value
-            self.shape = value.shape
+            self.__set_name(value.name)
+            self.__set_value(value.value)
+            self.__set_shape(value.shape)
             for _input in value.input:
                 self.__add_input(_input.clone())
             self.__set_operator(value.__operator)
@@ -174,6 +174,21 @@ class Symbol:
         else:
             raise ValueError('Output must be Symbol.')
 
+    def dependence(self, category: SymbolCategory=None):
+        if self.__get_category() == SymbolCategory.operator:
+            if category == SymbolCategory.operator:
+                dependence = {self}
+            else:
+                dependence = set()
+            for symbol in self.__input:
+                dependence |= symbol.dependence(category)
+            return dependence
+        else:
+            if category is None or self.__get_category() == category:
+                return {self}
+            else:
+                return set()
+
     def symbolic_compute(self, operator, inputs):
         if operator is not None and inputs:
             self.__set_operator(operator)
@@ -190,7 +205,7 @@ class Symbol:
                     symbol.__add_output(self)
                 else:
                     raise ValueError('Input must be Symbol.')
-            self.category = SymbolCategory.operator
+            self.__set_category(SymbolCategory.operator)
 
     def clone(self):
         clone_symbol = Symbol()

@@ -116,6 +116,7 @@ class Engine:
             self.__gradients[variable] = broadcast(Constant(1), self.shape(self.__symbol))
             return
         current_operator = None
+        index = -1
         for forward in variable.output:
             if self.gradient(forward) is not None:
                 if current_operator != forward.operator:
